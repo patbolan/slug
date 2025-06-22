@@ -1,0 +1,4 @@
+Got a start right now. But the CSV is not rendering correctly because the route is the same as collection, so it is going to the collection route. 
+
+I can fix this, but I need to understand what the routing concept is better, so I can design how the different routes should be organized. I'll need handlers for csv, json, nii. 
+

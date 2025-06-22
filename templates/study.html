@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Files in {{ subject }}/{{ study }}</title>
+</head>
+<body>
+    <h1>Files</h1>
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Last Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+                <tr>
+                    <td>
+                        {% if file.name.endswith('.csv') %}
+                            <a href="{{ url_for('render_csv', subject_name=subject, study_name=study, file_name=file.name) }}">
+                                {{ file.name }}
+                            </a>
+                        {% else %}
+                            {{ file.name }}
+                        {% endif %}
+                    </td>
+                    <td>{{ file.timestamp }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h1>Collections</h1>
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Collection Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for collection in collections %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('collection', subject_name=subject, study_name=study, collection_name=collection.name) }}">
+                            {{ collection.name }}
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <a href="{{ url_for('subject', subject_name=subject) }}">Back to Studies</a>
+</body>
+</html>

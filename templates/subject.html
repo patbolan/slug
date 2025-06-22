@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Studies for {{ subject }}</title>
+</head>
+<body>
+    <h1>Studies for {{ subject }}</h1>
+    <ul>
+        {% for study in studies %}
+            <li>
+                <a href="{{ url_for('study', subject_name=subject, study_name=study) }}">
+                    {{ study }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Back to Subjects</a>
+</body>
+</html>

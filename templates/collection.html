@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Collection: {{ collection_name }} in {{ subject }}/{{ study }}</title>
+</head>
+<body>
+    <h1>Files in Collection: {{ collection_name }}</h1>
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Last Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+                <tr>
+                    <td>
+                        {{ file.name }}
+                    </td>
+                    <td>{{ file.timestamp }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h1>Folders in Collection: {{ collection_name }}</h1>
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Folder Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for folder in folders %}
+                <tr>
+                    <td>{{ folder.name }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <a href="{{ url_for('study', subject_name=subject, study_name=study) }}">Back to Study</a>
+</body>
+</html>
