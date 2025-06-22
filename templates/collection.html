@@ -17,7 +17,17 @@
             {% for file in files %}
                 <tr>
                     <td>
-                        {{ file.name }}
+                        {% if file.name.endswith('.csv') %}
+                            <a href="{{ url_for('render_csv', subject_name=subject, study_name=study, collection_name=collection_name, file_name=file.name) }}">
+                                {{ file.name }}
+                            </a>
+                        {% elif file.name.endswith('.json') %}
+                            <a href="{{ url_for('render_json', subject_name=subject, study_name=study, collection_name=collection_name, file_name=file.name) }}">
+                                {{ file.name }}
+                            </a>
+                        {% else %}
+                            {{ file.name }}
+                        {% endif %}
                     </td>
                     <td>{{ file.timestamp }}</td>
                 </tr>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subjects</title>
+</head>
+<body>
+    <h1>Subjects</h1>
+    <ul>
+        {% for subject in subjects %}
+            <li><a href="{{ url_for('subject', subject_name=subject) }}">{{ subject }}</a></li>
+        {% endfor %}
+    </ul>
+    <br>
+    <p>Code: [<b>D</b>iagnostic, <b>V</b>olunteer, <b>P</b>hantom]; 
+    [<b>U</b>mn, UC<b>S</b>F, <b>H</b>CMC]; 
+    [<b>A</b>,<b>B</b>]
+</body>
+</html>

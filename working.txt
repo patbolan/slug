@@ -2,3 +2,13 @@ Got a start right now. But the CSV is not rendering correctly because the route 
 
 I can fix this, but I need to understand what the routing concept is better, so I can design how the different routes should be organized. I'll need handlers for csv, json, nii. 
 
+I have a scheme for /subject/studies/collections. But maybe a better routing would be with queries, /subject?subject_name=PUH-0004
+and /study?subject_name=PUH-0004&study_name=MR-20240204
+
+I like that for rendering files, when they can be in different levels of the hierarchy:
+/render_json/?subject_name=PUH-0004&study_name=MR-20240204&collection=dicom-original&file_name=header.json
+/render_json/?subject_name=PUH-0004&file_name=subject_info.json
+
+Need to think that through. Might be different when you do POST calls as well. Search and AI this question.
+
+

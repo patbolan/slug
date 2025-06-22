@@ -1,18 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Subjects</title>
+    <title>PCAD2 project</title>
 </head>
 <body>
-    <h1>Subjects</h1>
-    <ul>
-        {% for subject in subjects %}
-            <li><a href="{{ url_for('subject', subject_name=subject) }}">{{ subject }}</a></li>
-        {% endfor %}
-    </ul>
-    <br>
-    <p>Code: [<b>D</b>iagnostic, <b>V</b>olunteer, <b>P</b>hantom]; 
-    [<b>U</b>mn, UC<b>S</b>F, <b>H</b>CMC]; 
-    [<b>A</b>,<b>B</b>]
+    <h1>PCAD2 project</h1>
+    <p>Prototype replacement for the Matlab <i>mmanager</i> program</p>
+    <a href="{{ url_for('subjects') }}">All subjects</a>
 </body>
 </html>

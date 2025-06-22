@@ -4,18 +4,26 @@ from datetime import datetime
 import random
 import time
 import csv  # Add this import for handling CSV files
+import json  # Add this import for handling JSON files
 
 app = Flask(__name__)
 DATA_DIR = '/home/bakken-raid8/pcad2/data'
 
-
+# Home 
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+# List all subjects
+@app.route('/subjects')
+def subjects():
     subjects = [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))]
     subjects.sort()
-    return render_template('index.html', subjects=subjects)
+    return render_template('subjects.html', subjects=subjects)
 
-@app.route('/subject/<subject_name>')
+# Details for one subject. By default this will include a list of all studies
+@app.route('/subjects/<subject_name>/studies')
+@app.route('/subjects/<subject_name>')
 def subject(subject_name):
     subject_path = os.path.join(DATA_DIR, subject_name)
     if not os.path.isdir(subject_path):
@@ -25,7 +33,9 @@ def subject(subject_name):
     studies.sort()
     return render_template('subject.html', subject=subject_name, studies=studies)
 
-@app.route('/subject/<subject_name>/<study_name>', methods=['GET', 'POST'])
+# One study. Also list collections
+@app.route('/subjects/<subject_name>/studies/<study_name>/collections')
+@app.route('/subjects/<subject_name>/studies/<study_name>')
 def study(subject_name, study_name):
     study_path = os.path.join(DATA_DIR, subject_name, study_name)
     if not os.path.isdir(study_path):
@@ -47,9 +57,8 @@ def study(subject_name, study_name):
                            subject=subject_name, study=study_name, files=files, collections=collections)
 
 
-@app.route('/subject/<subject_name>/<study_name>/<collection_name>', methods=['GET', 'POST'])
+@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>')
 def collection(subject_name, study_name, collection_name):
-    print('rendering collection')
     collection_path = os.path.join(DATA_DIR, subject_name, study_name, collection_name)
     if not os.path.isdir(collection_path):
         abort(404)
@@ -69,13 +78,13 @@ def collection(subject_name, study_name, collection_name):
     return render_template('collection.html', 
                            subject=subject_name, 
                            study=study_name, 
-                           collection=collection_name, 
+                           collection_name=collection_name, 
                            files=files, folders=folders)
 
-@app.route('/subject/<subject_name>/<study_name>/<file_name>')
+#@app.route('/subject/<subject_name>/<study_name>/<file_name>')
+@app.route('/subject/<subject_name>/studies/<study_name>/<file_name>')
+#@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
 def render_csv(subject_name, study_name, file_name):
-    # NEver gets here, because the route is going to the collection
-    print('am here')
     file_path = os.path.join(DATA_DIR, subject_name, study_name, file_name)
     if not os.path.isfile(file_path) or not file_name.endswith('.csv'):
         print('Invalid file path or not a CSV file:', file_path)
@@ -91,6 +100,25 @@ def render_csv(subject_name, study_name, file_name):
                            study=study_name,  
                            file_name=file_name, 
                            csv_data=csv_data)
+
+@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
+def render_json(subject_name, study_name, collection_name, file_name):
+    file_path = os.path.join(DATA_DIR, subject_name, study_name, collection_name, file_name)
+    if not os.path.isfile(file_path) or not file_name.endswith('.json'):
+        abort(404)
+
+    with open(file_path, 'r') as json_file:
+        json_data = json.load(json_file)
+
+    # Format JSON data with indentation for readability
+    formatted_json = json.dumps(json_data, indent=4)
+
+    return render_template('json.html', 
+                           subject=subject_name, 
+                           study=study_name, 
+                           collection_name=collection_name, 
+                           file_name=file_name, 
+                           json_data=formatted_json)
 
 
 if __name__ == '__main__':
