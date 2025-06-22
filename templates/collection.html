@@ -25,6 +25,10 @@
                             <a href="{{ url_for('render_json', subject_name=subject, study_name=study, collection_name=collection_name, file_name=file.name) }}">
                                 {{ file.name }}
                             </a>
+                        {% elif file.name.endswith('.nii') %}
+                            <a href="{{ url_for('render_nifti', subject_name=subject, study_name=study, collection_name=collection_name, file_name=file.name) }}">
+                                {{ file.name }}
+                            </a>                       
                         {% else %}
                             {{ file.name }}
                         {% endif %}

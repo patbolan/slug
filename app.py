@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, request, redirect, url_for
+from flask import Flask, render_template, abort, request, redirect, url_for, send_file
 import os
 from datetime import datetime
 import random
@@ -101,7 +101,7 @@ def render_csv(subject_name, study_name, file_name):
                            file_name=file_name, 
                            csv_data=csv_data)
 
-@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
+@app.route('/json/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
 def render_json(subject_name, study_name, collection_name, file_name):
     file_path = os.path.join(DATA_DIR, subject_name, study_name, collection_name, file_name)
     if not os.path.isfile(file_path) or not file_name.endswith('.json'):
@@ -120,6 +120,28 @@ def render_json(subject_name, study_name, collection_name, file_name):
                            file_name=file_name, 
                            json_data=formatted_json)
 
+@app.route('/nifti/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
+def render_nifti(subject_name, study_name, collection_name, file_name):
+    print('Rendering NIFTI:', subject_name, study_name, collection_name, file_name)
+    file_path = os.path.join(DATA_DIR, subject_name, study_name, collection_name, file_name)
+    print('Rendering NIFTI:', file_path)
+    if not os.path.isfile(file_path) or not file_name.endswith('.nii'):
+        abort(404)
+
+    return render_template('nifti.html', 
+                           subject=subject_name, 
+                           study=study_name, 
+                           collection_name=collection_name, 
+                           file_path=file_path, )
+
+@app.route('/nifti-files/<path:filename>')
+def serve_nifti(filename):
+    # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
+    file_path = '/' + filename
+    print('Serving NIFTI file:', file_path)
+    if not os.path.isfile(file_path):
+        abort(404)
+    return send_file(file_path)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000
