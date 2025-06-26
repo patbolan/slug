@@ -1,19 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Studies for {{ subject }}</title>
+    <title>Subject {{ subject }}</title>
 </head>
 <body>
-    <h1>Studies for {{ subject }}</h1>
-    <ul>
-        {% for study in studies %}
-            <li>
-                <a href="{{ url_for('study', subject_name=subject, study_name=study) }}">
-                    {{ study }}
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('index') }}">Back to Subjects</a>
+    <header>
+        <a href="{{ url_for('index') }}">Home</a>, 
+        <a href="{{ url_for('subjects') }}">Subjects</a>
+
+    </header>
+
+    <h1>Subject {{ subject }}</h1>
+    <h2>Studies ({{ studies|length }})</h2>
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Study</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for study in studies %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('study', subject_name=subject, study_name=study) }}">{{ study }}</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
 </body>
 </html>
