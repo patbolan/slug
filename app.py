@@ -5,9 +5,28 @@ import random
 import time
 import csv  # Add this import for handling CSV files
 import json  # Add this import for handling JSON files
+import re  # Add this import for regular expressions
 
 app = Flask(__name__)
 DATA_DIR = '/home/bakken-raid8/pcad2/data'
+
+
+def get_all_subjects():
+    pattern = re.compile(r'^[A-Z]{3}-\d{4}$')  # Pattern for XXX-0000
+    subjects = [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d)) and pattern.match(d)]
+    subjects.sort()
+    return subjects
+
+def get_studies_for_subject(subject_name):
+    subject_path = os.path.join(DATA_DIR, subject_name)
+    if not os.path.isdir(subject_path):
+        return []
+    pattern = re.compile(r'MR-\d{8}$')  # Pattern for MR-YYYYMMDD
+    studies = [d for d in os.listdir(subject_path) if os.path.isdir(os.path.join(subject_path, d)) and pattern.match(d)]
+    studies.sort()
+    return studies
+
+
 
 # Home 
 @app.route('/')
@@ -17,20 +36,20 @@ def index():
 # List all subjects
 @app.route('/subjects')
 def subjects():
-    subjects = [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))]
-    subjects.sort()
-    return render_template('subjects.html', subjects=subjects)
+    subjects = get_all_subjects()
+    subjects_with_counts = []
+
+    for subject in subjects:
+        studies = get_studies_for_subject(subject)
+        subjects_with_counts.append((subject, len(studies)))
+
+    return render_template('subjects.html', subjects=subjects_with_counts)
 
 # Details for one subject. By default this will include a list of all studies
 @app.route('/subjects/<subject_name>/studies')
 @app.route('/subjects/<subject_name>')
 def subject(subject_name):
-    subject_path = os.path.join(DATA_DIR, subject_name)
-    if not os.path.isdir(subject_path):
-        abort(404)
-
-    studies = [d for d in os.listdir(subject_path) if os.path.isdir(os.path.join(subject_path, d))]
-    studies.sort()
+    studies = get_studies_for_subject(subject_name)
     return render_template('subject.html', subject=subject_name, studies=studies)
 
 # One study. Also list collections
