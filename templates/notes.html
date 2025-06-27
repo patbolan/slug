@@ -1,17 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Note for Subject {{ subject_name }}</title>
+    <title>Note for {{ subject_name }}{% if study_name %} / {{ study_name }}{% endif %}</title>
 </head>
 <body>
     <header>
         <a href="{{ url_for('index') }}">Home</a>, 
         <a href="{{ url_for('subjects') }}">Subjects</a>, 
         <a href="{{ url_for('studies') }}">Studies</a>, 
-        <a href="{{ url_for('subject', subject_name=subject_name) }}">Back to Subject</a>
+        {% if study_name %}
+            <a href="{{ url_for('study', subject_name=subject_name, study_name=study_name) }}">Back to Study</a>
+        {% else %}
+            <a href="{{ url_for('subject', subject_name=subject_name) }}">Back to Subject</a>
+        {% endif %}
     </header>
 
-    <h1>Note for Subject {{ subject_name }}</h1>
+    {% if study_name %}
+        <h1>Note for Study {{ subject_name }} / {{ study_name }}</h1>
+    {% else %}
+        <h1>Note for Subject {{ subject_name }}</h1>
+    {% endif %}
+    <!-- <h1>Note for {{ subject_name }}{% if study_name %} / {{ study_name }}{% endif %}</h1> -->
 
     <h2>Current Note Text</h2>
     <p><pre>{{ notes }}</pre></p>
@@ -24,7 +33,7 @@
     </form>
 
     <h2>Create Blank Note</h2>
-    <form method="POST" action="{{ url_for('note', subject_name=subject_name) }}">
+    <form method="POST" action="{% if study_name %}{{ url_for('study_note', subject_name=subject_name, study_name=study_name) }}{% else %}{{ url_for('note', subject_name=subject_name) }}{% endif %}">
         <input type="hidden" name="_method" value="PUT">
         <button type="submit">Create notes.txt</button>
     </form>
@@ -34,11 +43,10 @@
 
     <script>
     function deleteNote() {
-        fetch("{{ url_for('note', subject_name=subject_name) }}", {
+        fetch("{% if study_name %}{{ url_for('study_note', subject_name=subject_name, study_name=study_name) }}{% else %}{{ url_for('note', subject_name=subject_name) }}{% endif %}", {
             method: "DELETE"
         }).then(response => {
             if (response.ok) {
-                // alert("Note deleted successfully!");
                 location.reload();
             } else {
                 alert("Failed to delete note.");

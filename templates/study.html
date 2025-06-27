@@ -12,8 +12,13 @@
     </header>
 
     <h1>{{ subject }}/{{ study }}</h1>
+    <h2>Study Notes</h2>
+    <p><pre>{{ notes }}</pre></p>
+    <form action="{{ url_for('study_note', subject_name=subject, study_name=study) }}" method="GET">
+        <button type="submit">Edit Study Note</button>
+    </form>
 
-
+    <h2>TODO</h2>
     <table border="1" cellpadding="2" cellspacing="0">
         <thead>
             <tr>

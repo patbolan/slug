@@ -82,6 +82,14 @@ def study(subject_name, study_name):
     if not os.path.isdir(study_path):
         abort(404)
 
+    # Read notes.txt if it exists
+    notes_file = os.path.join(study_path, 'notes.txt')
+    if os.path.isfile(notes_file):
+        with open(notes_file, 'r') as f:
+            notes = f.read()
+    else:
+        notes = ""
+
     files = []
     collections = []
     for file_name in sorted(os.listdir(study_path)):
@@ -91,11 +99,15 @@ def study(subject_name, study_name):
         if os.path.isfile(full_path):
             timestamp = datetime.fromtimestamp(os.path.getmtime(full_path))
             files.append({'name': file_name, 'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S')})
-        else: # Folders are considered collections
+        else:  # Folders are considered collections
             collections.append({'name': file_name})
 
     return render_template('study.html', 
-                           subject=subject_name, study=study_name, files=files, collections=collections)
+                           subject=subject_name, 
+                           study=study_name, 
+                           notes=notes, 
+                           files=files, 
+                           collections=collections)
 
 
 @app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>')
@@ -200,21 +212,21 @@ def note(subject_name):
                 notes = f.read()
         else:
             notes = "<enter notes here>"
-        return render_template('note.html', subject_name=subject_name, notes=notes)
+        return render_template('notes.html', subject_name=subject_name, notes=notes)
 
     elif request.method == 'POST':
         # Update notes.txt with the submitted content
         new_notes = request.form.get('notes', '')
         with open(notes_file, 'w') as f:
             f.write(new_notes)
-        return redirect(url_for('note', subject_name=subject_name))
+        return redirect(url_for('notes', subject_name=subject_name))
 
     elif request.method == 'PUT':
         # Create notes.txt if it doesn't exist
         if not os.path.isfile(notes_file):
             with open(notes_file, 'w') as f:
                 f.write("")
-            return redirect(url_for('note', subject_name=subject_name))
+            return redirect(url_for('notes', subject_name=subject_name))
         else:
             return f"notes.txt already exists for subject {subject_name}", 409
 
@@ -227,6 +239,49 @@ def note(subject_name):
         else:
             print('notes.txt does not exist')  # Debugging statement
             return f"notes.txt does not exist for subject {subject_name}", 404
+
+@app.route('/note/<subject_name>/studies/<study_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def study_note(subject_name, study_name):
+    study_path = os.path.join(DATA_DIR, subject_name, study_name)
+    if not os.path.isdir(study_path):
+        abort(404)
+
+    notes_file = os.path.join(study_path, 'notes.txt')
+
+    if request.method == 'GET':
+        # Read notes.txt if it exists
+        if os.path.isfile(notes_file):
+            with open(notes_file, 'r') as f:
+                notes = f.read()
+        else:
+            notes = "<enter notes here>"
+        return render_template('notes.html', subject_name=subject_name, study_name=study_name, notes=notes)
+
+    elif request.method == 'POST':
+        # Update notes.txt with the submitted content
+        new_notes = request.form.get('notes', '')
+        with open(notes_file, 'w') as f:
+            f.write(new_notes)
+        return redirect(url_for('study_note', subject_name=subject_name, study_name=study_name))
+
+    elif request.method == 'PUT':
+        # Create notes.txt if it doesn't exist
+        if not os.path.isfile(notes_file):
+            with open(notes_file, 'w') as f:
+                f.write("")
+            return redirect(url_for('study_note', subject_name=subject_name, study_name=study_name))
+        else:
+            return f"notes.txt already exists for study {study_name}", 409
+
+    elif request.method == 'DELETE':
+        print(f"DELETE request received for study: {study_name}")  # Debugging statement
+        if os.path.isfile(notes_file):
+            print('Deleting notes file:', notes_file)  # Debugging statement
+            os.remove(notes_file)
+            return f"Deleted notes.txt for study {study_name}", 200
+        else:
+            print('notes.txt does not exist')  # Debugging statement
+            return f"notes.txt does not exist for study {study_name}", 404
 
 @app.route('/studies')
 def studies():
