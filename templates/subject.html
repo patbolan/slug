@@ -13,7 +13,7 @@
     <h1>Subject {{ subject }}</h1>
     <h2>Notes</h2>
     <p><pre>{{ notes }}</pre></p>
-    <form action="{{ url_for('note', subject_name=subject) }}" method="GET">
+    <form action="{{ url_for('subject_note', subject_name=subject) }}" method="GET">
         <button type="submit">Edit Subject Note</button>
     </form>
     <h2>Studies ({{ studies|length }})</h2>

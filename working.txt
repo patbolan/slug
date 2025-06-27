@@ -3,14 +3,23 @@ Got a lot of this working well. Next steps
 
 Study page
 X study header
-* All studies
+X All studies
+X study notes
 
-* study notes
 * DICOM Header metadata
 * DICOM table (does this go into collections page?)
 
 * Separate out source and generated collections? dicom-raw and dicom-original should be first
 
 
+Need to figure out collections. They can contain files, or folders with files. Should I define these as items? This is why Flywheel zipped them up, to avoid another level of hierarchy. 
+
+Another approach would be to not have collections, but under a study there are just file hierarchies. 
+I do want to handle some specially. Like, if there is a dicom-original, or Reports, or T1map/Reports.
+Maybe this is the simple way - you can view the file hierarchy directly. Then you would also have 
+special handlers for some files, or folder/files, directly. So you could see the file dicom_tags.csv, 
+but also have a special function to view/edit them. 
+
+For now, I'll not abstract these.
 
 

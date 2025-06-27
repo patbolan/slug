@@ -18,13 +18,77 @@ def get_all_subjects():
     return subjects
 
 def get_studies_for_subject(subject_name):
-    subject_path = os.path.join(DATA_DIR, subject_name)
+    subject_path = get_subject_path(subject_name)
     if not os.path.isdir(subject_path):
         return []
     pattern = re.compile(r'MR-\d{8}$')  # Pattern for MR-YYYYMMDD
     studies = [d for d in os.listdir(subject_path) if os.path.isdir(os.path.join(subject_path, d)) and pattern.match(d)]
     studies.sort()
     return studies
+
+def get_collections_for_study(subject_name, study_name):
+    study_path = get_study_path(subject_name, study_name)
+    if not study_path:
+        return []
+    collections = [d for d in os.listdir(study_path) if os.path.isdir(os.path.join(study_path, d)) and not d.startswith('.')]
+    collections.sort()
+    return collections
+
+# Keep all the path building functions together
+def get_subject_path(subject_name):
+    subject_path = os.path.join(DATA_DIR, subject_name)
+    if not os.path.isdir(subject_path):
+        return None
+    return subject_path
+
+def get_study_path(subject_name, study_name):
+    subject_path = get_subject_path(subject_name)
+    if not subject_path:
+        return None
+    study_path = os.path.join(subject_path, study_name)
+    if not os.path.isdir(study_path):
+        return None
+    return study_path
+
+def get_collection_path(subject_name, study_name, collection_name):
+    study_path = get_study_path(subject_name, study_name)
+    if not study_path:
+        return None
+    collection_path = os.path.join(study_path, collection_name)
+    if not os.path.isdir(collection_path):
+        return None
+    return collection_path
+
+# If you request a file, you get the full path. Does not test if the file exists.
+def get_subject_file_path(subject_name, file_name):
+    subject_path = get_subject_path(subject_name)
+    file_path = os.path.join(subject_path, file_name)
+    return file_path    
+
+def get_study_file_path(subject_name, study_name, file_name):
+    study_path = get_study_path(subject_name, study_name)
+    file_path = os.path.join(study_path, file_name)
+    return file_path
+
+def get_collection_file_path(subject_name, study_name, collection_name, file_name):
+    collection_path = get_collection_path(subject_name, study_name, collection_name)
+    file_path = os.path.join(collection_path, file_name)
+    return file_path
+
+# These a list of files in a study, with their full paths and timestamps
+def get_study_files(subject_name, study_name):
+    study_path = get_study_path(subject_name, study_name)
+    if not study_path:
+        return []
+    files = []
+    for file_name in sorted(os.listdir(study_path)):
+        full_path = os.path.join(study_path, file_name)
+        if file_name.startswith('.'):
+            continue  # Skip files starting with a period
+        if os.path.isfile(full_path):
+            files.append({'name': file_name, 'full_path': full_path})
+    return files
+
 
 
 # Middleware (?) to handle method overrides 
@@ -55,18 +119,27 @@ def subjects():
 
     return render_template('subjects.html', subjects=subjects_with_counts)
 
+# All studies
+@app.route('/studies')
+def studies():
+    all_studies = []
+    subjects = get_all_subjects()
+
+    for subject in subjects:
+        subject_studies = get_studies_for_subject(subject)
+        for study in subject_studies:
+            all_studies.append({'subject': subject, 'study': study})
+
+    return render_template('studies.html', studies=all_studies)
+
 # Details for one subject. By default this will include a list of all studies
 @app.route('/subjects/<subject_name>/studies')
 @app.route('/subjects/<subject_name>')
 def subject(subject_name):
-    subject_path = os.path.join(DATA_DIR, subject_name)
-    if not os.path.isdir(subject_path):
-        abort(404)
-
     # Read notes.txt if it exists
-    notes_file = os.path.join(subject_path, 'notes.txt')
-    if os.path.isfile(notes_file):
-        with open(notes_file, 'r') as f:
+    notes_file_path = get_subject_file_path(subject_name, 'notes.txt')
+    if os.path.isfile(notes_file_path):
+        with open(notes_file_path, 'r') as f:
             notes = f.read()
     else:
         notes = ""
@@ -78,29 +151,16 @@ def subject(subject_name):
 @app.route('/subjects/<subject_name>/studies/<study_name>/collections')
 @app.route('/subjects/<subject_name>/studies/<study_name>')
 def study(subject_name, study_name):
-    study_path = os.path.join(DATA_DIR, subject_name, study_name)
-    if not os.path.isdir(study_path):
-        abort(404)
-
     # Read notes.txt if it exists
-    notes_file = os.path.join(study_path, 'notes.txt')
+    notes_file = get_study_file_path(subject_name, study_name, 'notes.txt')
     if os.path.isfile(notes_file):
         with open(notes_file, 'r') as f:
             notes = f.read()
     else:
         notes = ""
 
-    files = []
-    collections = []
-    for file_name in sorted(os.listdir(study_path)):
-        full_path = os.path.join(study_path, file_name)
-        if file_name.startswith('.'):
-            continue  # Skip files starting with a period
-        if os.path.isfile(full_path):
-            timestamp = datetime.fromtimestamp(os.path.getmtime(full_path))
-            files.append({'name': file_name, 'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S')})
-        else:  # Folders are considered collections
-            collections.append({'name': file_name})
+    files = get_study_files(subject_name, study_name)
+    collections = get_collections_for_study(subject_name, study_name)
 
     return render_template('study.html', 
                            subject=subject_name, 
@@ -112,7 +172,7 @@ def study(subject_name, study_name):
 
 @app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>')
 def collection(subject_name, study_name, collection_name):
-    collection_path = os.path.join(DATA_DIR, subject_name, study_name, collection_name)
+    collection_path = get_collection_path(subject_name, study_name, collection_name)
     if not os.path.isdir(collection_path):
         abort(404)
 
@@ -124,9 +184,9 @@ def collection(subject_name, study_name, collection_name):
             continue  # Skip files starting with a period
         if os.path.isfile(full_path):
             timestamp = datetime.fromtimestamp(os.path.getmtime(full_path))
-            files.append({'name': file_name, 'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S')})
+            files.append({'name': file_name, 'full_path': full_path})
         else:
-            folders.append({'name': file_name})
+            folders.append({'name': file_name, 'full_path': full_path})
 
     return render_template('collection.html', 
                            subject=subject_name, 
@@ -138,7 +198,7 @@ def collection(subject_name, study_name, collection_name):
 @app.route('/subject/<subject_name>/studies/<study_name>/<file_name>')
 #@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
 def render_csv(subject_name, study_name, file_name):
-    file_path = os.path.join(DATA_DIR, subject_name, study_name, file_name)
+    file_path = get_study_file(subject_name, study_name, file_name)['full_path']
     if not os.path.isfile(file_path) or not file_name.endswith('.csv'):
         print('Invalid file path or not a CSV file:', file_path)
         abort(404)
@@ -156,7 +216,8 @@ def render_csv(subject_name, study_name, file_name):
 
 @app.route('/json/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
 def render_json(subject_name, study_name, collection_name, file_name):
-    file_path = os.path.join(DATA_DIR, subject_name, study_name, collection_name, file_name)
+    collection_path = get_collection_path(subject_name, study_name, collection_name)
+    file_path = os.path.join(collection_path, file_name)
     if not os.path.isfile(file_path) or not file_name.endswith('.json'):
         abort(404)
 
@@ -176,7 +237,8 @@ def render_json(subject_name, study_name, collection_name, file_name):
 @app.route('/nifti/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
 def render_nifti(subject_name, study_name, collection_name, file_name):
     print('Rendering NIFTI:', subject_name, study_name, collection_name, file_name)
-    file_path = os.path.join(DATA_DIR, subject_name, study_name, collection_name, file_name)
+    collection_path = get_collection_path(subject_name, study_name, collection_name)
+    file_path = os.path.join(collection_path, file_name)
     print('Rendering NIFTI:', file_path)
     if not os.path.isfile(file_path) or not file_name.endswith('.nii'):
         abort(404)
@@ -197,77 +259,74 @@ def serve_nifti(filename):
     return send_file(file_path)
 
 
-@app.route('/note/<subject_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def note(subject_name):
-    subject_path = os.path.join(DATA_DIR, subject_name)
-    if not os.path.isdir(subject_path):
-        abort(404)
+@app.route('/notes/<subject_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def subject_note(subject_name):   
 
-    notes_file = os.path.join(subject_path, 'notes.txt')
+    notes_file_path = get_subject_file_path(subject_name, 'notes.txt')
 
     if request.method == 'GET':
         # Read notes.txt if it exists
-        if os.path.isfile(notes_file):
-            with open(notes_file, 'r') as f:
+        if os.path.isfile(notes_file_path):
+            with open(notes_file_path, 'r') as f:
                 notes = f.read()
         else:
             notes = "<enter notes here>"
+        print("Calling render with notes:", notes)  # Debugging statement
         return render_template('notes.html', subject_name=subject_name, notes=notes)
 
     elif request.method == 'POST':
         # Update notes.txt with the submitted content
         new_notes = request.form.get('notes', '')
-        with open(notes_file, 'w') as f:
+        with open(notes_file_path, 'w') as f:
             f.write(new_notes)
-        return redirect(url_for('notes', subject_name=subject_name))
+        return redirect(url_for('subject_note', subject_name=subject_name))
 
     elif request.method == 'PUT':
         # Create notes.txt if it doesn't exist
-        if not os.path.isfile(notes_file):
-            with open(notes_file, 'w') as f:
+        if not os.path.isfile(notes_file_path):
+            with open(notes_file_path, 'w') as f:
                 f.write("")
-            return redirect(url_for('notes', subject_name=subject_name))
+            return redirect(url_for('subject_note', subject_name=subject_name))
         else:
             return f"notes.txt already exists for subject {subject_name}", 409
 
     elif request.method == 'DELETE':
-        print(f"DELETE request received for subject: {subject_name}")  # Debugging statement
-        if os.path.isfile(notes_file):
-            print('Deleting notes file:', notes_file)  # Debugging statement
-            os.remove(notes_file)
+        print(f"DELETE notes.txt request received for subject: {subject_name}")  # Debugging statement
+        if os.path.isfile(notes_file_path):
+            print('Deleting notes file:', notes_file_path)  # Debugging statement
+            os.remove(notes_file_path)
             return f"Deleted notes.txt for subject {subject_name}", 200
         else:
             print('notes.txt does not exist')  # Debugging statement
             return f"notes.txt does not exist for subject {subject_name}", 404
 
-@app.route('/note/<subject_name>/studies/<study_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/notes/<subject_name>/studies/<study_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def study_note(subject_name, study_name):
-    study_path = os.path.join(DATA_DIR, subject_name, study_name)
-    if not os.path.isdir(study_path):
-        abort(404)
 
-    notes_file = os.path.join(study_path, 'notes.txt')
+    notes_file_path = get_study_file_path(subject_name, study_name, 'notes.txt')
 
     if request.method == 'GET':
         # Read notes.txt if it exists
-        if os.path.isfile(notes_file):
-            with open(notes_file, 'r') as f:
+        if os.path.isfile(notes_file_path):
+            with open(notes_file_path, 'r') as f:
                 notes = f.read()
         else:
             notes = "<enter notes here>"
+        
+        print("Calling render with notes:", notes)  # Debugging statement
         return render_template('notes.html', subject_name=subject_name, study_name=study_name, notes=notes)
 
     elif request.method == 'POST':
         # Update notes.txt with the submitted content
         new_notes = request.form.get('notes', '')
-        with open(notes_file, 'w') as f:
+        with open(notes_file_path, 'w') as f:
             f.write(new_notes)
         return redirect(url_for('study_note', subject_name=subject_name, study_name=study_name))
 
     elif request.method == 'PUT':
         # Create notes.txt if it doesn't exist
-        if not os.path.isfile(notes_file):
-            with open(notes_file, 'w') as f:
+        if not os.path.isfile(notes_file_path):
+            with open(notes_file_path, 'w') as f:
                 f.write("")
             return redirect(url_for('study_note', subject_name=subject_name, study_name=study_name))
         else:
@@ -275,25 +334,15 @@ def study_note(subject_name, study_name):
 
     elif request.method == 'DELETE':
         print(f"DELETE request received for study: {study_name}")  # Debugging statement
-        if os.path.isfile(notes_file):
-            print('Deleting notes file:', notes_file)  # Debugging statement
-            os.remove(notes_file)
+        if os.path.isfile(notes_file_path):
+            print('Deleting notes file:', notes_file_path)  # Debugging statement
+            os.remove(notes_file_path)
             return f"Deleted notes.txt for study {study_name}", 200
         else:
             print('notes.txt does not exist')  # Debugging statement
             return f"notes.txt does not exist for study {study_name}", 404
 
-@app.route('/studies')
-def studies():
-    all_studies = []
-    subjects = get_all_subjects()
 
-    for subject in subjects:
-        subject_studies = get_studies_for_subject(subject)
-        for study in subject_studies:
-            all_studies.append({'subject': subject, 'study': study})
-
-    return render_template('studies.html', studies=all_studies)
 
 
 

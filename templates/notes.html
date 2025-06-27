@@ -32,18 +32,19 @@
         <button type="submit">Save</button>
     </form>
 
+    <!-- No need for blank notes
     <h2>Create Blank Note</h2>
-    <form method="POST" action="{% if study_name %}{{ url_for('study_note', subject_name=subject_name, study_name=study_name) }}{% else %}{{ url_for('note', subject_name=subject_name) }}{% endif %}">
+    <form method="POST" action="{% if study_name %}{{ url_for('study_note', subject_name=subject_name, study_name=study_name) }}{% else %}{{ url_for('subject_note', subject_name=subject_name) }}{% endif %}">
         <input type="hidden" name="_method" value="PUT">
         <button type="submit">Create notes.txt</button>
-    </form>
+    </form> -->
 
     <h2>Delete Note</h2>
     <button onclick="deleteNote()">Delete notes.txt</button>
 
     <script>
     function deleteNote() {
-        fetch("{% if study_name %}{{ url_for('study_note', subject_name=subject_name, study_name=study_name) }}{% else %}{{ url_for('note', subject_name=subject_name) }}{% endif %}", {
+        fetch("{% if study_name %}{{ url_for('study_note', subject_name=subject_name, study_name=study_name) }}{% else %}{{ url_for('subject_note', subject_name=subject_name) }}{% endif %}", {
             method: "DELETE"
         }).then(response => {
             if (response.ok) {
