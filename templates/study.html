@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Files in {{ subject }}/{{ study }}</title>
+    <title>{{ subject }}/{{ study }}</title>
 </head>
 <body>
-    <h1>Files</h1>
+    <header>
+        <a href="{{ url_for('index') }}">Home</a>, 
+        <a href="{{ url_for('subjects') }}">Subjects</a>, 
+        <a href="{{ url_for('subject', subject_name=subject) }}">Back to Subject</a>
+    </header>
 
-    <table border="1" cellpadding="8" cellspacing="0">
+    <h1>{{ subject }}/{{ study }}</h1>
+
+
+    <table border="1" cellpadding="2" cellspacing="0">
         <thead>
             <tr>
                 <th>File Name</th>
@@ -33,7 +40,7 @@
 
     <h1>Collections</h1>
 
-    <table border="1" cellpadding="8" cellspacing="0">
+    <table border="1" cellpadding="2" cellspacing="0">
         <thead>
             <tr>
                 <th>Collection Name</th>
