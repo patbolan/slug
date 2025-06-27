@@ -7,10 +7,14 @@
     <header>
         <a href="{{ url_for('index') }}">Home</a>, 
         <a href="{{ url_for('subjects') }}">Subjects</a>
-
     </header>
 
     <h1>Subject {{ subject }}</h1>
+    <h2>Notes</h2>
+    <p><pre>{{ notes }}</pre></p>
+    <form action="{{ url_for('note', subject_name=subject) }}" method="GET">
+        <button type="submit">Edit Note</button>
+    </form>
     <h2>Studies ({{ studies|length }})</h2>
     <table border="1" cellpadding="2" cellspacing="0">
         <thead>
@@ -28,6 +32,5 @@
             {% endfor %}
         </tbody>
     </table>
-
 </body>
 </html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Note for Subject {{ subject_name }}</title>
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('index') }}">Home</a>, 
+        <a href="{{ url_for('subjects') }}">Subjects</a>, 
+        <a href="{{ url_for('subject', subject_name=subject_name) }}">Back to Subject</a>
+    </header>
+
+    <h1>Note for Subject {{ subject_name }}</h1>
+
+    <h2>Current Note Text</h2>
+    <p><pre>{{ notes }}</pre></p>
+
+    <h2>Edit Note Text</h2>
+    <form method="POST">
+        <textarea name="notes" rows="10" cols="80">{{ notes }}</textarea>
+        <br>
+        <button type="submit">Save</button>
+    </form>
+
+    <h2>Create Blank Note</h2>
+    <form method="POST" action="{{ url_for('note', subject_name=subject_name) }}">
+        <input type="hidden" name="_method" value="PUT">
+        <button type="submit">Create notes.txt</button>
+    </form>
+
+    <h2>Delete Note</h2>
+    <button onclick="deleteNote()">Delete notes.txt</button>
+
+    <script>
+    function deleteNote() {
+        fetch("{{ url_for('note', subject_name=subject_name) }}", {
+            method: "DELETE"
+        }).then(response => {
+            if (response.ok) {
+                // alert("Note deleted successfully!");
+                location.reload();
+            } else {
+                alert("Failed to delete note.");
+            }
+        });
+    }
+    </script>
+</body>
+</html>

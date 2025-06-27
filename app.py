@@ -26,6 +26,14 @@ def get_studies_for_subject(subject_name):
     studies.sort()
     return studies
 
+# Middleware
+@app.before_request
+def handle_method_override():
+    if request.method == 'POST' and '_method' in request.form:
+        method = request.form['_method'].upper()
+        print(f"Overriding method to: {method}")  # Debugging statement
+        if method in ['PUT', 'DELETE']:
+            request.environ['REQUEST_METHOD'] = method
 
 
 # Home 
@@ -49,8 +57,20 @@ def subjects():
 @app.route('/subjects/<subject_name>/studies')
 @app.route('/subjects/<subject_name>')
 def subject(subject_name):
+    subject_path = os.path.join(DATA_DIR, subject_name)
+    if not os.path.isdir(subject_path):
+        abort(404)
+
+    # Read notes.txt if it exists
+    notes_file = os.path.join(subject_path, 'notes.txt')
+    if os.path.isfile(notes_file):
+        with open(notes_file, 'r') as f:
+            notes = f.read()
+    else:
+        notes = ""
+
     studies = get_studies_for_subject(subject_name)
-    return render_template('subject.html', subject=subject_name, studies=studies)
+    return render_template('subject.html', subject=subject_name, studies=studies, notes=notes)
 
 # One study. Also list collections
 @app.route('/subjects/<subject_name>/studies/<study_name>/collections')
@@ -161,6 +181,51 @@ def serve_nifti(filename):
     if not os.path.isfile(file_path):
         abort(404)
     return send_file(file_path)
+
+@app.route('/note/<subject_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def note(subject_name):
+    subject_path = os.path.join(DATA_DIR, subject_name)
+    if not os.path.isdir(subject_path):
+        abort(404)
+
+    notes_file = os.path.join(subject_path, 'notes.txt')
+
+    if request.method == 'GET':
+        # Read notes.txt if it exists
+        if os.path.isfile(notes_file):
+            with open(notes_file, 'r') as f:
+                notes = f.read()
+        else:
+            notes = "<enter notes here>"
+        return render_template('note.html', subject_name=subject_name, notes=notes)
+
+    elif request.method == 'POST':
+        # Update notes.txt with the submitted content
+        new_notes = request.form.get('notes', '')
+        with open(notes_file, 'w') as f:
+            f.write(new_notes)
+        return redirect(url_for('note', subject_name=subject_name))
+
+    elif request.method == 'PUT':
+        # Create notes.txt if it doesn't exist
+        if not os.path.isfile(notes_file):
+            with open(notes_file, 'w') as f:
+                f.write("")
+            return redirect(url_for('note', subject_name=subject_name))
+        else:
+            return f"notes.txt already exists for subject {subject_name}", 409
+
+    elif request.method == 'DELETE':
+        print(f"DELETE request received for subject: {subject_name}")  # Debugging statement
+        if os.path.isfile(notes_file):
+            print('Deleting notes file:', notes_file)  # Debugging statement
+            os.remove(notes_file)
+            return f"Deleted notes.txt for subject {subject_name}", 200
+        else:
+            print('notes.txt does not exist')  # Debugging statement
+            return f"notes.txt does not exist for subject {subject_name}", 404
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000
