@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Studies</title>
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('index') }}">Home</a>, 
+        <a href="{{ url_for('subjects') }}">Subjects</a>
+    </header>
+
+    <h1>All Studies</h1>
+
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Study Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for study in studies %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('subject', subject_name=study.subject) }}">{{ study.subject }}</a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('study', subject_name=study.subject, study_name=study.study) }}">{{ study.study }}</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <p>Total number of studies: <b>{{ studies|length }}</b></p>
+</body>
+</html>

@@ -184,6 +184,7 @@ def serve_nifti(filename):
         abort(404)
     return send_file(file_path)
 
+
 @app.route('/note/<subject_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def note(subject_name):
     subject_path = os.path.join(DATA_DIR, subject_name)
@@ -226,6 +227,18 @@ def note(subject_name):
         else:
             print('notes.txt does not exist')  # Debugging statement
             return f"notes.txt does not exist for subject {subject_name}", 404
+
+@app.route('/studies')
+def studies():
+    all_studies = []
+    subjects = get_all_subjects()
+
+    for subject in subjects:
+        subject_studies = get_studies_for_subject(subject)
+        for study in subject_studies:
+            all_studies.append({'subject': subject, 'study': study})
+
+    return render_template('studies.html', studies=all_studies)
 
 
 

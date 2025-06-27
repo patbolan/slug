@@ -2,7 +2,9 @@
 Got a lot of this working well. Next steps
 
 Study page
-* header
+X study header
+* All studies
+
 * study notes
 * DICOM Header metadata
 * DICOM table (does this go into collections page?)
