@@ -10,7 +10,7 @@ import re  # Add this import for regular expressions
 app = Flask(__name__)
 DATA_DIR = '/home/bakken-raid8/pcad2/data'
 
-
+## Utility functions to access subjects and studies
 def get_all_subjects():
     pattern = re.compile(r'^[A-Z]{3}-\d{4}$')  # Pattern for XXX-0000
     subjects = [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d)) and pattern.match(d)]
@@ -26,7 +26,8 @@ def get_studies_for_subject(subject_name):
     studies.sort()
     return studies
 
-# Middleware
+
+# Middleware (?) to handle method overrides 
 @app.before_request
 def handle_method_override():
     if request.method == 'POST' and '_method' in request.form:
@@ -36,6 +37,7 @@ def handle_method_override():
             request.environ['REQUEST_METHOD'] = method
 
 
+# Routes
 # Home 
 @app.route('/')
 def index():
