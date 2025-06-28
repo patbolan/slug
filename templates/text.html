@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text File: {{ filepath }}</title>
+</head>
+<body>
+    <h1>Text File: {{subject}}/{{study}}/{{ filepath }}</h1>
+    <pre>{{ content }}</pre>
+    <br>
+    <a href="{{ url_for('collection', subject_name=subject, study_name=study, collection_name=collection_name) }}">Back to Collection</a>
+</body>
+</html>

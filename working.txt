@@ -8,8 +8,9 @@ X study notes
 
 * DICOM Header metadata
 * DICOM table (does this go into collections page?)
-
 * Separate out source and generated collections? dicom-raw and dicom-original should be first
+* get rid of collections
+* Unify your text editing for json, .txt, csv
 
 
 Need to figure out collections. They can contain files, or folders with files. Should I define these as items? This is why Flywheel zipped them up, to avoid another level of hierarchy. 

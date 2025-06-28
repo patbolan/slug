@@ -147,10 +147,40 @@ def subject(subject_name):
     studies = get_studies_for_subject(subject_name)
     return render_template('subject.html', subject=subject_name, studies=studies, notes=notes)
 
+def get_file_tree(path):
+    """
+    Recursively generates a hierarchical file tree for the given path.
+    :param path: Root directory path.
+    :return: List representing the file tree.
+    """
+    tree = []
+    for entry in sorted(os.listdir(path)):
+        if entry.startswith('.'):  # Ignore files or folders starting with a period
+            continue
+        full_path = os.path.join(path, entry)
+        if os.path.isdir(full_path):
+            tree.append({
+                'text': entry,
+                'icon': 'jstree-folder',  # Folder icon
+                'children': get_file_tree(full_path),
+                'full_path': full_path
+            })
+        else:
+            tree.append({
+                'text': entry,
+                'icon': 'jstree-file',  # File icon
+                'full_path': full_path
+            })
+    return tree
+
 # One study. Also list collections
 @app.route('/subjects/<subject_name>/studies/<study_name>/collections')
 @app.route('/subjects/<subject_name>/studies/<study_name>')
 def study(subject_name, study_name):
+    study_path = get_study_path(subject_name, study_name)
+    if not os.path.isdir(study_path):
+        abort(404)
+
     # Read notes.txt if it exists
     notes_file = get_study_file_path(subject_name, study_name, 'notes.txt')
     if os.path.isfile(notes_file):
@@ -162,12 +192,16 @@ def study(subject_name, study_name):
     files = get_study_files(subject_name, study_name)
     collections = get_collections_for_study(subject_name, study_name)
 
+    # Generate file tree
+    file_tree = get_file_tree(study_path)
+
     return render_template('study.html', 
                            subject=subject_name, 
                            study=study_name, 
                            notes=notes, 
                            files=files, 
-                           collections=collections)
+                           collections=collections, 
+                           file_tree=file_tree)
 
 
 @app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>')
@@ -194,13 +228,50 @@ def collection(subject_name, study_name, collection_name):
                            collection_name=collection_name, 
                            files=files, folders=folders)
 
+# But using the "path:" keyword, all the path information after will get assigned to one variable
+@app.route('/viewer/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>')
+def file_viewer(subject_name, study_name, file_relative_path):
+
+    # Construct the full file path
+    file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+    
+    # Check if the file exists and is a text file
+    if not os.path.isfile(file_path):
+        print('text_viewer: Invalid file path:', file_path)
+        abort(404)
+    
+    if file_relative_path.endswith('.txt'):
+        # Read the content of the text file
+        with open(file_path, 'r') as f:
+            content = f.read()
+
+    elif file_relative_path.endswith('csv'):
+        with open(file_path, newline='', encoding='utf-8') as csvfile:
+            # TODO needs line breaks
+            reader = csv.reader(csvfile)
+            content = list(reader)
+
+    elif file_relative_path.endswith('json'):
+        with open(file_path, encoding='utf-8') as jsonfile:
+            content = json.load(jsonfile)
+    else:
+        content
+
+    return render_template('text.html', 
+                           subject=subject_name, 
+                           study=study_name, 
+                           filepath=file_relative_path, 
+                           content=content)
+
+
 #@app.route('/subject/<subject_name>/<study_name>/<file_name>')
 @app.route('/subject/<subject_name>/studies/<study_name>/<file_name>')
+@app.route('/subjects/<subject_name>/studies/<study_name>/<file_name>')
 #@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
 def render_csv(subject_name, study_name, file_name):
-    file_path = get_study_file(subject_name, study_name, file_name)['full_path']
+    file_path = get_study_file_path(subject_name, study_name, file_name)
     if not os.path.isfile(file_path) or not file_name.endswith('.csv'):
-        print('Invalid file path or not a CSV file:', file_path)
+        print('render_csv: Invalid file path or not a CSV file:', file_path)
         abort(404)
 
     csv_data = []
