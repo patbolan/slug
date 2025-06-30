@@ -26,14 +26,6 @@ def get_studies_for_subject(subject_name):
     studies.sort()
     return studies
 
-def get_collections_for_study(subject_name, study_name):
-    study_path = get_study_path(subject_name, study_name)
-    if not study_path:
-        return []
-    collections = [d for d in os.listdir(study_path) if os.path.isdir(os.path.join(study_path, d)) and not d.startswith('.')]
-    collections.sort()
-    return collections
-
 # Keep all the path building functions together
 def get_subject_path(subject_name):
     subject_path = os.path.join(DATA_DIR, subject_name)
@@ -50,15 +42,6 @@ def get_study_path(subject_name, study_name):
         return None
     return study_path
 
-def get_collection_path(subject_name, study_name, collection_name):
-    study_path = get_study_path(subject_name, study_name)
-    if not study_path:
-        return None
-    collection_path = os.path.join(study_path, collection_name)
-    if not os.path.isdir(collection_path):
-        return None
-    return collection_path
-
 # If you request a file, you get the full path. Does not test if the file exists.
 def get_subject_file_path(subject_name, file_name):
     subject_path = get_subject_path(subject_name)
@@ -68,11 +51,6 @@ def get_subject_file_path(subject_name, file_name):
 def get_study_file_path(subject_name, study_name, file_name):
     study_path = get_study_path(subject_name, study_name)
     file_path = os.path.join(study_path, file_name)
-    return file_path
-
-def get_collection_file_path(subject_name, study_name, collection_name, file_name):
-    collection_path = get_collection_path(subject_name, study_name, collection_name)
-    file_path = os.path.join(collection_path, file_name)
     return file_path
 
 # These a list of files in a study, with their full paths and timestamps
@@ -173,8 +151,7 @@ def get_file_tree(path):
             })
     return tree
 
-# One study. Also list collections
-@app.route('/subjects/<subject_name>/studies/<study_name>/collections')
+# One study. 
 @app.route('/subjects/<subject_name>/studies/<study_name>')
 def study(subject_name, study_name):
     study_path = get_study_path(subject_name, study_name)
@@ -190,7 +167,6 @@ def study(subject_name, study_name):
         notes = ""
 
     files = get_study_files(subject_name, study_name)
-    collections = get_collections_for_study(subject_name, study_name)
 
     # Generate file tree
     file_tree = get_file_tree(study_path)
@@ -231,34 +207,9 @@ def study(subject_name, study_name):
                            study=study_name, 
                            notes=notes, 
                            files=files, 
-                           collections=collections, 
                            file_tree=file_tree, 
                            dicom_folders=dicom_folders)
 
-
-@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>')
-def collection(subject_name, study_name, collection_name):
-    collection_path = get_collection_path(subject_name, study_name, collection_name)
-    if not os.path.isdir(collection_path):
-        abort(404)
-
-    files = []
-    folders = []
-    for file_name in sorted(os.listdir(collection_path)):
-        full_path = os.path.join(collection_path, file_name)
-        if file_name.startswith('.'):
-            continue  # Skip files starting with a period
-        if os.path.isfile(full_path):
-            timestamp = datetime.fromtimestamp(os.path.getmtime(full_path))
-            files.append({'name': file_name, 'full_path': full_path})
-        else:
-            folders.append({'name': file_name, 'full_path': full_path})
-
-    return render_template('collection.html', 
-                           subject=subject_name, 
-                           study=study_name, 
-                           collection_name=collection_name, 
-                           files=files, folders=folders)
 
 # But using the "path:" keyword, all the path information after will get assigned to one variable
 @app.route('/viewer/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>')
@@ -299,61 +250,6 @@ def file_viewer(subject_name, study_name, file_relative_path):
                            content=content)
 
 
-#@app.route('/subject/<subject_name>/<study_name>/<file_name>')
-@app.route('/subject/<subject_name>/studies/<study_name>/<file_name>')
-@app.route('/subjects/<subject_name>/studies/<study_name>/<file_name>')
-#@app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
-def render_csv(subject_name, study_name, file_name):
-    file_path = get_study_file_path(subject_name, study_name, file_name)
-    if not os.path.isfile(file_path) or not file_name.endswith('.csv'):
-        print('render_csv: Invalid file path or not a CSV file:', file_path)
-        abort(404)
-
-    csv_data = []
-    with open(file_path, 'r') as csv_file:
-        reader = csv.reader(csv_file)
-        csv_data = list(reader)
-
-    return render_template('csv.html', 
-                           subject=subject_name, 
-                           study=study_name,  
-                           file_name=file_name, 
-                           csv_data=csv_data)
-
-@app.route('/json/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
-def render_json(subject_name, study_name, collection_name, file_name):
-    collection_path = get_collection_path(subject_name, study_name, collection_name)
-    file_path = os.path.join(collection_path, file_name)
-    if not os.path.isfile(file_path) or not file_name.endswith('.json'):
-        abort(404)
-
-    with open(file_path, 'r') as json_file:
-        json_data = json.load(json_file)
-
-    # Format JSON data with indentation for readability
-    formatted_json = json.dumps(json_data, indent=4)
-
-    return render_template('json.html', 
-                           subject=subject_name, 
-                           study=study_name, 
-                           collection_name=collection_name, 
-                           file_name=file_name, 
-                           json_data=formatted_json)
-
-@app.route('/nifti/<subject_name>/studies/<study_name>/collections/<collection_name>/files/<file_name>')
-def render_nifti(subject_name, study_name, collection_name, file_name):
-    print('Rendering NIFTI:', subject_name, study_name, collection_name, file_name)
-    collection_path = get_collection_path(subject_name, study_name, collection_name)
-    file_path = os.path.join(collection_path, file_name)
-    print('Rendering NIFTI:', file_path)
-    if not os.path.isfile(file_path) or not file_name.endswith('.nii'):
-        abort(404)
-
-    return render_template('nifti.html', 
-                           subject=subject_name, 
-                           study=study_name, 
-                           collection_name=collection_name, 
-                           file_path=file_path, )
 
 @app.route('/nifti-files/<path:filename>')
 def serve_nifti(filename):
