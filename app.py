@@ -213,9 +213,13 @@ def study(subject_name, study_name):
 
 # But using the "path:" keyword, all the path information after will get assigned to one variable
 @app.route('/viewer/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['GET', 'PUT'])
-def file_viewer(subject_name, study_name, file_relative_path):
-    # Construct the full file path
-    file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+@app.route('/viewer/subjects/<subject_name>/<path:file_relative_path>', methods=['GET', 'PUT'])
+def file_viewer(subject_name, file_relative_path, study_name=None):
+    # Construct the full file path based on whether study_name is provided
+    if study_name:
+        file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+    else:
+        file_path = get_subject_file_path(subject_name, file_relative_path)
 
     if request.method == 'PUT':
         # Create a blank file if it does not exist
@@ -232,7 +236,7 @@ def file_viewer(subject_name, study_name, file_relative_path):
     if not os.path.isfile(file_path):
         print('text_viewer: Invalid file path:', file_path)
         abort(404)
-    
+
     if file_relative_path.endswith('.txt'):
         # Read the content of the text file
         with open(file_path, 'r') as f:
@@ -309,53 +313,16 @@ def subject_note(subject_name):
             print('notes.txt does not exist')  # Debugging statement
             return f"notes.txt does not exist for subject {subject_name}", 404
 
-@app.route('/notes/<subject_name>/studies/<study_name>', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def study_note(subject_name, study_name):
-
-    notes_file_path = get_study_file_path(subject_name, study_name, 'notes.txt')
-
-    if request.method == 'GET':
-        # Read notes.txt if it exists
-        if os.path.isfile(notes_file_path):
-            with open(notes_file_path, 'r') as f:
-                notes = f.read()
-        else:
-            notes = "<enter notes here>"
-        
-        print("Calling render with notes:", notes)  # Debugging statement
-        return render_template('notes.html', subject_name=subject_name, study_name=study_name, notes=notes)
-
-    elif request.method == 'POST':
-        # Update notes.txt with the submitted content
-        new_notes = request.form.get('notes', '')
-        with open(notes_file_path, 'w') as f:
-            f.write(new_notes)
-        return redirect(url_for('study_note', subject_name=subject_name, study_name=study_name))
-
-    elif request.method == 'PUT':
-        # Create notes.txt if it doesn't exist
-        if not os.path.isfile(notes_file_path):
-            with open(notes_file_path, 'w') as f:
-                f.write("")
-            return redirect(url_for('study_note', subject_name=subject_name, study_name=study_name))
-        else:
-            return f"notes.txt already exists for study {study_name}", 409
-
-    elif request.method == 'DELETE':
-        print(f"DELETE request received for study: {study_name}")  # Debugging statement
-        if os.path.isfile(notes_file_path):
-            print('Deleting notes file:', notes_file_path)  # Debugging statement
-            os.remove(notes_file_path)
-            return f"Deleted notes.txt for study {study_name}", 200
-        else:
-            print('notes.txt does not exist')  # Debugging statement
-            return f"notes.txt does not exist for study {study_name}", 404
-
 @app.route('/edit/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['POST'])
+@app.route('/edit/subjects/<subject_name>/<path:file_relative_path>', methods=['POST'])
 def edit_file(subject_name, study_name, file_relative_path):
-    # Construct the full file path
-    file_path = get_study_file_path(subject_name, study_name, file_relative_path)
 
+    # Construct the full file path based on whether study_name is provided
+    if study_name:
+        file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+    else:
+        file_path = get_subject_file_path(subject_name, file_relative_path)
+    
     # Check if the file exists
     if not os.path.isfile(file_path):
         print('edit_file: Invalid file path:', file_path)
@@ -371,10 +338,14 @@ def edit_file(subject_name, study_name, file_relative_path):
     # Redirect back to the viewer route
     return redirect(url_for('file_viewer', subject_name=subject_name, study_name=study_name, file_relative_path=file_relative_path))
 
+@app.route('/edit-page/subjects/<subject_name>/<path:file_relative_path>', methods=['GET'])
 @app.route('/edit-page/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['GET'])
 def edit_file_page(subject_name, study_name, file_relative_path):
-    # Construct the full file path
-    file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+    # Construct the full file path based on whether study_name is provided
+    if study_name:
+        file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+    else:
+        file_path = get_subject_file_path(subject_name, file_relative_path)
 
     # Check if the file exists
     if not os.path.isfile(file_path):
