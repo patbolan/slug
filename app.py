@@ -249,11 +249,14 @@ def file_viewer(subject_name, study_name, file_relative_path):
         with open(file_path, newline='', encoding='utf-8') as csvfile:
             # TODO needs line breaks
             reader = csv.reader(csvfile)
-            content = list(reader)
+            #content = list(reader)
+            content = '\n'.join([','.join(row) for row in reader])
 
     elif file_relative_path.endswith('json'):
         with open(file_path, encoding='utf-8') as jsonfile:
-            content = json.load(jsonfile)
+            #content = json.load(jsonfile)
+            content = json.dumps(json.load(jsonfile), indent=4)
+
     else:
         content
 
