@@ -31,55 +31,9 @@
     <h2>TODO</h2>
     <p>What do we need here? Actions? Niftis? Collections?</p>
 
-    <table border="1" cellpadding="2" cellspacing="0">
-        <thead>
-            <tr>
-                <th>File Name</th>
-                <th>Last Modified</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for file in files %}
-                <tr>
-                    <td>
-                        {% if file.name.endswith('.csv') %}
-                            <a href="{{ url_for('render_csv', subject_name=subject, study_name=study, file_name=file.name) }}">
-                                {{ file.name }}
-                            </a>
-                        {% else %}
-                            {{ file.name }}
-                        {% endif %}
-                    </td>
-                    <td>{{ file.timestamp }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <h2>Collections</h2>
-
-    <table border="1" cellpadding="2" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Collection Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for collection in collections %}
-                <tr>
-                    <td>
-                        <a href="{{ url_for('collection', subject_name=subject, study_name=study, collection_name=collection.name) }}">
-                            {{ collection }}
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 
 
     <h2>Files</h2>
-    <p>Clicking on files isnt working quite right</p>
     <div id="file-tree"></div>
 
     <script>
@@ -123,6 +77,27 @@
             });
         });
     </script>
+
+
+<h2>DICOM</h2>
+<table border="1" cellpadding="2" cellspacing="0">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Tag</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for folder in dicom_folders %}
+            <tr>
+                <td>{{ folder.series_number }}</td>
+                <td>{{ folder.name }}</td>
+                <td>{{ folder.tag }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
     <br>
     <a href="{{ url_for('subject', subject_name=subject) }}">Back to Studies</a>

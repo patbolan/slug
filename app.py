@@ -195,13 +195,45 @@ def study(subject_name, study_name):
     # Generate file tree
     file_tree = get_file_tree(study_path)
 
+    # Process DICOM folders
+    dicom_path = os.path.join(study_path, 'dicom-original')
+    dicom_folders = []
+    dicom_tags_path = os.path.join(study_path, 'dicom_tags.csv')
+
+    # Read tags from dicom_tags.csv
+    dicom_tags = {}
+    if os.path.isfile(dicom_tags_path):
+        with open(dicom_tags_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader) # Skip header row
+            for row in reader:
+                if len(row) >= 2:
+                    dicom_tags[int(row[0])] = row[1]
+
+    # Process folders under dicom-original
+    if os.path.isdir(dicom_path):
+        for folder_name in sorted(os.listdir(dicom_path)):
+            folder_path = os.path.join(dicom_path, folder_name)
+            if os.path.isdir(folder_path):
+                # Extract series number from folder name
+                match = re.match(r'MR-SE(\d{3})-', folder_name)
+                if match:
+                    series_number = int(match.group(1))
+                    tag = dicom_tags.get(series_number, "No Tag")
+                    dicom_folders.append({
+                        'name': folder_name,
+                        'series_number': series_number,
+                        'tag': tag
+                    })
+
     return render_template('study.html', 
                            subject=subject_name, 
                            study=study_name, 
                            notes=notes, 
                            files=files, 
                            collections=collections, 
-                           file_tree=file_tree)
+                           file_tree=file_tree, 
+                           dicom_folders=dicom_folders)
 
 
 @app.route('/subject/<subject_name>/studies/<study_name>/collections/<collection_name>')
