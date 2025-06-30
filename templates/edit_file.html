@@ -11,12 +11,12 @@
             Edit File: {{ subject }}/{{ filepath }}
         {% endif %}
     </h1>
-    <form method="POST" action="{% if study %}{{ url_for('edit_file', subject_name=subject, study_name=study, file_relative_path=filepath) }}{% else %}{{ url_for('edit_file', subject_name=subject, file_relative_path=filepath) }}{% endif %}">
+    <form method="POST" action="{% if study %}{{ url_for('edit_file', subject_name=subject, study_name=study, file_relative_path=filepath) }}{% else %}{{ url_for('edit_file', subject_name=subject, study_name=study, file_relative_path=filepath) }}{% endif %}">
         <textarea name="content" rows="20" cols="80">{{ content }}</textarea>
         <br>
         <button type="submit">Save Changes</button>
     </form>
     <br>
-    <a href="{% if study %}{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path=filepath) }}{% else %}{{ url_for('file_viewer', subject_name=subject, file_relative_path=filepath) }}{% endif %}">Cancel</a>
+    <a href="{% if study %}{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path=filepath) }}{% else %}{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path=filepath) }}{% endif %}">Cancel</a>
 </body>
 </html>

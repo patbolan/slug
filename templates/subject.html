@@ -13,9 +13,36 @@
     <h1>Subject {{ subject }}</h1>
     <h2>Notes</h2>
     <p><pre>{{ notes }}</pre></p>
-    <form action="{{ url_for('subject_note', subject_name=subject) }}" method="GET">
-        <button type="submit">Edit Subject Note</button>
+    <form id="edit-subject-note-form" method="GET" action="{{ url_for('file_viewer', subject_name=subject, file_relative_path='notes.txt') }}">
+        <button type="button" onclick="editSubjectNote()">Edit Subject Note</button>
     </form>
+
+    <script>
+        function editSubjectNote() {
+            const url = "{{ url_for('file_viewer', subject_name=subject, file_relative_path='notes.txt') }}";
+            fetch(url, { method: 'GET' })
+                .then(response => {
+                    if (response.ok) {
+                        // If the file exists, redirect to the viewer route
+                        document.getElementById('edit-subject-note-form').submit();
+                    } else if (response.status === 404) {
+                        // If the file does not exist, create it using PUT
+                        fetch(url, { method: 'PUT' })
+                            .then(putResponse => {
+                                if (putResponse.ok) {
+                                    // After creating the file, redirect to the viewer route
+                                    document.getElementById('edit-subject-note-form').submit();
+                                } else {
+                                    alert("Failed to create notes.txt.");
+                                }
+                            });
+                    } else {
+                        alert("Failed to access notes.txt.");
+                    }
+                });
+        }
+    </script>
+
     <h2>Studies ({{ studies|length }})</h2>
     <table border="1" cellpadding="2" cellspacing="0">
         <thead>
