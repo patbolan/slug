@@ -416,9 +416,45 @@ def study_note(subject_name, study_name):
             print('notes.txt does not exist')  # Debugging statement
             return f"notes.txt does not exist for study {study_name}", 404
 
+@app.route('/edit/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['POST'])
+def edit_file(subject_name, study_name, file_relative_path):
+    # Construct the full file path
+    file_path = get_study_file_path(subject_name, study_name, file_relative_path)
 
+    # Check if the file exists
+    if not os.path.isfile(file_path):
+        print('edit_file: Invalid file path:', file_path)
+        abort(404)
 
+    # Get the updated content from the form
+    updated_content = request.form.get('content', '')
 
+    # Write the updated content back to the file
+    with open(file_path, 'w') as f:
+        f.write(updated_content)
+
+    # Redirect back to the viewer route
+    return redirect(url_for('file_viewer', subject_name=subject_name, study_name=study_name, file_relative_path=file_relative_path))
+
+@app.route('/edit-page/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['GET'])
+def edit_file_page(subject_name, study_name, file_relative_path):
+    # Construct the full file path
+    file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+
+    # Check if the file exists
+    if not os.path.isfile(file_path):
+        print('edit_file_page: Invalid file path:', file_path)
+        abort(404)
+
+    # Read the file content
+    with open(file_path, 'r') as f:
+        content = f.read()
+
+    return render_template('edit_file.html', 
+                           subject=subject_name, 
+                           study=study_name, 
+                           filepath=file_relative_path, 
+                           content=content)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000
