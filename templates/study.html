@@ -24,9 +24,35 @@
     <h1>{{ subject }}/{{ study }}</h1>
     <h2>Study Notes</h2>
     <p><pre>{{ notes }}</pre></p>
-    <form action="{{ url_for('study_note', subject_name=subject, study_name=study) }}" method="GET">
-        <button type="submit">Edit Study Note</button>
+    <form id="edit-study-note-form" method="GET" action="{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path='notes.txt') }}">
+        <button type="button" onclick="editStudyNote()">Edit Study Note</button>
     </form>
+
+    <script>
+        function editStudyNote() {
+            const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path='notes.txt') }}";
+            fetch(url, { method: 'GET' })
+                .then(response => {
+                    if (response.ok) {
+                        // If the file exists, redirect to the viewer route
+                        document.getElementById('edit-study-note-form').submit();
+                    } else if (response.status === 404) {
+                        // If the file does not exist, create it using PUT
+                        fetch(url, { method: 'PUT' })
+                            .then(putResponse => {
+                                if (putResponse.ok) {
+                                    // After creating the file, redirect to the viewer route
+                                    document.getElementById('edit-study-note-form').submit();
+                            } else {
+                                alert("Failed to create notes.txt.");
+                            }
+                        });
+                    } else {
+                        alert("Failed to access notes.txt.");
+                    }
+                });
+        }
+    </script>
 
     <h2>TODO</h2>
     <p>What do we need here? Actions? Niftis?</p>
