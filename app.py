@@ -212,13 +212,23 @@ def study(subject_name, study_name):
 
 
 # But using the "path:" keyword, all the path information after will get assigned to one variable
-@app.route('/viewer/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>')
+@app.route('/viewer/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['GET', 'PUT'])
 def file_viewer(subject_name, study_name, file_relative_path):
-
     # Construct the full file path
     file_path = get_study_file_path(subject_name, study_name, file_relative_path)
-    
-    # Check if the file exists and is a text file
+
+    if request.method == 'PUT':
+        # Create a blank file if it does not exist
+        if not os.path.isfile(file_path):
+            with open(file_path, 'w') as f:
+                f.write("")  # Write an empty string to create the file
+            print(f"Created blank file: {file_path}")
+            return f"Created blank file: {file_relative_path}", 201
+        else:
+            print(f"File already exists: {file_path}")
+            return f"File already exists: {file_relative_path}", 409
+
+    # Check if the file exists for GET requests
     if not os.path.isfile(file_path):
         print('text_viewer: Invalid file path:', file_path)
         abort(404)
@@ -228,20 +238,17 @@ def file_viewer(subject_name, study_name, file_relative_path):
         with open(file_path, 'r') as f:
             content = f.read()
 
-    elif file_relative_path.endswith('csv'):
+    elif file_relative_path.endswith('.csv'):
         with open(file_path, newline='', encoding='utf-8') as csvfile:
-            # TODO needs line breaks
             reader = csv.reader(csvfile)
-            #content = list(reader)
             content = '\n'.join([','.join(row) for row in reader])
 
-    elif file_relative_path.endswith('json'):
+    elif file_relative_path.endswith('.json'):
         with open(file_path, encoding='utf-8') as jsonfile:
-            #content = json.load(jsonfile)
             content = json.dumps(json.load(jsonfile), indent=4)
 
     else:
-        content
+        content = "Unsupported file type."
 
     return render_template('text.html', 
                            subject=subject_name, 
