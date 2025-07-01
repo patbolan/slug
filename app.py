@@ -212,64 +212,77 @@ def study(subject_name, study_name):
 
 
 # But using the "path:" keyword, all the path information after will get assigned to one variable
-@app.route('/viewer/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['GET', 'PUT'])
-@app.route('/viewer/subjects/<subject_name>/<path:file_relative_path>', methods=['GET', 'PUT'])
+@app.route('/viewer/subjects/<subject_name>/studies/<study_name>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
+@app.route('/viewer/subjects/<subject_name>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
 def file_viewer(subject_name, file_relative_path, study_name=None):
+    print(f'file_viewer: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}')
     # Construct the full file path based on whether study_name is provided
     if study_name:
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
     else:
         file_path = get_subject_file_path(subject_name, file_relative_path)
 
-    if request.method == 'PUT':
-        # Create a blank file if it does not exist
+    # HACK - the javascript sometimes adds an extra path delimiter. 
+    file_path = re.sub(r'/+', '/', file_path)
+    print(f'file_viewer: file_path = {file_path}')
+
+
+    # Get File type
+    _, ext = os.path.splitext(file_path) 
+    ext = ext[1:] # Get rid of the period
+
+    if ext in ('txt', 'csv', 'json'):
+        if request.method == 'PUT':
+            # Create a blank file if it does not exist
+            if not os.path.isfile(file_path):
+                with open(file_path, 'w') as f:
+                    f.write("")  # Write an empty string to create the file
+                print(f"Created blank file: {file_path}")
+                return f"Created blank file: {file_relative_path}", 201
+            else:
+                print(f"File already exists: {file_path}")
+                return f"File already exists: {file_relative_path}", 409
+
+        # Check if the file exists for GET requests
         if not os.path.isfile(file_path):
-            with open(file_path, 'w') as f:
-                f.write("")  # Write an empty string to create the file
-            print(f"Created blank file: {file_path}")
-            return f"Created blank file: {file_relative_path}", 201
+            print('file_viewer: Invalid file path:', file_path)
+            abort(404)
+
+        if ext == 'txt':
+            # Read the content of the text file
+            with open(file_path, 'r') as f:
+                content = f.read()
+
+        elif ext == 'csv':
+            with open(file_path, newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                content = '\n'.join([','.join(row) for row in reader])
+
+        elif ext == 'json':
+            with open(file_path, encoding='utf-8') as jsonfile:
+                content = json.dumps(json.load(jsonfile), indent=4)
+
         else:
-            print(f"File already exists: {file_path}")
-            return f"File already exists: {file_relative_path}", 409
+            content = "Unsupported file type."
 
-    # Check if the file exists for GET requests
-    if not os.path.isfile(file_path):
-        print('text_viewer: Invalid file path:', file_path)
-        abort(404)
-
-    if file_relative_path.endswith('.txt'):
-        # Read the content of the text file
-        with open(file_path, 'r') as f:
-            content = f.read()
-
-    elif file_relative_path.endswith('.csv'):
-        with open(file_path, newline='', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile)
-            content = '\n'.join([','.join(row) for row in reader])
-
-    elif file_relative_path.endswith('.json'):
-        with open(file_path, encoding='utf-8') as jsonfile:
-            content = json.dumps(json.load(jsonfile), indent=4)
-
+        return render_template('text.html', 
+                            subject=subject_name, 
+                            study=study_name, 
+                            filepath=file_relative_path, 
+                            content=content)
     else:
-        content = "Unsupported file type."
-
-    return render_template('text.html', 
-                           subject=subject_name, 
-                           study=study_name, 
-                           filepath=file_relative_path, 
-                           content=content)
+        print('file_viewer: Invalid file type:', file_path)
+        abort(404) 
 
 
-
-@app.route('/nifti-files/<path:filename>')
-def serve_nifti(filename):
-    # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
-    file_path = '/' + filename
-    print('Serving NIFTI file:', file_path)
-    if not os.path.isfile(file_path):
-        abort(404)
-    return send_file(file_path)
+# @app.route('/nifti-files/<path:filename>')
+# def serve_nifti(filename):
+#     # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
+#     file_path = '/' + filename
+#     print('Serving NIFTI file:', file_path)
+#     if not os.path.isfile(file_path):
+#         abort(404)
+#     return send_file(file_path)
 
 
 

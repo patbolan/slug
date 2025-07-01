@@ -94,10 +94,9 @@
                 const path = data.instance.get_path(data.node, '/');
 
                 // Check file extension and open in browser
-                if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json')) {
-                    //const url = "{{ url_for('study', subject_name=subject, study_name=study) }}" + '/' + fileName;
-                    //const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path=path) }}" + '/' + 'TEST';
+                if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii')) {
                     const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path='') }}" + path;
+                    //const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path=path) }}";
                     window.open(url, '_blank');
                 }
             });
