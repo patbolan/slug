@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DICOM File: {{ filepath }}</title>
+</head>
+<body>
+    <h1>DICOM File: {{ subject }}/{{ study }}/{{ filepath }}</h1>
+    <h2>Image</h2>
+    {% if image_base64 %}
+        <img src="data:image/png;base64,{{ image_base64 }}" alt="DICOM Image">
+    {% else %}
+        <p>No image data available in this DICOM file.</p>
+    {% endif %}
+    <h2>Header Information</h2>
+    <pre>{{ header_info }}</pre>
+
+    <br>
+    <a href="{% if study %}{{ url_for('study', subject_name=subject, study_name=study) }}{% else %}{{ url_for('subject', subject_name=subject) }}{% endif %}">Back</a>
+</body>
+</html>

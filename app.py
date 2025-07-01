@@ -7,6 +7,13 @@ import csv  # Add this import for handling CSV files
 import json  # Add this import for handling JSON files
 import re  # Add this import for regular expressions
 
+# For DICOM handling
+import pydicom
+import numpy as np
+from matplotlib import pyplot as plt
+from io import BytesIO
+import base64
+
 app = Flask(__name__)
 DATA_DIR = '/home/bakken-raid8/pcad2/data'
 
@@ -226,12 +233,12 @@ def file_viewer(subject_name, file_relative_path, study_name=None):
     file_path = re.sub(r'/+', '/', file_path)
     print(f'file_viewer: file_path = {file_path}')
 
-
     # Get File type
-    _, ext = os.path.splitext(file_path) 
-    ext = ext[1:] # Get rid of the period
+    _, ext = os.path.splitext(file_path)
+    ext = ext[1:]  # Get rid of the period
 
     if ext in ('txt', 'csv', 'json'):
+        # Existing logic for text files
         if request.method == 'PUT':
             # Create a blank file if it does not exist
             if not os.path.isfile(file_path):
@@ -281,6 +288,39 @@ def file_viewer(subject_name, file_relative_path, study_name=None):
                             subject=subject_name, 
                             study=study_name, 
                             file_path=file_path, )
+    elif ext == 'dcm':
+        # Handle DICOM files
+        if not os.path.isfile(file_path):
+            print('file_viewer: Invalid file path:', file_path)
+            abort(404)
+
+        # Read the DICOM file
+        dicom_data = pydicom.dcmread(file_path)
+
+        # Extract header information
+        header_info = dicom_data
+
+        # Extract image data
+        if hasattr(dicom_data, 'pixel_array'):
+            image_data = dicom_data.pixel_array
+
+            # Render the image using matplotlib
+            plt.imshow(image_data, cmap='gray')
+            plt.axis('off')
+            buffer = BytesIO()
+            plt.savefig(buffer, format='png')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            buffer.close()
+        else:
+            image_base64 = None
+
+        return render_template('dicom.html',
+                               subject=subject_name,
+                               study=study_name,
+                               filepath=file_relative_path,
+                               header_info=header_info,
+                               image_base64=image_base64)
     else:
         print('file_viewer: Invalid file type:', file_path)
         abort(404) 

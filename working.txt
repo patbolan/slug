@@ -9,7 +9,9 @@ Need more distinct routes:
 
 
 TODO:
-* get NIFTIs back online
 * Click on the DICOMs series. 
 * extract some dicom header information in the study page
+* Autotag
+* Other dicom procesing
+* Pipeline steps
 
