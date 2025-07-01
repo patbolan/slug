@@ -270,19 +270,30 @@ def file_viewer(subject_name, file_relative_path, study_name=None):
                             study=study_name, 
                             filepath=file_relative_path, 
                             content=content)
+    
+    elif ext in ('nii'):
+        # Note that I accidently deleted this logic when I "REmoved Collections"
+        print('Rendering NIFTI:', file_path)
+        if not os.path.isfile(file_path):
+            abort(404)
+
+        return render_template('nifti.html', 
+                            subject=subject_name, 
+                            study=study_name, 
+                            file_path=file_path, )
     else:
         print('file_viewer: Invalid file type:', file_path)
         abort(404) 
 
 
-# @app.route('/nifti-files/<path:filename>')
-# def serve_nifti(filename):
-#     # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
-#     file_path = '/' + filename
-#     print('Serving NIFTI file:', file_path)
-#     if not os.path.isfile(file_path):
-#         abort(404)
-#     return send_file(file_path)
+@app.route('/nifti-files/<path:filename>')
+def serve_nifti(filename):
+    # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
+    file_path = '/' + filename
+    print('Serving NIFTI file:', file_path)
+    if not os.path.isfile(file_path):
+        abort(404)
+    return send_file(file_path)
 
 
 
