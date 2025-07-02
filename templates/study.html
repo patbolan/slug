@@ -123,7 +123,11 @@
         {% for folder in dicom_folders %}
             <tr>
                 <td>{{ folder.series_number }}</td>
-                <td>{{ folder.name }}</td>
+                <td>
+                    <a href="{{ url_for('dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path=folder.relative_path) }}" target="_blank">
+                        {{ folder.name }}
+                    </a>
+                </td>
                 <td>{{ folder.tag }}</td>
             </tr>
         {% endfor %}

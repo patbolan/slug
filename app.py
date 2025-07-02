@@ -205,6 +205,7 @@ def study(subject_name, study_name):
                     tag = dicom_tags.get(series_number, "No Tag")
                     dicom_folders.append({
                         'name': folder_name,
+                        'relative_path': os.path.join('dicom-original', folder_name),
                         'series_number': series_number,
                         'tag': tag
                     })
@@ -340,7 +341,7 @@ def serve_nifti(filename):
 def serve_dicom_file(filename):  
     # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
     filename = '/' + filename
-    print('Serving DICOM file:', filename)
+    #print('Serving DICOM file:', filename) # Called many times
     if not os.path.isfile(filename):
         abort(404)
     return send_file(filename, mimetype='application/dicom')
@@ -364,9 +365,9 @@ def dicom_series_viewer(subject_name, study_name, series_relative_path):
 
     dicom_urls = [url_for('serve_dicom_file', filename=f ) for f in dicom_files] 
 
-    print('Here are the URLs:')
-    for url in dicom_urls:
-        print(url)
+    # print('Here are the URLs:')
+    # for url in dicom_urls:
+    #     print(url)
 
     return render_template('dicom_series.html', dicom_urls=dicom_urls)
 
