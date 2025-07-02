@@ -336,6 +336,41 @@ def serve_nifti(filename):
     return send_file(file_path)
 
 
+@app.route('/dicom-file/<path:filename>')  
+def serve_dicom_file(filename):  
+    # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
+    filename = '/' + filename
+    print('Serving DICOM file:', filename)
+    if not os.path.isfile(filename):
+        abort(404)
+    return send_file(filename, mimetype='application/dicom')
+
+@app.route('/dicom-series/subjects/<subject_name>/studies/<study_name>/<path:series_relative_path>', methods=['GET'])
+def dicom_series_viewer(subject_name, study_name, series_relative_path):
+    print(f'dicom_series_viewer: subject_name={subject_name}, study_name={study_name}, \
+          series_relative_path={series_relative_path}')
+
+    # Construct the full path to the DICOM series
+    series_path = get_study_file_path(subject_name, study_name, series_relative_path)
+
+    # Check if the series path exists
+    if not os.path.isdir(series_path):
+        print('dicom_series_viewer: Invalid series path:', series_path)
+        abort(404)
+
+    # Get all DICOM files in the series
+    dicom_files = [os.path.join(series_path, f) for f in os.listdir(series_path) if f.endswith('.dcm')]
+    dicom_files.sort() # TODO: needs special sorting
+
+    dicom_urls = [url_for('serve_dicom_file', filename=f ) for f in dicom_files] 
+
+    print('Here are the URLs:')
+    for url in dicom_urls:
+        print(url)
+
+    return render_template('dicom_series.html', dicom_urls=dicom_urls)
+
+
 
 @app.route('/edit/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['POST'])
 @app.route('/edit/subjects/<subject_name>/<path:file_relative_path>', methods=['POST'])

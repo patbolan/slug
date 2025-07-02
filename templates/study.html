@@ -86,7 +86,7 @@
                 }
             });
 
-            // Handle double-click on files
+            // Handle double-click on files and specific folders
             $('#file-tree').on('select_node.jstree', function (e, data) {
                 const node = data.node;
                 const fileName = node.text;
@@ -96,7 +96,13 @@
                 // Check file extension and open in browser
                 if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.endsWith('.dcm')) {
                     const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path='') }}" + path;
-                    //const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path=path) }}";
+                    window.open(url, '_blank');
+                }
+
+                // Handle folders starting with "MR-SExxx"
+                const folderPattern = /^MR-SE\d{3}/;
+                if (folderPattern.test(fileName)) {
+                    const url = "{{ url_for('dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path='') }}" + path;
                     window.open(url, '_blank');
                 }
             });

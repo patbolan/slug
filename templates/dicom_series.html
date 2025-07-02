@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>4D DICIOM Viewer (Papaya)</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='papaya.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='papaya.js') }}"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        .papaya { width: 100vw; height: 100vh; }
+    </style>
+    <script type="text/javascript">
+        // Papaya configuration parameters
+        var params = [];
+        params["images"] = [{{ dicom_urls | tojson }}]; // List of DICOM URLs to load
+        params["worldSpace"] = true;
+        params["kioskMode"] = false; // show full UI
+        params["expandable"] = true;
+        params["showControls"] = true;
+        params["showTime"] = true; // enable time slider for 4D
+        params["showSliceSlider"] = true;
+        params["showZoom"] = true;
+        params["showOrientation"] = true;
+        params["showCrosshairs"] = true;
+        params["showColorBar"] = true;
+    </script>
+</head>
+<body>
+    <div class="papaya" data-params="params"></div>
+</body>
+</html>
