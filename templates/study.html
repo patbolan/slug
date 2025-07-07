@@ -110,7 +110,67 @@
     </script>
 
 
+<h2>DICOM header info</h2>
+
+{% if dicom_info %}
+<table border="1" cellpadding="2" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Key</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Study Time</td>
+            <td>
+                {% if 'StudyTime' in dicom_info %}
+                    {{ dicom_info.StudyDate if 'StudyDate' in dicom_info else '' }} 
+                    {{ dicom_info.StudyTime[:2] }}:{{ dicom_info.StudyTime[2:4] }}:{{ dicom_info.StudyTime[4:6] }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Patient Sex</td>
+            <td>{{ dicom_info.PatientSex if 'PatientSex' in dicom_info else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td>Patient Weight</td>
+            <td>
+                {% if 'PatientWeight' in dicom_info %}
+                    {{ (dicom_info.PatientWeight * 2.20462)|round(1) }} lbs
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Patient Size</td>
+            <td>
+                {% if 'PatientSize' in dicom_info %}
+                    {{ (dicom_info.PatientSize * 39.3701)|round(1) }} in
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Patient Age</td>
+            <td>{{ dicom_info.PatientAge if 'PatientAge' in dicom_info else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td>Family Name</td>
+            <td>{{ dicom_info.PatientName.family_name if dicom_info.PatientName and dicom_info.PatientName.family_name else 'N/A' }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endif %}
+
+
 <h2>DICOM</h2>
+
 <table border="1" cellpadding="2" cellspacing="0">
     <thead>
         <tr>

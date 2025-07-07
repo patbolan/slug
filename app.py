@@ -75,6 +75,32 @@ def get_study_files(subject_name, study_name):
     return files
 
 
+# Get some DICOM header information
+def get_sample_dicom_header(subject_name, study_name):
+    study_path = get_study_path(subject_name, study_name)
+    if not study_path:
+        return None
+    dicom_path = os.path.join(study_path, 'dicom-original')
+    if not os.path.isdir(dicom_path):
+        return None
+    # Grab a dicom folder
+    dicom_folders = [f for f in os.listdir(dicom_path) if f.startswith('MR-SE')]
+    if not dicom_folders:
+        return None
+
+    # Look in the first folder
+    sample_folder = os.path.join(dicom_path, dicom_folders[0])  # Sort to get a consistent sample
+    dicom_files = [f for f in os.listdir(sample_folder) if f.endswith('.dcm')]
+    if not dicom_files:
+        return None
+    sample_file = os.path.join(sample_folder, dicom_files[0])
+    try:
+        dicom_data = pydicom.dcmread(sample_file)
+        return dicom_data
+    except Exception as e:
+        print(f"Error reading DICOM file {sample_file}: {e}")
+        return None
+
 
 # Middleware (?) to handle method overrides 
 @app.before_request
@@ -193,6 +219,11 @@ def study(subject_name, study_name):
                 if len(row) >= 2:
                     dicom_tags[int(row[0])] = row[1]
 
+    # Read sample dicom metadata
+    dicom_info = get_sample_dicom_header(subject_name, study_name)
+    if dicom_info == None:
+        print('Unable to find dicom info')
+
     # Process folders under dicom-original
     if os.path.isdir(dicom_path):
         for folder_name in sorted(os.listdir(dicom_path)):
@@ -216,7 +247,8 @@ def study(subject_name, study_name):
                            notes=notes, 
                            files=files, 
                            file_tree=file_tree, 
-                           dicom_folders=dicom_folders)
+                           dicom_folders=dicom_folders, 
+                           dicom_info = dicom_info)
 
 
 # But using the "path:" keyword, all the path information after will get assigned to one variable
