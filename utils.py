@@ -82,3 +82,32 @@ def get_sample_dicom_header(subject_name, study_name):
     except Exception as e:
         print(f"Error reading DICOM file {sample_file}: {e}")
         return None
+    
+
+def get_file_tree(path):
+    """
+    Recursively generates a hierarchical file tree for the given path.
+    :param path: Root directory path.
+    :return: List representing the file tree.
+    """
+    tree = []
+    for entry in sorted(os.listdir(path)):
+        if entry.startswith('.'):  # Ignore files or folders starting with a period
+            continue
+        full_path = os.path.join(path, entry)
+        if os.path.isdir(full_path):
+            tree.append({
+                'text': entry,
+                'icon': 'jstree-folder',  # Folder icon
+                'children': get_file_tree(full_path),
+                'full_path': full_path
+            })
+        else:
+            tree.append({
+                'text': entry,
+                'icon': 'jstree-file',  # File icon
+                'full_path': full_path
+            })
+    return tree
+
+    

@@ -7,8 +7,11 @@ from utils import (  # Import the utility functions
     get_subject_file_path,
     get_study_file_path,
     get_study_files, 
-    get_sample_dicom_header
+    get_sample_dicom_header, 
+    get_file_tree
 )
+from tools import *
+
 import os
 from datetime import datetime
 import random
@@ -85,31 +88,7 @@ def subject(subject_name):
     studies = get_studies_for_subject(subject_name)
     return render_template('subject.html', subject=subject_name, studies=studies, notes=notes)
 
-def get_file_tree(path):
-    """
-    Recursively generates a hierarchical file tree for the given path.
-    :param path: Root directory path.
-    :return: List representing the file tree.
-    """
-    tree = []
-    for entry in sorted(os.listdir(path)):
-        if entry.startswith('.'):  # Ignore files or folders starting with a period
-            continue
-        full_path = os.path.join(path, entry)
-        if os.path.isdir(full_path):
-            tree.append({
-                'text': entry,
-                'icon': 'jstree-folder',  # Folder icon
-                'children': get_file_tree(full_path),
-                'full_path': full_path
-            })
-        else:
-            tree.append({
-                'text': entry,
-                'icon': 'jstree-file',  # File icon
-                'full_path': full_path
-            })
-    return tree
+
 
 # One study. 
 @app.route('/subjects/<subject_name>/studies/<study_name>')
@@ -130,6 +109,9 @@ def study(subject_name, study_name):
 
     # Generate file tree
     file_tree = get_file_tree(study_path)
+
+    # Get toolset 
+    toolset = get_tools_for_study(subject_name, study_name) 
 
     # Process DICOM folders
     dicom_path = os.path.join(study_path, 'dicom-original')
@@ -172,6 +154,7 @@ def study(subject_name, study_name):
                            subject=subject_name, 
                            study=study_name, 
                            notes=notes, 
+                           toolset=toolset,
                            files=files, 
                            file_tree=file_tree, 
                            dicom_folders=dicom_folders, 
