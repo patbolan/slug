@@ -55,3 +55,30 @@ def get_study_files(subject_name, study_name):
         if os.path.isfile(full_path):
             files.append({'name': file_name, 'full_path': full_path})
     return files
+
+
+# Get some DICOM header information
+def get_sample_dicom_header(subject_name, study_name):
+    study_path = get_study_path(subject_name, study_name)
+    if not study_path:
+        return None
+    dicom_path = os.path.join(study_path, 'dicom-original')
+    if not os.path.isdir(dicom_path):
+        return None
+    # Grab a dicom folder
+    dicom_folders = [f for f in os.listdir(dicom_path) if f.startswith('MR-SE')]
+    if not dicom_folders:
+        return None
+
+    # Look in the first folder
+    sample_folder = os.path.join(dicom_path, dicom_folders[0])  # Sort to get a consistent sample
+    dicom_files = [f for f in os.listdir(sample_folder) if f.endswith('.dcm')]
+    if not dicom_files:
+        return None
+    sample_file = os.path.join(sample_folder, dicom_files[0])
+    try:
+        dicom_data = pydicom.dcmread(sample_file)
+        return dicom_data
+    except Exception as e:
+        print(f"Error reading DICOM file {sample_file}: {e}")
+        return None
