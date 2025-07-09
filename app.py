@@ -8,7 +8,8 @@ from utils import (  # Import the utility functions
     get_study_file_path,
     get_study_files, 
     get_sample_dicom_header, 
-    get_file_tree
+    get_file_tree,
+    get_series_number_from_folder
 )
 from tools import *
 
@@ -138,11 +139,11 @@ def study(subject_name, study_name):
         for folder_name in sorted(os.listdir(dicom_path)):
             folder_path = os.path.join(dicom_path, folder_name)
             if os.path.isdir(folder_path):
-                # Extract series number from folder name
-                match = re.match(r'MR-SE(\d{3})-', folder_name)
-                if match:
-                    series_number = int(match.group(1))
-                    tag = dicom_tags.get(series_number, "No Tag")
+                # Use the new utility function to extract the series number
+                series_number = get_series_number_from_folder(folder_name)
+                if series_number is not None:
+                    tag = dicom_tags.get(series_number, "")
+                    # tag = dicom_tags.get(series_number, "No Tag")
                     dicom_folders.append({
                         'name': folder_name,
                         'relative_path': os.path.join('dicom-original', folder_name),

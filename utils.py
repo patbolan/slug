@@ -1,5 +1,6 @@
 import os
 import re
+import pydicom
 
 DATA_DIR = '/home/bakken-raid8/pcad2/data'
 
@@ -110,4 +111,15 @@ def get_file_tree(path):
             })
     return tree
 
-    
+def get_series_number_from_folder(folder_name):
+    """
+    Extracts the series number from a folder name if it matches the naming convention.
+    Expecting the series number to be a zero-padded integer with 3-5 digits
+    :param folder_name: The name of the folder.
+    :return: The series number as an integer, or None if the folder name does not match. 
+    """
+    match = re.match(r'MR-SE(\d{3,5})-', folder_name)  # Match 3 to 5 digits
+    if match:
+        return int(match.group(1))
+    return None
+
