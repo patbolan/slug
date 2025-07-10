@@ -2,6 +2,17 @@
 <html>
 <head>
     <title>Subject {{ subject }}</title>
+    <!-- Include jsTree CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <!-- Include jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Include jsTree JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+    <style>
+        #file-tree {
+            font-family: monospace; /* Use fixed-width font */
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -23,14 +34,11 @@
             fetch(url, { method: 'GET' })
                 .then(response => {
                     if (response.ok) {
-                        // If the file exists, redirect to the viewer route
                         document.getElementById('edit-subject-note-form').submit();
                     } else if (response.status === 404) {
-                        // If the file does not exist, create it using PUT
                         fetch(url, { method: 'PUT' })
                             .then(putResponse => {
                                 if (putResponse.ok) {
-                                    // After creating the file, redirect to the viewer route
                                     document.getElementById('edit-subject-note-form').submit();
                                 } else {
                                     alert("Failed to create notes.txt.");
@@ -42,6 +50,7 @@
                 });
         }
     </script>
+
 
     <h2>Studies ({{ studies|length }})</h2>
     <table border="1" cellpadding="2" cellspacing="0">
@@ -60,5 +69,47 @@
             {% endfor %}
         </tbody>
     </table>
+
+    {% if file_tree %}
+    <h2>Subject_Reports</h2>
+    <div id="file-tree"></div>
+
+    <script>
+        $(document).ready(function () {
+            $('#file-tree').jstree({
+                'core': {
+                    'data': [
+                        {
+                            'text': 'Subject_Reports',
+                            'state': { 'opened': false }, // Start collapsed
+                            'children': {{ file_tree|tojson }}
+                        }
+                    ]
+                },
+                'plugins': ['types'], // Enable types plugin
+                'types': {
+                    'jstree-folder': {
+                        'icon': 'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/folder.png' // Public folder icon
+                    },
+                    'jstree-file': {
+                        'icon': 'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/file.png' // Public file icon
+                    }
+                }
+            });
+
+            // Handle double-click on files
+            $('#file-tree').on('select_node.jstree', function (e, data) {
+                const node = data.node;
+                const fileName = node.text;
+                const path = data.instance.get_path(data.node, '/');
+
+                if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.endsWith('.dcm') || fileName.endsWith('.png')) {
+                    const url = "{{ url_for('file_viewer', subject_name=subject, file_relative_path='') }}" + path;
+                    window.open(url, '_blank');
+                }
+            });
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

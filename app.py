@@ -87,7 +87,20 @@ def subject(subject_name):
         notes = ""
 
     studies = get_studies_for_subject(subject_name)
-    return render_template('subject.html', subject=subject_name, studies=studies, notes=notes)
+
+    # Generate file tree for the subject
+    # Note: the folder name "Subject_Reports" is hardwired here and in "subject.html"
+    subject_reports_path = get_subject_file_path(subject_name, 'Subject_Reports')
+    if os.path.isdir(subject_reports_path):
+        file_tree = get_file_tree(subject_reports_path)
+    else:
+        file_tree = []
+
+    return render_template('subject.html', 
+                           subject=subject_name, 
+                           studies=studies, 
+                           notes=notes, 
+                           file_tree=file_tree)
 
 
 
@@ -232,6 +245,14 @@ def file_viewer(subject_name, file_relative_path, study_name=None):
                             subject=subject_name, 
                             study=study_name, 
                             file_path=file_path, )
+    elif ext in ('png'):
+        # Handle PNG files
+        if not os.path.isfile(file_path):
+            print('file_viewer: Invalid file path:', file_path)
+            abort(404)
+        return send_file(file_path, mimetype='image/png')
+        
+
     elif ext == 'dcm':
         # Handle DICOM files
         if not os.path.isfile(file_path):
