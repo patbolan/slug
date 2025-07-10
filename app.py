@@ -365,5 +365,12 @@ def edit_file_page(subject_name, study_name=None, file_relative_path=None):
                            filepath=file_relative_path, 
                            content=content)
 
+@app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/studies/<study_name>/', methods=['POST'])
+def tool_command(tool_name, command, subject_name, study_name):
+
+    print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
+    execute_tool(tool_name, command, subject_name, study_name)
+    return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000
