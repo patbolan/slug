@@ -1,17 +1,26 @@
-20250630
-Handling of all text files is now the same
+Later need to break up app.py. One other file for file handling (text, dicom) and one for tools
 
-NOPE! Thought it was working, but it was really using subject and variable path
+Got a first tool (nii-converter) working well. It runs as a subprocess, but undo is inline
+Added a process subfolder, contains all sorts of stuff about processes (stdout, etc)
+Note that processes are pretty lightweight. I could actually store a PID, and then you could GET the status of a specific PID. But I wanted something a little simpler for this. If the process fails you just need to clean up. But you can troubleshoot a little through the web.
 
-Need more distinct routes:
-/viewer/subjects/<subject_name>/studies/<study_name>/files/<path:file_relative_path>
-/viewer/subjects/<subject_name>/files/<path:file_relative_path>
+Next Tool steps:
+* Prepare a second tool. I think the dicom-raw converter
+* refactor the tool code. Probably need a separate processes class. Support for subproc and inline processes
+* prepare for processes at study, subject, and project level
+* add delete processes button to keep things clean
+* document up the tools a bit. Four states. 
+
+ALSO
+* move the code to pcad2
+
+A tool 
+* applicable at different levels. Study, subject, file, etc 
+* Has states: running, completed, available, unavailable 
+* has commands which depend on state (run, undo)
 
 
 TODO:
-* Click on the DICOMs series. 
-* extract some dicom header information in the study page
 * Autotag
-* Other dicom procesing
 * Pipeline steps
 

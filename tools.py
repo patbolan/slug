@@ -3,6 +3,7 @@ import os
 import subprocess
 import shutil
 import time
+import glob
 from datetime import datetime
 from multiprocessing import Process
 
@@ -55,21 +56,29 @@ class NiiConverter:
     # returns status, message
     def get_status_dict(self):
 
-        # Check for nii-original
-        if os.path.exists(self.nii_folder):
-            status = 'complete'
-            message = 'nii-original folder exists'
-            commands = ['undo']
+        # Look for a running process
+        study_process_folder_running = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'running'))  
+        running_processes = glob.glob(os.path.join(study_process_folder_running, f'*{self.tool_name}*'))
+        if running_processes:
+            status = 'running'
+            message = 'refresh page to update'
+            commands = []
         else:
-            # Check for pre-reqs
-            if os.path.exists(self.dicom_original_path):
-                status = 'available'
-                message = 'dicom-original found, ready to convert'
-                commands = ['run']
+            # Check for nii-original
+            if os.path.exists(self.nii_folder):
+                status = 'complete'
+                message = 'nii-original folder exists'
+                commands = ['undo']
             else:
-                status = 'unavailable'
-                message = 'dicom-original not found'
-                commands = []
+                # Check for pre-reqs
+                if os.path.exists(self.dicom_original_path):
+                    status = 'available'
+                    message = 'dicom-original found, ready to convert'
+                    commands = ['run']
+                else:
+                    status = 'unavailable'
+                    message = 'dicom-original not found'
+                    commands = []
 
         # Format and return descriptor dictionary   
         return {'name': self.tool_name,
@@ -119,14 +128,15 @@ class NiiConverter:
         # Add 10s pause 
         time.sleep(10)
                 
-        print("STDOUT:")
-        print(result.stdout)
-        print("STDERR:")
-        print(result.stderr)
-        print("Return Code:", result.returncode)
+        # result.returncode is 0 if sucessful
+        print(f'Completed with return code: {result.returncode}')
 
         with open(os.path.join(this_process_folder, 'stdout.txt'), 'w') as f:
             f.write(result.stdout + '\n')
+        with open(os.path.join(this_process_folder, 'stderr.txt'), 'w') as f:
+            f.write(result.stderr + '\n')
+        with open(os.path.join(this_process_folder, 'returncode.txt'), 'w') as f:
+            f.write(f'{result.returncode}\n')
 
         # Now move this process to completed
         shutil.move(this_process_folder, study_process_folder_completed)

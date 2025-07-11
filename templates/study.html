@@ -54,7 +54,7 @@
         }
     </script>
 
-    
+
     <h2>Files</h2>
     <div id="file-tree"></div>
 
@@ -127,11 +127,10 @@
                                     {{ command }}
                                 </button>
                             {% endfor %}
-                        {% else %}
-                            N/A
+                            
                         {% endif %}
                     </td>
-                    <td>{{ tool.message if tool.message else 'N/A' }}</td>
+                    <td>{{ tool.message if tool.message else '' }}</td>
                 </tr>
             {% endfor %}
         </tbody>
