@@ -54,71 +54,7 @@
         }
     </script>
 
-    <h2>Processing Tools</h2>
-
-<table border="1" cellpadding="2" cellspacing="0">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Commands</th>
-            <th>Message</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for tool in toolset %}
-            <tr>
-                <td>{{ tool.name }}</td>
-                <td>{{ tool.status }}</td>
-                <td>
-                    {% if tool.commands %}
-                        {% for command in tool.commands %}
-                            <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ command }}')">
-                                {{ command }}
-                            </button>
-                        {% endfor %}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td>{{ tool.message if tool.message else 'N/A' }}</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<script>
-    function runToolCommand(toolName, command) {
-        const url = `/tools/${toolName}/${command}/subjects/{{ subject }}/studies/{{ study }}/`;
-        
-        // Change cursor to wait
-        document.body.style.cursor = 'wait';
-
-        // Send POST request
-        fetch(url, { method: 'POST' })
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    throw new Error('Failed to execute command');
-                }
-            })
-            .then(data => {
-                console.log(data); // Log the server response
-                // Reload the page to update the study page
-                location.reload();
-            })
-            .catch(error => {
-                console.error(error);
-                alert('An error occurred while executing the command.');
-            })
-            .finally(() => {
-                // Reset cursor to default
-                document.body.style.cursor = 'default';
-            });
-    }
-</script>
-
+    
     <h2>Files</h2>
     <div id="file-tree"></div>
 
@@ -169,90 +105,154 @@
         });
     </script>
 
-
-<h2>DICOM header info</h2>
-
-{% if dicom_info %}
-<table border="1" cellpadding="2" cellspacing="0">
-    <thead>
-        <tr>
-            <th>Key</th>
-            <th>Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Study Time</td>
-            <td>
-                {% if 'StudyTime' in dicom_info %}
-                    {{ dicom_info.StudyDate if 'StudyDate' in dicom_info else '' }} 
-                    {{ dicom_info.StudyTime[:2] }}:{{ dicom_info.StudyTime[2:4] }}:{{ dicom_info.StudyTime[4:6] }}
-                {% else %}
-                    N/A
-                {% endif %}
-            </td>
-        </tr>
-        <tr>
-            <td>Patient Sex</td>
-            <td>{{ dicom_info.PatientSex if 'PatientSex' in dicom_info else 'N/A' }}</td>
-        </tr>
-        <tr>
-            <td>Patient Weight</td>
-            <td>
-                {% if 'PatientWeight' in dicom_info %}
-                    {{ (dicom_info.PatientWeight * 2.20462)|round(1) }} lbs
-                {% else %}
-                    N/A
-                {% endif %}
-            </td>
-        </tr>
-        <tr>
-            <td>Patient Size</td>
-            <td>
-                {% if 'PatientSize' in dicom_info %}
-                    {{ (dicom_info.PatientSize * 39.3701)|round(1) }} in
-                {% else %}
-                    N/A
-                {% endif %}
-            </td>
-        </tr>
-        <tr>
-            <td>Patient Age</td>
-            <td>{{ dicom_info.PatientAge if 'PatientAge' in dicom_info else 'N/A' }}</td>
-        </tr>
-        <tr>
-            <td>Family Name</td>
-            <td>{{ dicom_info.PatientName.family_name if dicom_info.PatientName and dicom_info.PatientName.family_name else 'N/A' }}</td>
-        </tr>
-    </tbody>
-</table>
-{% endif %}
-
-
-<h2>DICOM</h2>
-
-<table border="1" cellpadding="2" cellspacing="0">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Tag</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for folder in dicom_folders %}
+    <h2>Processing Tools</h2>
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
             <tr>
-                <td>{{ folder.series_number }}</td>
-                <td>
-                    <a href="{{ url_for('dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path=folder.relative_path) }}" target="_blank">
-                        {{ folder.name }}
-                    </a>
-                </td>
-                <td>{{ folder.tag }}</td>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Commands</th>
+                <th>Message</th>
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for tool in toolset %}
+                <tr>
+                    <td>{{ tool.name }}</td>
+                    <td>{{ tool.status }}</td>
+                    <td>
+                        {% if tool.commands %}
+                            {% for command in tool.commands %}
+                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ command }}')">
+                                    {{ command }}
+                                </button>
+                            {% endfor %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ tool.message if tool.message else 'N/A' }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function runToolCommand(toolName, command) {
+            const url = `/tools/${toolName}/${command}/subjects/{{ subject }}/studies/{{ study }}/`;
+            
+            // Change cursor to wait
+            document.body.style.cursor = 'wait';
+
+            // Send POST request
+            fetch(url, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('Failed to execute command');
+                    }
+                })
+                .then(data => {
+                    console.log(data); // Log the server response
+                    // Reload the page to update the study page
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('An error occurred while executing the command.');
+                })
+                .finally(() => {
+                    // Reset cursor to default
+                    document.body.style.cursor = 'default';
+                });
+        }
+    </script>
+
+
+
+    {% if dicom_info %}
+    <h2>DICOM header info</h2>
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Study Time</td>
+                <td>
+                    {% if 'StudyTime' in dicom_info %}
+                        {{ dicom_info.StudyDate if 'StudyDate' in dicom_info else '' }} 
+                        {{ dicom_info.StudyTime[:2] }}:{{ dicom_info.StudyTime[2:4] }}:{{ dicom_info.StudyTime[4:6] }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>Patient Sex</td>
+                <td>{{ dicom_info.PatientSex if 'PatientSex' in dicom_info else 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td>Patient Weight</td>
+                <td>
+                    {% if 'PatientWeight' in dicom_info %}
+                        {{ (dicom_info.PatientWeight * 2.20462)|round(1) }} lbs
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>Patient Size</td>
+                <td>
+                    {% if 'PatientSize' in dicom_info %}
+                        {{ (dicom_info.PatientSize * 39.3701)|round(1) }} in
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>Patient Age</td>
+                <td>{{ dicom_info.PatientAge if 'PatientAge' in dicom_info else 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td>Family Name</td>
+                <td>{{ dicom_info.PatientName.family_name if dicom_info.PatientName and dicom_info.PatientName.family_name else 'N/A' }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+
+    <h2>DICOM</h2>
+
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Tag</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for folder in dicom_folders %}
+                <tr>
+                    <td>{{ folder.series_number }}</td>
+                    <td>
+                        <a href="{{ url_for('dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path=folder.relative_path) }}" target="_blank">
+                            {{ folder.name }}
+                        </a>
+                    </td>
+                    <td>{{ folder.tag }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <br>
     <a href="{{ url_for('subject', subject_name=subject) }}">Back to Studies</a>

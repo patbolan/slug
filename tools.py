@@ -1,30 +1,39 @@
-from utils import *
+from utils import get_study_file_path, get_study_path
 import os
 import subprocess
 import shutil
-
+import time
+from datetime import datetime
+from multiprocessing import Process
 
 def get_tools_for_study(subject_name, study_name):
 
-    # returns a list of tools
-    # HARDWIRED
-    # toolset = [ 
-    #     {'name': 'NiiConverter', 'status': 'complete', 'commands':['undo'] }, 
-    #     {'name': 'T2Mapping', 'status': 'available', 'commands':['run'] }, 
-    #     {'name': 'Segmentation', 'status': 'unavailable', 'message':'Not yet implemented', 'commands':[] }, 
-    # ]
-
+    # returns a list of tools, each as a dictionary summarizing its current state
     nii_converter = NiiConverter(subject_name, study_name)  
     toolset = [nii_converter.get_status_dict()]
 
     return toolset
 
-def execute_tool(tool_name, command, subject_name, study_name):
-    # Execute a tool command
+def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
+    """
+    Execute a tool command, either synchronously or asynchronously.
+    :param tool_name: Name of the tool.
+    :param command: Command to execute (e.g., 'run', 'undo').
+    :param subject_name: Subject name.
+    :param study_name: Study name.
+    :param async_mode: If True, execute the command asynchronously.
+    """
     if tool_name == 'nii-converter':
         nii_converter = NiiConverter(subject_name, study_name)
         if command == 'run':
-            nii_converter.run()
+            if async_mode:
+                # Run asynchronously in a separate process
+                process = Process(target=nii_converter.run)
+                process.start()
+                print(f"Started asynchronous process for {tool_name} with command '{command}'")
+            else:
+                # Run synchronously
+                nii_converter.run()
         elif command == 'undo':
             nii_converter.undo()
         else:
@@ -37,6 +46,7 @@ class NiiConverter:
     def __init__(self, subject_name, study_name):
         self.subject_name = subject_name
         self.study_name = study_name
+        self.tool_name = 'nii-converter'
 
         # Temporoary folder
         self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
@@ -62,10 +72,10 @@ class NiiConverter:
                 commands = []
 
         # Format and return descriptor dictionary   
-        return {'name': 'nii-converter',
-                           'status': status,
-                           'message': message,
-                           'commands': commands}
+        return {'name': self.tool_name,
+                'status': status,
+                'message': message,
+                'commands': commands}
         
 
     # Dummy functions, create and delete a folder "nii-temp"
@@ -82,6 +92,23 @@ class NiiConverter:
         cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
         print(f"Running command: {cmd}")
 
+        # Prep a process folder
+        study_process_folder_running = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'running'))    
+        study_process_folder_completed = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'completed'))    
+        if not os.path.exists(study_process_folder_running):
+            os.makedirs(study_process_folder_running)
+        if not os.path.exists(study_process_folder_completed):
+            os.makedirs(study_process_folder_completed)
+
+        # This process
+        this_process_folder_name = f'{datetime.now().isoformat()}-{self.tool_name}-run'
+        this_process_folder = os.path.join(study_process_folder_running, this_process_folder_name)
+        print(f'Creating {this_process_folder}')
+        if not os.path.exists(this_process_folder):
+            os.makedirs(this_process_folder)
+
+        with open(os.path.join(this_process_folder, 'command.txt'), 'w') as f:
+            f.write(' '.join(cmd))
 
         result = subprocess.run(
             cmd,   # Replace with your command and arguments
@@ -89,11 +116,20 @@ class NiiConverter:
             text=True                       # Returns output as strings instead of bytes
         )
 
+        # Add 10s pause 
+        time.sleep(10)
+                
         print("STDOUT:")
         print(result.stdout)
         print("STDERR:")
         print(result.stderr)
         print("Return Code:", result.returncode)
+
+        with open(os.path.join(this_process_folder, 'stdout.txt'), 'w') as f:
+            f.write(result.stdout + '\n')
+
+        # Now move this process to completed
+        shutil.move(this_process_folder, study_process_folder_completed)
 
         return result
 
