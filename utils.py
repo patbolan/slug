@@ -57,6 +57,8 @@ def get_study_files(subject_name, study_name):
             files.append({'name': file_name, 'full_path': full_path})
     return files
 
+def get_process_root_folder():
+    return '/home/bakken-raid8/pcad2/processes'
 
 # Get some DICOM header information
 def get_sample_dicom_header(subject_name, study_name):

@@ -19,6 +19,11 @@ A tool
 * Has states: running, completed, available, unavailable 
 * has commands which depend on state (run, undo)
 
+I'm trying to avoid a full process infrastructure. Like they are indpeendent objects, with ids and states. Some are associated with subjects, otehrs with studies. They are tracked through time. 
+Why do I think it's overkill? Need a separate set of routes, separate folders. 
+Maybe you should just do this. 
+Tools don't necessarily need to launch a process. Like NII converter, needs a process for conversion, just do the inline directly. So process is really like queued task. I think the words process and tool are OK.
+
 
 TODO:
 * Autotag

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Processes</title>
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('index') }}">Home</a>, 
+        <a href="{{ url_for('subjects') }}">Subjects</a>, 
+        <a href="{{ url_for('studies') }}">Studies</a>
+    </header>
+
+    <h1>Processes</h1>
+
+    <h2>Running Processes</h2>
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>PID</th>
+                <th>Subject Name</th>
+                <th>Study Name</th>
+                <th>Command</th>
+                <th>Start Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for process in running_processes %}
+                <tr>
+                    <td>{{ process.name }}</td>
+                    <td>{{ process.pid }}</td>
+                    <td>{{ process.subject_name }}</td>
+                    <td>{{ process.study_name }}</td>
+                    <td>{{ process.command }}</td>
+                    <td>{{ process.start_time }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <p>Total number of running processes: <b>{{ running_processes|length }}</b></p>
+
+    <h2>Completed Processes</h2>
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>PID</th>
+                <th>Subject Name</th>
+                <th>Study Name</th>
+                <th>Command</th>
+                <th>Start Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for process in completed_processes %}
+                <tr>
+                    <td>{{ process.name }}</td>
+                    <td>{{ process.pid }}</td>
+                    <td>{{ process.subject_name }}</td>
+                    <td>{{ process.study_name }}</td>
+                    <td>{{ process.command }}</td>
+                    <td>{{ process.start_time }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <p>Total number of completed processes: <b>{{ completed_processes|length }}</b></p>
+</body>
+</html>

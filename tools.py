@@ -26,12 +26,16 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
     """
     if tool_name == 'nii-converter':
         nii_converter = NiiConverter(subject_name, study_name)
+        process_name = f'slug-{tool_name}'
         if command == 'run':
             if async_mode:
                 # Run asynchronously in a separate process
-                process = Process(target=nii_converter.run)
+                process = Process(name=process_name, target=nii_converter.run)
                 process.start()
                 print(f"Started asynchronous process for {tool_name} with command '{command}'")
+                this_process = os.getpid()
+                print(f"pid={process.pid}, parent={this_process}, {process.name}")
+
             else:
                 # Run synchronously
                 nii_converter.run()
@@ -124,6 +128,8 @@ class NiiConverter:
             capture_output=True,            # Captures both stdout and stderr
             text=True                       # Returns output as strings instead of bytes
         )
+        print('Result:')
+        print(result)
 
         # Add 10s pause 
         time.sleep(10)

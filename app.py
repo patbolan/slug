@@ -12,6 +12,7 @@ from utils import (  # Import the utility functions
     get_series_number_from_folder
 )
 from tools import *
+from process_manager import ProcessManager
 
 import os
 from datetime import datetime
@@ -392,6 +393,20 @@ def tool_command(tool_name, command, subject_name, study_name):
     print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
     execute_tool(tool_name, command, subject_name, study_name)
     return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
+
+@app.route('/processes')
+def processes():
+    # Create an instance of ProcessManager
+    process_manager = ProcessManager()
+
+    # Get the list of running and completed processes
+    running_processes = process_manager.get_processes(folder_type='running')
+    completed_processes = process_manager.get_processes(folder_type='completed')
+
+    # Render the processes.html template with both lists
+    return render_template('processes.html', 
+                           running_processes=running_processes, 
+                           completed_processes=completed_processes)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000
