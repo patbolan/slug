@@ -5,9 +5,12 @@ import shutil
 import time
 import glob
 from datetime import datetime
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
 from process_manager import ProcessManager
 from abc import ABC
+import sys
+import io
+
 
 def get_tools_for_study(subject_name, study_name):
 
@@ -63,7 +66,7 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
             if async_mode:
                 pm = ProcessManager()
                 ipid = pm.spawn2(tool=simple_tool, command='run')
-                print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
+                #print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
 
             else:
                 simple_tool.run()
@@ -88,9 +91,9 @@ class Tool(ABC):
     # Tools can operate at the subject, study, or project level. 
     def get_context(self):
         return {
-            'subject-name': '',
-            'study-name': '',
-            'file-path': ''
+            'subject_name': '',
+            'study_name': '',
+            'file_path': ''
         }
 
     def run(self):
@@ -110,8 +113,14 @@ class SimpleTool(Tool):
         self.study_name = study_name
         self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
 
-    def get_status_dict(self):
+    def get_context(self):
+        return {
+            'subject_name': self.subject_name,
+            'study_name': self.study_name,
+            'file_path': '' # Operating on a study, not a pat
+        }
 
+    def get_status_dict(self):
         if os.path.isfile(self.test_file_path):
             status = 'complete'
             message = 'Simple tool has run successfully'
@@ -129,15 +138,29 @@ class SimpleTool(Tool):
         }
 
     def run(self):
+        # if conn is not None:
+        #     print('!! REDIRECTING STDOUT and STDERR !! ')
+        #     stdout = io.StringIO()
+        #     stderr = io.StringIO()
+        #     sys.stdout = stdout
+        #     sys.stderr = stderr
+
         print(f"Running simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")
 
         print('Sleeping for 5s as a test....')
         time.sleep(5)
         print('.... done sleeping.')
-        
+
         # Create a dummy file in the study folder
         with open(self.test_file_path, 'w') as f:
             f.write(f"This is a test file for {self.name} in study {self.study_name} for subject {self.subject_name}\n")    
+
+        # if conn is not None:
+        #     sys.stdout = sys.__stdout__
+        #     sys.stderr = sys.__stderr__
+        #     conn.send((stdout.getvalue(), stderr.getvalue()))
+        #     conn.close()
+
 
 
 

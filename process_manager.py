@@ -5,8 +5,36 @@ import shutil
 import glob
 import json
 from datetime import datetime
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
+import sys
+import io
 import threading
+
+def run_task_in_process(tool_obj, method_name, conn):
+
+    if not hasattr(tool_obj, method_name):
+        raise ValueError(f"Tool '{tool_obj}' does not have command '{method_name}'")
+    target = getattr(tool_obj, method_name)
+    if not callable(target):
+        raise ValueError(f"Command '{method_name}' of tool '{tool_obj}' is not callable")
+
+    # Redirect stdout and stderr within this process
+    stdout_buffer = io.StringIO()
+    stderr_buffer = io.StringIO()
+    sys.stdout = stdout_buffer
+    sys.stderr = stderr_buffer
+
+    try:
+        target()
+    except Exception as e:
+        print(f"Exception in run: {e}", file=sys.stderr)
+    finally:
+        # Restore stdout/stderr and send output back
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        conn.send((stdout_buffer.getvalue(), stderr_buffer.getvalue()))
+        conn.close()
+
 
 class ProcessManager():
     def __init__(self):
@@ -22,19 +50,6 @@ class ProcessManager():
         if not os.path.exists(self.completed_folder):
             os.makedirs(self.completed_folder)
 
-        # Keep track of the largest internal process id (ipid) used
-        self.config_file = os.path.join(self.process_root, 'config.json')
-        if not os.path.isfile(self.config_file):
-            # Create a new config file with initial ipid
-            config = {'max_ipid': 0}
-            with open(self.config_file, 'w') as f:
-                json.dump(config, f, indent=4)
-        else:
-            # Load existing config file
-            with open(self.config_file, 'r') as f:
-                config = json.load(f)
-            self.max_ipid = config.get('max_ipid', 0)
-
 
     def spawn2(self, tool, command):
         if not hasattr(tool, command):
@@ -43,19 +58,63 @@ class ProcessManager():
         if not callable(target):
             raise ValueError(f"Command '{command}' of tool '{tool}' is not callable")
 
+        # Configure the new process
         context_dict = tool.get_context()
         process_name = f'slug:{tool.name}:{command}'
-        print(f"Spawning process for {process_name} with command '{target.__name__}' on {context_dict}")
-        process = Process(name=process_name, target=target)
-        process.start()
+   
 
-        def watch():
-            process.join()
-            print('Watcher noticed that the process completed.')
+        # Create a new process
+        print(f"Spawning process for {process_name} with command '{target.__name__}' on {context_dict}")
+        parent_conn, child_conn = Pipe()
+        process = Process(name=process_name, target=run_task_in_process, args=(tool, command, child_conn))
+        #process = Process(name=process_name, target=target)
         
-        watcher = threading.Thread(target=watch)
+        process.start() # the .pid is not available until after this call
+        print(f"   --> started pid={process.pid}, parent={os.getpid()}, {process.name}")
+
+        # Set up a process folder for this process. 
+        this_process_folder_name = f'{process.pid}'
+        this_process_folder = os.path.join(self.running_folder, this_process_folder_name)        
+        if not os.path.exists(this_process_folder):
+            print(f'Creating process folder {this_process_folder}')
+            os.makedirs(this_process_folder)
+
+        # Write a context file
+        timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        process_context = {
+            'name': process_name,
+            'os_pid': process.pid,
+            'subject_name': context_dict['subject_name'],
+            'study_name': context_dict['study_name'],
+            'file_path': context_dict['file_path'],
+            'start_time': timestamp
+        }    
+        with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
+            json.dump(process_context, json_file, indent=4)
+
+
+        # configure tasks to run once the process completes
+        def postprocess():
+            stdout_data, stderr_data = parent_conn.recv() 
+            process.join()
+            retcode = process.exitcode
+            print(f'The process pid={process.pid} completed with code {retcode}.')
+
+            with open(os.path.join(this_process_folder, 'stdout.txt'), 'w') as f:
+                f.write(stdout_data + '\n')
+            with open(os.path.join(this_process_folder, 'stderr.txt'), 'w') as f:
+                f.write(stderr_data + '\n')
+            with open(os.path.join(this_process_folder, 'returncode.txt'), 'w') as f:
+                f.write(f'{retcode}\n')
+
+            # Move the process folder to the completed folder   
+            shutil.move(this_process_folder, self.completed_folder)
+        
+        watcher = threading.Thread(target=postprocess)
         watcher.start()
-        print('Also launched a watcher.')
+        print(f'Started a watcher thread to execute when pid={process.pid} terminates.')
+
+        return process.pid
 
 
 
