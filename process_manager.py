@@ -80,14 +80,15 @@ class ProcessManager():
             os.makedirs(this_process_folder)
 
         # Write a context file
-        timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        datetime_start = datetime.now()
+        timestamp_start = datetime_start.strftime('%Y-%m-%dT%H:%M:%S')
         process_context = {
             'name': process_name,
             'os_pid': process.pid,
             'subject_name': context_dict['subject_name'],
             'study_name': context_dict['study_name'],
             'file_path': context_dict['file_path'],
-            'start_time': timestamp
+            'start_time': timestamp_start
         }    
         with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
             json.dump(process_context, json_file, indent=4)
@@ -104,8 +105,17 @@ class ProcessManager():
                 f.write(stdout_data + '\n')
             with open(os.path.join(this_process_folder, 'stderr.txt'), 'w') as f:
                 f.write(stderr_data + '\n')
-            with open(os.path.join(this_process_folder, 'returncode.txt'), 'w') as f:
-                f.write(f'{retcode}\n')
+            
+            datetime_end = datetime.now()
+            timestamp_end = datetime_end.strftime('%Y-%m-%dT%H:%M:%S')
+            completion_dict = {
+                'return_code': retcode,
+                'end_time': timestamp_end,
+                'duration_s': f'{(datetime_end - datetime_start).total_seconds():.1f}',
+            }
+            with open(os.path.join(this_process_folder, 'completion.json'), 'w') as json_file:
+                json.dump(completion_dict, json_file, indent=4)
+
 
             # Move the process folder to the completed folder   
             shutil.move(this_process_folder, self.completed_folder)
@@ -115,67 +125,6 @@ class ProcessManager():
         print(f'Started a watcher thread to execute when pid={process.pid} terminates.')
 
         return process.pid
-
-
-
-    def spawn_process(self, tool, command):
-        if not hasattr(tool, command):
-            raise ValueError(f"Tool '{tool}' does not have command '{command}'")
-        target = getattr(tool, command)
-        name = f'slug-{tool.__name__}-{command}'
-        if not callable(target):
-            raise ValueError(f"Command '{command}' of tool '{tool}' is not callable")
-        
-        # Create a new process
-        timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-        print(f"Spawning process for {name} with target '{target.__name__}' at time {timestamp}")
-        this_process_folder_name = f'{timestamp}'
-        this_process_folder = os.path.join(self.running_folder, this_process_folder_name)
-        if not os.path.exists(this_process_folder):
-            os.makedirs(this_process_folder)
-
-        context_dict = tool.get_context()
-
-        process = Process(name=name, target=target)
-        process.start()
-        print(f"Spawning process for {name} with command '{target.__name__}' on {context_dict}")
-        pid = os.getpid()
-        print(f"pid={process.pid}, parent={pid}, {process.name}")
-
-        process_context = {
-            'name': name,
-            'pid': pid,
-            'subject_name': context_dict['subject_name'],
-            'study_name': context_dict['study_name'],
-            'file_path': context_dict['file_path'],
-            'command': '???',
-            'start_time': timestamp
-        }    
-        with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
-            json.dump(process_context, json_file, indent=4)
-
-
-    # For testing
-    def create_dummy_process(self):
-
-        # One in running first
-        timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-        this_process_folder_name = f'{timestamp}'
-        this_process_folder = os.path.join(self.running_folder, this_process_folder_name)
-        print(f'Creating Dummy process {this_process_folder}')
-        if not os.path.exists(this_process_folder):
-            os.makedirs(this_process_folder)
-
-        process_context = {
-            'name': 'tmp-process',
-            'pid': 42,
-            'subject-name': 'PJB-0001',
-            'study-name': '', 
-            'command': '/here/is/my/command.sh',
-            'start-time': timestamp
-        }    
-        with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
-            json.dump(process_context, json_file, indent=4)
 
     def get_processes(self, folder_type='running'):
         """
@@ -194,6 +143,7 @@ class ProcessManager():
         for folder_name in os.listdir(folder_path):
             process_folder = os.path.join(folder_path, folder_name)
             context_file = os.path.join(process_folder, 'context.json')
+            completion_file = os.path.join(process_folder, 'completion.json')
 
             if os.path.isdir(process_folder) and os.path.isfile(context_file):
                 try:
@@ -201,14 +151,31 @@ class ProcessManager():
                         process_context = json.load(json_file)
                         processes.append({
                             'name': process_context.get('name', 'N/A'),
-                            'pid': process_context.get('pid', 'N/A'),
-                            'subject_name': process_context.get('subject-name', 'N/A'),
-                            'study_name': process_context.get('study-name', 'N/A'),
-                            'command': process_context.get('command', 'N/A'),
-                            'start_time': process_context.get('start-time', 'N/A')
+                            'pid': folder_name,
+                            'subject_name': process_context.get('subject_name', 'N/A'),
+                            'study_name': process_context.get('study_name', 'N/A'),
+                            'file_path': process_context.get('file_path', 'N/A'),
+                            'start_time': process_context.get('start_time', 'N/A')
                         })
                 except Exception as e:
                     print(f"Error reading context.json in {process_folder}: {e}")
+
+                # If the process is completed, add completion details           
+                try:
+                    with open(completion_file, 'r') as json_file:
+                        completion_context = json.load(json_file)
+                        processes[-1]['return_code'] = completion_context.get('return_code', 'N/A')
+                        processes[-1]['end_time'] = completion_context.get('end_time', 'N/A')
+                        processes[-1]['duration_s'] = completion_context.get('duration_s', 'N/A')
+
+                except FileNotFoundError:
+                    # If completion file does not exist, it means the process is still running
+                    processes[-1]['return_code'] = ''
+                    processes[-1]['end_time'] = ''
+                    processes[-1]['duration_s'] = ''
+
+        # Sort processes by most recent start_time  
+        processes = sorted(processes, key=lambda x: x['start_time'], reverse=True)  
         return processes
 
 

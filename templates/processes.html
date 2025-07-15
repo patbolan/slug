@@ -20,18 +20,16 @@
                 <th>PID</th>
                 <th>Subject Name</th>
                 <th>Study Name</th>
-                <th>Command</th>
                 <th>Start Time</th>
             </tr>
         </thead>
         <tbody>
             {% for process in running_processes %}
                 <tr>
-                    <td>{{ process.name }}</td>
                     <td>{{ process.pid }}</td>
+                    <td>{{ process.name }}</td>
                     <td>{{ process.subject_name }}</td>
                     <td>{{ process.study_name }}</td>
-                    <td>{{ process.command }}</td>
                     <td>{{ process.start_time }}</td>
                 </tr>
             {% endfor %}
@@ -48,19 +46,23 @@
                 <th>PID</th>
                 <th>Subject Name</th>
                 <th>Study Name</th>
-                <th>Command</th>
                 <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration (s)</th>
+                <th>Return code</th>
             </tr>
         </thead>
         <tbody>
             {% for process in completed_processes %}
                 <tr>
-                    <td>{{ process.name }}</td>
                     <td>{{ process.pid }}</td>
+                    <td>{{ process.name }}</td>
                     <td>{{ process.subject_name }}</td>
                     <td>{{ process.study_name }}</td>
-                    <td>{{ process.command }}</td>
                     <td>{{ process.start_time }}</td>
+                    <td>{{ process.end_time }}</td>
+                    <td>{{ process.duration_s }}</td>
+                    <td>{{ process.return_code }}</td>
                 </tr>
             {% endfor %}
         </tbody>
