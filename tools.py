@@ -20,6 +20,8 @@ def get_tools_for_study(subject_name, study_name):
     simple_tool = SimpleTool(subject_name, study_name)
     toolset = [simple_tool.get_status_dict()]
 
+    print(toolset)
+
     return toolset
 
 def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
@@ -65,7 +67,7 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
 
             if async_mode:
                 pm = ProcessManager()
-                ipid = pm.spawn2(tool=simple_tool, command='run')
+                ipid = pm.spawn_process(tool=simple_tool, command='run')
                 #print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
 
             else:
@@ -121,29 +123,35 @@ class SimpleTool(Tool):
         }
 
     def get_status_dict(self):
-        if os.path.isfile(self.test_file_path):
-            status = 'complete'
-            message = 'Simple tool has run successfully'
-            commands = ['undo']
-        else:
-            status = 'available'
-            message = 'Simple tool is ready to run'
-            commands = ['run']
+
+        # See if there is a running process first. This is inefficient
+        pm = ProcessManager()
+        pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
+        if pid is not None:
+            print(f'Found running process {pid}')
+            status = 'running'
+            message = 'Simple tool is running, refresh page to update'
+            commands = []        
+        else: 
+            pid = None
+            if os.path.isfile(self.test_file_path):
+                status = 'complete'
+                message = 'Simple tool has run successfully'
+                commands = ['undo']
+            else:
+                status = 'available'
+                message = 'Simple tool is ready to run'
+                commands = ['run']
 
         return {
             'name': self.name,
             'status': status,
             'message': message,
-            'commands': commands
+            'commands': commands,
+            'pid': pid
         }
 
     def run(self):
-        # if conn is not None:
-        #     print('!! REDIRECTING STDOUT and STDERR !! ')
-        #     stdout = io.StringIO()
-        #     stderr = io.StringIO()
-        #     sys.stdout = stdout
-        #     sys.stderr = stderr
 
         print(f"Running simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")
 
@@ -154,15 +162,6 @@ class SimpleTool(Tool):
         # Create a dummy file in the study folder
         with open(self.test_file_path, 'w') as f:
             f.write(f"This is a test file for {self.name} in study {self.study_name} for subject {self.subject_name}\n")    
-
-        # if conn is not None:
-        #     sys.stdout = sys.__stdout__
-        #     sys.stderr = sys.__stderr__
-        #     conn.send((stdout.getvalue(), stderr.getvalue()))
-        #     conn.close()
-
-
-
 
     def undo(self):
         print(f"Undoing simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")

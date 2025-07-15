@@ -51,7 +51,7 @@ class ProcessManager():
             os.makedirs(self.completed_folder)
 
 
-    def spawn2(self, tool, command):
+    def spawn_process(self, tool, command):
         if not hasattr(tool, command):
             raise ValueError(f"Tool '{tool}' does not have command '{command}'")
         target = getattr(tool, command)
@@ -126,6 +126,75 @@ class ProcessManager():
 
         return process.pid
 
+    def get_process_id(self, subject_name, study_name, tool_name):
+        """
+        Returns the process ID for a given subject, study, and tool.
+        Ignores command
+        If no such process is found, returns None.
+        """
+        folder_path = self.running_folder
+        for folder_name in os.listdir(folder_path):
+            process_folder = os.path.join(folder_path, folder_name)
+            context_file = os.path.join(process_folder, 'context.json')
+
+            if os.path.isdir(process_folder) and os.path.isfile(context_file):
+                with open(context_file, 'r') as json_file:
+                    process_context = json.load(json_file)
+                    if (process_context.get('subject_name') == subject_name and
+                        process_context.get('study_name') == study_name and
+                        process_context.get('name').startswith(f'slug:{tool_name}')):
+                        return int(folder_name)
+        return None
+                    
+
+    def get_process_info(self, pid):
+        """
+        Returns a dictionary representing the process with the given pid.
+        The dictionary includes name, pid, subject_name, study_name, command, start_time,
+        return_code, end_time, and duration_s.
+        If no such process is found, returns None.
+        """
+        # First look in running, then completed
+        process_folder = os.path.join(self.running_folder, str(pid))
+        if not os.path.isdir(process_folder):        
+            process_folder = os.path.join(self.completed_folder, str(pid))
+            if not os.path.isdir(process_folder):        
+                return None
+
+        context_file = os.path.join(process_folder, 'context.json')
+        completion_file = os.path.join(process_folder, 'completion.json')
+        process_info = dict() # Start with empty dict
+
+        try:
+            with open(context_file, 'r') as json_file:
+                process_context = json.load(json_file)
+                process_info = {
+                    'name': process_context.get('name', 'N/A'),
+                    'pid': pid,
+                    'subject_name': process_context.get('subject_name', 'N/A'),
+                    'study_name': process_context.get('study_name', 'N/A'),
+                    'file_path': process_context.get('file_path', 'N/A'),
+                    'start_time': process_context.get('start_time', 'N/A')
+                }
+        except Exception as e:
+            print(f"Error reading context.json in {process_folder}: {e}")
+            return None
+
+        # If the process is completed, add completion details
+        try:
+            with open(completion_file, 'r') as json_file:
+                completion_context = json.load(json_file)
+                process_info['return_code'] = completion_context.get('return_code', 'N/A')
+                process_info['end_time'] = completion_context.get('end_time', 'N/A')
+                process_info['duration_s'] = completion_context.get('duration_s', 'N/A')
+        except FileNotFoundError:
+            # If completion file does not exist, it means the process is still running
+            process_info['return_code'] = ''
+            process_info['end_time'] = ''
+            process_info['duration_s'] = ''
+
+        return process_info
+
     def get_processes(self, folder_type='running'):
         """
         Returns a list of dictionaries representing all processes in the specified folder.
@@ -141,38 +210,7 @@ class ProcessManager():
 
         processes = []
         for folder_name in os.listdir(folder_path):
-            process_folder = os.path.join(folder_path, folder_name)
-            context_file = os.path.join(process_folder, 'context.json')
-            completion_file = os.path.join(process_folder, 'completion.json')
-
-            if os.path.isdir(process_folder) and os.path.isfile(context_file):
-                try:
-                    with open(context_file, 'r') as json_file:
-                        process_context = json.load(json_file)
-                        processes.append({
-                            'name': process_context.get('name', 'N/A'),
-                            'pid': folder_name,
-                            'subject_name': process_context.get('subject_name', 'N/A'),
-                            'study_name': process_context.get('study_name', 'N/A'),
-                            'file_path': process_context.get('file_path', 'N/A'),
-                            'start_time': process_context.get('start_time', 'N/A')
-                        })
-                except Exception as e:
-                    print(f"Error reading context.json in {process_folder}: {e}")
-
-                # If the process is completed, add completion details           
-                try:
-                    with open(completion_file, 'r') as json_file:
-                        completion_context = json.load(json_file)
-                        processes[-1]['return_code'] = completion_context.get('return_code', 'N/A')
-                        processes[-1]['end_time'] = completion_context.get('end_time', 'N/A')
-                        processes[-1]['duration_s'] = completion_context.get('duration_s', 'N/A')
-
-                except FileNotFoundError:
-                    # If completion file does not exist, it means the process is still running
-                    processes[-1]['return_code'] = ''
-                    processes[-1]['end_time'] = ''
-                    processes[-1]['duration_s'] = ''
+            processes.append( self.get_process_info(folder_name) )
 
         # Sort processes by most recent start_time  
         processes = sorted(processes, key=lambda x: x['start_time'], reverse=True)  
