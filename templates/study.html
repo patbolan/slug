@@ -120,13 +120,14 @@
                 <tr>
                     <td>{{ tool.name }}</td>
                     <td>{{ tool.status }}</td>
-                    <td>
+                    <td align="center">
                         {% if tool.commands %}
                             {% for command in tool.commands %}
                                 <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ command }}')">
                                     {{ command }}
                                 </button>
                             {% endfor %}
+
                             
                         {% endif %}
                     </td>

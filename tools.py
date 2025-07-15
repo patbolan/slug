@@ -14,8 +14,8 @@ def get_tools_for_study(subject_name, study_name):
     # returns a list of tools, each as a dictionary summarizing its current state
     #nii_converter = NiiConverter(subject_name, study_name)  
     #toolset = [nii_converter.get_status_dict()]
-    dummy_tool = DummyTool(subject_name, study_name)
-    toolset = [dummy_tool.get_status_dict()]
+    simple_tool = SimpleTool(subject_name, study_name)
+    toolset = [simple_tool.get_status_dict()]
 
     return toolset
 
@@ -56,12 +56,12 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
         raise ValueError(f"Tool nii-converter disabled ")
         
         
-    elif tool_name == 'dummy-tool': # Dummy tool for testing
-        dummy_tool = DummyTool(subject_name, study_name)
+    elif tool_name == 'simple-tool': # Simple tool for testing
+        simple_tool = SimpleTool(subject_name, study_name)
         if command == 'run':
-            dummy_tool.run()
+            simple_tool.run()
         elif command == 'undo':
-            dummy_tool.undo()
+            simple_tool.undo()
         else:
             raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
 
@@ -92,12 +92,12 @@ class Tool(ABC):
         raise NotImplementedError("Subclasses should implement this method")
 
 
-class DummyTool(Tool):
+class SimpleTool(Tool):
     """
-    A dummy tool for testing purposes.
+    A simple tool for testing purposes.
     """
     def __init__(self, subject_name, study_name):
-        self.name = 'dummy-tool'
+        self.name = 'simple-tool'
         self.subject_name = subject_name
         self.study_name = study_name
         self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
@@ -106,11 +106,11 @@ class DummyTool(Tool):
 
         if os.path.isfile(self.test_file_path):
             status = 'complete'
-            message = 'Dummy tool has run successfully'
+            message = 'Simple tool has run successfully'
             commands = ['undo']
         else:
             status = 'available'
-            message = 'Dummy tool is ready to run'
+            message = 'Simple tool is ready to run'
             commands = ['run']
 
         return {
@@ -121,17 +121,25 @@ class DummyTool(Tool):
         }
 
     def run(self):
-        print(f"Running dummy tool {self.name} for subject {self.subject_name} and study {self.study_name}")
+        print(f"Running simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")
         # Create a dummy file in the study folder
         with open(self.test_file_path, 'w') as f:
             f.write(f"This is a test file for {self.name} in study {self.study_name} for subject {self.subject_name}\n")    
 
 
     def undo(self):
-        print(f"Undoing dummy tool {self.name} for subject {self.subject_name} and study {self.study_name}")
+        print(f"Undoing simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")
         if os.path.isfile(self.test_file_path):
             os.remove(self.test_file_path)
 
+
+
+
+
+
+###############################################################################
+# The NiiConverter class is a tool for converting DICOM files to NIfTI format.
+# Currently not used - will come back to it
 
 class NiiConverter(Tool):
     def __init__(self, subject_name, study_name):
