@@ -6,12 +6,16 @@ import time
 import glob
 from datetime import datetime
 from multiprocessing import Process
+from process_manager import ProcessManager
+from abc import ABC
 
 def get_tools_for_study(subject_name, study_name):
 
     # returns a list of tools, each as a dictionary summarizing its current state
-    nii_converter = NiiConverter(subject_name, study_name)  
-    toolset = [nii_converter.get_status_dict()]
+    #nii_converter = NiiConverter(subject_name, study_name)  
+    #toolset = [nii_converter.get_status_dict()]
+    dummy_tool = DummyTool(subject_name, study_name)
+    toolset = [dummy_tool.get_status_dict()]
 
     return toolset
 
@@ -25,29 +29,111 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
     :param async_mode: If True, execute the command asynchronously.
     """
     if tool_name == 'nii-converter':
-        nii_converter = NiiConverter(subject_name, study_name)
-        process_name = f'slug-{tool_name}'
-        if command == 'run':
-            if async_mode:
-                # Run asynchronously in a separate process
-                process = Process(name=process_name, target=nii_converter.run)
-                process.start()
-                print(f"Started asynchronous process for {tool_name} with command '{command}'")
-                this_process = os.getpid()
-                print(f"pid={process.pid}, parent={this_process}, {process.name}")
+        # nii_converter = NiiConverter(subject_name, study_name)
+        # process_name = f'slug-{tool_name}'
+        # if command == 'run':
+        #     if async_mode:
+        #         # TESTING
+        #         pm = ProcessManager()
+        #         #pm.create_dummy_process()
+        #         # pm.spawn_process(name=process_name, target=nii_converter.run)
+        #         process_id = pm.spawn_process(tool=nii_converter, command='run')
 
-            else:
-                # Run synchronously
-                nii_converter.run()
+        #         # Run asynchronously in a separate process
+        #         # process = Process(name=process_name, target=nii_converter.run)
+        #         # process.start()
+        #         # print(f"Started asynchronous process for {tool_name} with command '{command}'")
+        #         # this_process = os.getpid()
+        #         # print(f"pid={process.pid}, parent={this_process}, {process.name}")
+
+        #     else:
+        #         # Run synchronously
+        #         nii_converter.run()
+        # elif command == 'undo':
+        #     nii_converter.undo()
+        # else:
+        #     raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
+        raise ValueError(f"Tool nii-converter disabled ")
+        
+        
+    elif tool_name == 'dummy-tool': # Dummy tool for testing
+        dummy_tool = DummyTool(subject_name, study_name)
+        if command == 'run':
+            dummy_tool.run()
         elif command == 'undo':
-            nii_converter.undo()
+            dummy_tool.undo()
         else:
             raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
+
     else:
         raise ValueError(f"Unknown tool '{tool_name}'")
+    
+
+class Tool(ABC):
+    """
+    Abstract base class for tools.
+    Each tool should implement the get_status_dict, run, and undo methods.
+    """
+    def get_status_dict(self):
+        raise NotImplementedError("Subclasses should implement this method")
+    
+    # Tools can operate at the subject, study, or project level. 
+    def get_context(self):
+        return {
+            'subject-name': '',
+            'study-name': '',
+            'file-path': ''
+        }
+
+    def run(self):
+        raise NotImplementedError("Subclasses should implement this method")
+
+    def undo(self):
+        raise NotImplementedError("Subclasses should implement this method")
 
 
-class NiiConverter:
+class DummyTool(Tool):
+    """
+    A dummy tool for testing purposes.
+    """
+    def __init__(self, subject_name, study_name):
+        self.name = 'dummy-tool'
+        self.subject_name = subject_name
+        self.study_name = study_name
+        self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
+
+    def get_status_dict(self):
+
+        if os.path.isfile(self.test_file_path):
+            status = 'complete'
+            message = 'Dummy tool has run successfully'
+            commands = ['undo']
+        else:
+            status = 'available'
+            message = 'Dummy tool is ready to run'
+            commands = ['run']
+
+        return {
+            'name': self.name,
+            'status': status,
+            'message': message,
+            'commands': commands
+        }
+
+    def run(self):
+        print(f"Running dummy tool {self.name} for subject {self.subject_name} and study {self.study_name}")
+        # Create a dummy file in the study folder
+        with open(self.test_file_path, 'w') as f:
+            f.write(f"This is a test file for {self.name} in study {self.study_name} for subject {self.subject_name}\n")    
+
+
+    def undo(self):
+        print(f"Undoing dummy tool {self.name} for subject {self.subject_name} and study {self.study_name}")
+        if os.path.isfile(self.test_file_path):
+            os.remove(self.test_file_path)
+
+
+class NiiConverter(Tool):
     def __init__(self, subject_name, study_name):
         self.subject_name = subject_name
         self.study_name = study_name
@@ -56,6 +142,13 @@ class NiiConverter:
         # Temporoary folder
         self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
+
+    def get_context(self):
+        return {
+            'subject-name': self.subject_name,
+            'study-name': self.study_name,
+            'file-path': ''
+        }
 
     # returns status, message
     def get_status_dict(self):
@@ -92,10 +185,10 @@ class NiiConverter:
         
 
     # Dummy functions, create and delete a folder "nii-temp"
-    def run(self):
-        status_dict = self.get_status_dict()
-        if status_dict['status'] != 'available':
-            raise Exception(f"NiiConverter cannot run: {status_dict['message']}")
+    def run(self, log_folder=None):
+        # status_dict = self.get_status_dict()       
+        # if status_dict['status'] != 'available':
+        #     raise Exception(f"NiiConverter cannot run: status={status_dict['status']}, message={status_dict['message']}")
 
         # Run the module, a command-line script
         module_folder = '/home/bakken-raid8/pcad2/modules/'
@@ -105,23 +198,24 @@ class NiiConverter:
         cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
         print(f"Running command: {cmd}")
 
-        # Prep a process folder
-        study_process_folder_running = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'running'))    
-        study_process_folder_completed = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'completed'))    
-        if not os.path.exists(study_process_folder_running):
-            os.makedirs(study_process_folder_running)
-        if not os.path.exists(study_process_folder_completed):
-            os.makedirs(study_process_folder_completed)
+        # # Prep a process folder
+        # study_process_folder_running = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'running'))    
+        # study_process_folder_completed = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'completed'))    
+        # if not os.path.exists(study_process_folder_running):
+        #     os.makedirs(study_process_folder_running)
+        # if not os.path.exists(study_process_folder_completed):
+        #     os.makedirs(study_process_folder_completed)
 
-        # This process
-        this_process_folder_name = f'{datetime.now().isoformat()}-{self.tool_name}-run'
-        this_process_folder = os.path.join(study_process_folder_running, this_process_folder_name)
-        print(f'Creating {this_process_folder}')
-        if not os.path.exists(this_process_folder):
-            os.makedirs(this_process_folder)
+        # # This process
+        # this_process_folder_name = f'{datetime.now().isoformat()}-{self.tool_name}-run'
+        # this_process_folder = os.path.join(study_process_folder_running, this_process_folder_name)
+        # print(f'Creating {this_process_folder}')
+        # if not os.path.exists(this_process_folder):
+        #     os.makedirs(this_process_folder)
 
-        with open(os.path.join(this_process_folder, 'command.txt'), 'w') as f:
-            f.write(' '.join(cmd))
+        if log_folder is not None:
+            with open(os.path.join(log_folder, 'command.txt'), 'w') as f:
+                f.write(' '.join(cmd))
 
         result = subprocess.run(
             cmd,   # Replace with your command and arguments
@@ -137,15 +231,17 @@ class NiiConverter:
         # result.returncode is 0 if sucessful
         print(f'Completed with return code: {result.returncode}')
 
-        with open(os.path.join(this_process_folder, 'stdout.txt'), 'w') as f:
+        with open(os.path.join(log_folder, 'stdout.txt'), 'w') as f:
             f.write(result.stdout + '\n')
-        with open(os.path.join(this_process_folder, 'stderr.txt'), 'w') as f:
+        with open(os.path.join(log_folder, 'stderr.txt'), 'w') as f:
             f.write(result.stderr + '\n')
-        with open(os.path.join(this_process_folder, 'returncode.txt'), 'w') as f:
+        with open(os.path.join(log_folder, 'returncode.txt'), 'w') as f:
             f.write(f'{result.returncode}\n')
 
         # Now move this process to completed
-        shutil.move(this_process_folder, study_process_folder_completed)
+        #shutil.move(this_process_folder, study_process_folder_completed)
+        # Process Manager should do this. But we don't know the os pid. 
+        # We do for this thread, but not for the command-line tool started by subprocess.run()
 
         return result
 

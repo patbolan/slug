@@ -22,14 +22,51 @@ class ProcessManager():
         if not os.path.exists(self.completed_folder):
             os.makedirs(self.completed_folder)
 
+    def spawn_process(self, tool, command):
+        if not hasattr(tool, command):
+            raise ValueError(f"Tool '{tool}' does not have command '{command}'")
+        target = getattr(tool, command)
+        name = f'slug-{tool.__name__}-{command}'
+        if not callable(target):
+            raise ValueError(f"Command '{command}' of tool '{tool}' is not callable")
+        
+        # Create a new process
+        timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        print(f"Spawning process for {name} with target '{target.__name__}' at time {timestamp}")
+        this_process_folder_name = f'{timestamp}'
+        this_process_folder = os.path.join(self.running_folder, this_process_folder_name)
+        if not os.path.exists(this_process_folder):
+            os.makedirs(this_process_folder)
+
+        context_dict = tool.get_context()
+
+        process = Process(name=name, target=target)
+        process.start()
+        print(f"Spawning process for {name} with command '{target.__name__}' on {context_dict}")
+        pid = os.getpid()
+        print(f"pid={process.pid}, parent={pid}, {process.name}")
+
+        process_context = {
+            'name': name,
+            'pid': pid,
+            'subject-name': context_dict['subject-name'],
+            'study-name': context_dict['study-name'],
+            'file-path': context_dict['file-path'],
+            'command': '???',
+            'start-time': timestamp
+        }    
+        with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
+            json.dump(process_context, json_file, indent=4)
+
+
     # For testing
     def create_dummy_process(self):
 
         # One in running first
-        timestamp = datetime.now().isoformat()
+        timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         this_process_folder_name = f'{timestamp}'
         this_process_folder = os.path.join(self.running_folder, this_process_folder_name)
-        print(f'Creating {this_process_folder}')
+        print(f'Creating Dummy process {this_process_folder}')
         if not os.path.exists(this_process_folder):
             os.makedirs(this_process_folder)
 
@@ -39,9 +76,9 @@ class ProcessManager():
             'subject-name': 'PJB-0001',
             'study-name': '', 
             'command': '/here/is/my/command.sh',
-            'start-time': datetime.now().isoformat()
+            'start-time': timestamp
         }    
-        with open(os.path.join(this_process_folder, 'context.json')) as json_file:
+        with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
             json.dump(process_context, json_file, indent=4)
 
     def get_processes(self, folder_type='running'):

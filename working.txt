@@ -1,5 +1,10 @@
 Later need to break up app.py. One other file for file handling (text, dicom) and one for tools
 
+Process/tool project
+Started basic process. 
+Now add a spawn, and make your nii-convert use that for it's processsing
+
+
 Got a first tool (nii-converter) working well. It runs as a subprocess, but undo is inline
 Added a process subfolder, contains all sorts of stuff about processes (stdout, etc)
 Note that processes are pretty lightweight. I could actually store a PID, and then you could GET the status of a specific PID. But I wanted something a little simpler for this. If the process fails you just need to clean up. But you can troubleshoot a little through the web.
