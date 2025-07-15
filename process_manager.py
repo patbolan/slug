@@ -6,7 +6,7 @@ import glob
 import json
 from datetime import datetime
 from multiprocessing import Process
-
+import threading
 
 class ProcessManager():
     def __init__(self):
@@ -21,6 +21,43 @@ class ProcessManager():
             os.makedirs(self.running_folder)
         if not os.path.exists(self.completed_folder):
             os.makedirs(self.completed_folder)
+
+        # Keep track of the largest internal process id (ipid) used
+        self.config_file = os.path.join(self.process_root, 'config.json')
+        if not os.path.isfile(self.config_file):
+            # Create a new config file with initial ipid
+            config = {'max_ipid': 0}
+            with open(self.config_file, 'w') as f:
+                json.dump(config, f, indent=4)
+        else:
+            # Load existing config file
+            with open(self.config_file, 'r') as f:
+                config = json.load(f)
+            self.max_ipid = config.get('max_ipid', 0)
+
+
+    def spawn2(self, tool, command):
+        if not hasattr(tool, command):
+            raise ValueError(f"Tool '{tool}' does not have command '{command}'")
+        target = getattr(tool, command)
+        if not callable(target):
+            raise ValueError(f"Command '{command}' of tool '{tool}' is not callable")
+
+        context_dict = tool.get_context()
+        process_name = f'slug:{tool.name}:{command}'
+        print(f"Spawning process for {process_name} with command '{target.__name__}' on {context_dict}")
+        process = Process(name=process_name, target=target)
+        process.start()
+
+        def watch():
+            process.join()
+            print('Watcher noticed that the process completed.')
+        
+        watcher = threading.Thread(target=watch)
+        watcher.start()
+        print('Also launched a watcher.')
+
+
 
     def spawn_process(self, tool, command):
         if not hasattr(tool, command):
@@ -49,11 +86,11 @@ class ProcessManager():
         process_context = {
             'name': name,
             'pid': pid,
-            'subject-name': context_dict['subject-name'],
-            'study-name': context_dict['study-name'],
-            'file-path': context_dict['file-path'],
+            'subject_name': context_dict['subject_name'],
+            'study_name': context_dict['study_name'],
+            'file_path': context_dict['file_path'],
             'command': '???',
-            'start-time': timestamp
+            'start_time': timestamp
         }    
         with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
             json.dump(process_context, json_file, indent=4)

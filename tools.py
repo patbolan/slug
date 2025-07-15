@@ -59,7 +59,15 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
     elif tool_name == 'simple-tool': # Simple tool for testing
         simple_tool = SimpleTool(subject_name, study_name)
         if command == 'run':
-            simple_tool.run()
+
+            if async_mode:
+                pm = ProcessManager()
+                ipid = pm.spawn2(tool=simple_tool, command='run')
+                print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
+
+            else:
+                simple_tool.run()
+
         elif command == 'undo':
             simple_tool.undo()
         else:
@@ -122,9 +130,15 @@ class SimpleTool(Tool):
 
     def run(self):
         print(f"Running simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")
+
+        print('Sleeping for 5s as a test....')
+        time.sleep(5)
+        print('.... done sleeping.')
+        
         # Create a dummy file in the study folder
         with open(self.test_file_path, 'w') as f:
             f.write(f"This is a test file for {self.name} in study {self.study_name} for subject {self.subject_name}\n")    
+
 
 
     def undo(self):
