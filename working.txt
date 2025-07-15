@@ -1,8 +1,9 @@
 Later need to break up app.py. One other file for file handling (text, dicom) and one for tools
 
 Process/tool project
-Started basic process. 
-Now add a spawn, and make your nii-convert use that for it's processsing
+Add a page for PID. Show files there. 
+Then go back and get nii-converter working well
+
 
 
 Got a first tool (nii-converter) working well. It runs as a subprocess, but undo is inline
