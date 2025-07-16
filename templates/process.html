@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Process {{ process_info.pid }}</title>
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('index') }}">Home</a>, 
+        <a href="{{ url_for('processes') }}">All Processes</a>
+    </header>
+
+    <h1>Process Details</h1>
+
+    <table border="1" cellpadding="2" cellspacing="0">
+        <tr>
+            <th>PID</th>
+            <td>{{ process_info.pid }}</td>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <td>{{ process_info.name }}</td>
+        </tr>
+        <tr>
+            <th>Subject Name</th>
+            <td>{{ process_info.subject_name }}</td>
+        </tr>
+        <tr>
+            <th>Study Name</th>
+            <td>{{ process_info.study_name }}</td>
+        </tr>
+        <tr>
+            <th>File Path</th>
+            <td>{{ process_info.file_path }}</td>
+        </tr>
+        <tr>
+            <th>Start Time</th>
+            <td>{{ process_info.start_time }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <!-- <td>{{ "Running" if is_running else "Completed" }}</td> -->
+            <td>{{ process_info.status }}</td>
+        </tr>
+
+        <tr>
+            <th>Return Code</th>
+            <td>{{ process_info.return_code }}</td>
+        </tr>
+        <tr>
+            <th>End Time</th>
+            <td>{{ process_info.end_time }}</td>
+        </tr>
+        <tr>
+            <th>Duration (s)</th>
+            <td>{{ process_info.duration_s }}</td>
+        </tr>
+
+    </table>
+
+    <br>
+    <a href="{{ url_for('processes') }}">All Processes</a>
+</body>
+</html>

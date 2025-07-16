@@ -26,8 +26,8 @@
         <tbody>
             {% for process in running_processes %}
                 <tr>
-                    <td>{{ process.pid }}</td>
                     <td>{{ process.name }}</td>
+                    <td><a href="{{ url_for('process_info', pid=process.pid) }}">{{ process.pid }}</a></td>
                     <td>{{ process.subject_name }}</td>
                     <td>{{ process.study_name }}</td>
                     <td>{{ process.start_time }}</td>
@@ -55,8 +55,8 @@
         <tbody>
             {% for process in completed_processes %}
                 <tr>
-                    <td>{{ process.pid }}</td>
                     <td>{{ process.name }}</td>
+                    <td><a href="{{ url_for('process_info', pid=process.pid) }}">{{ process.pid }}</a></td>
                     <td>{{ process.subject_name }}</td>
                     <td>{{ process.study_name }}</td>
                     <td>{{ process.start_time }}</td>

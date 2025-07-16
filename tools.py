@@ -127,25 +127,27 @@ class SimpleTool(Tool):
         # See if there is a running process first. This is inefficient
         pm = ProcessManager()
         pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
-        if pid is not None:
-            print(f'Found running process {pid}')
-            status = 'running'
-            message = 'Simple tool is running, refresh page to update'
-            commands = []        
+        if pm.is_running(pid): 
+                print(f'Found running process {pid}')
+                tool_status = 'running'
+                message = 'Simple tool is running, refresh page to update'
+                commands = []        
         else: 
-            pid = None
+            print(f'Process {pid} is not running')
+            # Either can't find process, or it is completed. Check outputs
             if os.path.isfile(self.test_file_path):
-                status = 'complete'
+                tool_status = 'complete'
                 message = 'Simple tool has run successfully'
                 commands = ['undo']
             else:
-                status = 'available'
+                pid = None # It may have ran before, but don't like to that pid - confusing
+                tool_status = 'available'
                 message = 'Simple tool is ready to run'
                 commands = ['run']
 
         return {
             'name': self.name,
-            'status': status,
+            'status': tool_status,
             'message': message,
             'commands': commands,
             'pid': pid

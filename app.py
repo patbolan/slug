@@ -179,13 +179,22 @@ def study(subject_name, study_name):
 # But using the "path:" keyword, all the path information after will get assigned to one variable
 @app.route('/viewer/subjects/<subject_name>/studies/<study_name>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
 @app.route('/viewer/subjects/<subject_name>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
-def file_viewer(subject_name, file_relative_path, study_name=None):
-    print(f'file_viewer: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}')
+@app.route('/viewer/process/<process_id>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
+def file_viewer(file_relative_path, subject_name=None, study_name=None, process_id=None):
+    print(f'file_viewer: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}, process_id={process_id}')
     # Construct the full file path based on whether study_name is provided
-    if study_name:
+    if study_name is not None:
+        # Study-associated file
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
-    else:
+    elif subject_name is not None:
+        # Subject-associated file
         file_path = get_subject_file_path(subject_name, file_relative_path)
+    elif process_id is not None:
+        file_path = get_processs_file_path(process_id)
+    else:
+        # Todo: project-associated files? Reports?
+        print('file_viewer: unsupported file association')
+        abort(404)
 
     # HACK - the javascript sometimes adds an extra path delimiter. 
     file_path = re.sub(r'/+', '/', file_path)
@@ -407,6 +416,20 @@ def processes():
     return render_template('processes.html', 
                            running_processes=running_processes, 
                            completed_processes=completed_processes)
+
+@app.route('/process/<pid>')
+def process_info(pid):
+    # Create an instance of ProcessManager
+    process_manager = ProcessManager()
+
+    # Get process information
+    process_info = process_manager.get_process_info(pid)
+
+    # If the process does not exist, return a 404 error
+    if not process_info:
+        abort(404, description=f"Process with PID {pid} not found.")
+
+    return render_template('process.html', process_info=process_info)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000

@@ -61,6 +61,18 @@ def get_process_root_folder():
     #return '/home/bakken-raid8/pcad2/processes'
     return '/home/bakken-raid2/bolan/prj/slug/processes'
 
+def get_processs_file_path(process_id):
+    pm = ProcessManager()
+    process_info = pm.get_process_info(process_id)
+    if process_info is None:
+        return None
+    else:
+        if process_info['status'] == 'running':
+            return os.path.join(get_process_root_folder(), 'running' )
+        else: 
+            return os.path.join(get_process_root_folder(), 'completed')
+
+
 # Get some DICOM header information
 def get_sample_dicom_header(subject_name, study_name):
     study_path = get_study_path(subject_name, study_name)

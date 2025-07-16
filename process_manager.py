@@ -35,7 +35,8 @@ def run_task_in_process(tool_obj, method_name, conn):
         conn.send((stdout_buffer.getvalue(), stderr_buffer.getvalue()))
         conn.close()
 
-
+# TODO: This doesn't need to be a class, these could all just be functions. 
+# The state never changes. But maybe it's OK to be a class?
 class ProcessManager():
     def __init__(self):
         self.process_root = get_process_root_folder()
@@ -127,25 +128,26 @@ class ProcessManager():
         return process.pid
 
     def get_process_id(self, subject_name, study_name, tool_name):
-        """
-        Returns the process ID for a given subject, study, and tool.
-        Ignores command
-        If no such process is found, returns None.
-        """
-        folder_path = self.running_folder
-        for folder_name in os.listdir(folder_path):
-            process_folder = os.path.join(folder_path, folder_name)
-            context_file = os.path.join(process_folder, 'context.json')
 
-            if os.path.isdir(process_folder) and os.path.isfile(context_file):
-                with open(context_file, 'r') as json_file:
-                    process_context = json.load(json_file)
-                    if (process_context.get('subject_name') == subject_name and
-                        process_context.get('study_name') == study_name and
-                        process_context.get('name').startswith(f'slug:{tool_name}')):
-                        return int(folder_name)
+        for folder_type in ['running', 'completed']:
+            processes = self.get_processes(folder_type=folder_type)
+            for process_info in processes:  
+                if (process_info['subject_name'] == subject_name and
+                    process_info['study_name'] == study_name and
+                    process_info['name'].startswith(f'slug:{tool_name}')):
+                    return process_info['pid']
         return None
                     
+    def is_running(self, pid):
+        print(f'   is {pid} running?')
+        process_info = self.get_process_info(pid)
+        if process_info is not None and ('status' in process_info) and process_info['status'] == 'running': 
+            print(f'   Yep!!')
+            return True
+        else:
+            print(f'    No. {process_info}')
+            print(f'     {"status" in process_info}')
+            return False
 
     def get_process_info(self, pid):
         """
@@ -155,11 +157,16 @@ class ProcessManager():
         If no such process is found, returns None.
         """
         # First look in running, then completed
-        process_folder = os.path.join(self.running_folder, str(pid))
-        if not os.path.isdir(process_folder):        
+        process_folder = os.path.join(self.running_folder, str(pid))        
+        if os.path.isdir(process_folder):
+            status = 'running'
+        else:        
             process_folder = os.path.join(self.completed_folder, str(pid))
-            if not os.path.isdir(process_folder):        
-                return None
+            if os.path.isdir(process_folder): 
+                status = 'completed' 
+            else:
+                print(f"Process with pid {pid} not found in either running or completed folders.") 
+                return None       
 
         context_file = os.path.join(process_folder, 'context.json')
         completion_file = os.path.join(process_folder, 'completion.json')
@@ -170,6 +177,7 @@ class ProcessManager():
                 process_context = json.load(json_file)
                 process_info = {
                     'name': process_context.get('name', 'N/A'),
+                    'status': status,
                     'pid': pid,
                     'subject_name': process_context.get('subject_name', 'N/A'),
                     'study_name': process_context.get('study_name', 'N/A'),
