@@ -36,6 +36,9 @@
         </tbody>
     </table>
     <br>
+    <form action="{{ url_for('clear_running_logs') }}" method="POST">
+        <button type="submit">Clear running logs</button>
+    </form>
     <p>Total number of running processes: <b>{{ running_processes|length }}</b></p>
 
     <h2>Completed Processes</h2>
@@ -49,7 +52,7 @@
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Duration (s)</th>
-                <th>Return code</th>
+                <th>Return Code</th>
             </tr>
         </thead>
         <tbody>
@@ -68,6 +71,10 @@
         </tbody>
     </table>
     <br>
+    <form action="{{ url_for('clear_completed_logs') }}" method="POST">
+        <button type="submit">Clear completed logs</button>
+    </form>
     <p>Total number of completed processes: <b>{{ completed_processes|length }}</b></p>
+
 </body>
 </html>

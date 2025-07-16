@@ -29,6 +29,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from io import BytesIO
 import base64
+import shutil  # Add this import for removing directories
 
 app = Flask(__name__)
 
@@ -441,6 +442,35 @@ def process_info(pid):
     return render_template('process.html', 
                            process_info=process_info, 
                            file_tree=file_tree)
+
+@app.route('/clear-running-logs', methods=['POST'])
+def clear_running_logs():
+    process_manager = ProcessManager()
+    running_folder = process_manager.running_folder
+
+    # Delete all folders under the running folder
+    for folder_name in os.listdir(running_folder):
+        folder_path = os.path.join(running_folder, folder_name)
+        if os.path.isdir(folder_path):
+            shutil.rmtree(folder_path)
+            print(f"Deleted folder: {folder_path}")
+
+    return redirect(url_for('processes'))
+
+
+@app.route('/clear-completed-logs', methods=['POST'])
+def clear_completed_logs():
+    process_manager = ProcessManager()
+    completed_folder = process_manager.completed_folder
+
+    # Delete all folders under the completed folder
+    for folder_name in os.listdir(completed_folder):
+        folder_path = os.path.join(completed_folder, folder_name)
+        if os.path.isdir(folder_path):
+            shutil.rmtree(folder_path)
+            print(f"Deleted folder: {folder_path}")
+
+    return redirect(url_for('processes'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000

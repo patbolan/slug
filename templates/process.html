@@ -2,6 +2,16 @@
 <html>
 <head>
     <title>Process {{ process_info.pid }}</title>
+    <!-- Use public jsTree CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <!-- Use public jQuery and jsTree JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+    <style>
+        #file-tree {
+            font-family: monospace; /* Use fixed-width font */
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -59,8 +69,7 @@
 
     <h2>Files</h2>
     <div id="file-tree"></div>
-    <p>TODO: for some reason the tree isnt showing!</p>
-    <p>{{ file_tree }} </p>
+
     <script>
         $(document).ready(function () {
             $('#file-tree').jstree({
