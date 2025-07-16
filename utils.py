@@ -61,16 +61,24 @@ def get_process_root_folder():
     #return '/home/bakken-raid8/pcad2/processes'
     return '/home/bakken-raid2/bolan/prj/slug/processes'
 
-def get_processs_file_path(process_id):
+def get_process_file_path(process_id, file_relative_path=None):
+    from process_manager import ProcessManager
+
     pm = ProcessManager()
     process_info = pm.get_process_info(process_id)
     if process_info is None:
         return None
     else:
         if process_info['status'] == 'running':
-            return os.path.join(get_process_root_folder(), 'running' )
+            return_path = os.path.join(get_process_root_folder(), 'running', f'{process_id}')
         else: 
-            return os.path.join(get_process_root_folder(), 'completed')
+            return_path = os.path.join(get_process_root_folder(), 'completed', f'{process_id}')
+
+    # Add file to path 
+    if file_relative_path is not None:
+        return_path = os.path.join(return_path, file_relative_path)
+        
+    return return_path
 
 
 # Get some DICOM header information

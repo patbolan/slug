@@ -8,15 +8,28 @@
         {% if study %}
             Text File: {{ subject }}/{{ study }}/{{ filepath }}
         {% else %}
-            Text File: {{ subject }}/{{ filepath }}
+            {% if subject %}
+                Text File: {{ subject }}/{{ filepath }}
+            {% else %}
+                Text File: {{ process_id }}/{{ filepath }}
+            {% endif %}
         {% endif %}
     </h1>
     <pre>{{ content }}</pre>
     <br>
-    <form action="{{ url_for('edit_file_page', subject_name=subject, study_name=study, file_relative_path=filepath) }}" method="GET">
-        <button type="submit">Edit File</button>
-    </form>
+    {% if not readonly %}
+        <form action="{{ url_for('edit_file_page', subject_name=subject, study_name=study, file_relative_path=filepath) }}" method="GET">
+            <button type="submit">Edit File</button>
+        </form>
+    {% endif %}
     <br>
-    <a href="{% if study %}{{ url_for('study', subject_name=subject, study_name=study) }}{% else %}{{ url_for('subject', subject_name=subject) }}{% endif %}">Back</a>
+    {% if study %}
+        <a href="{ url_for('study', subject_name=subject, study_name=study) }">Back</a>
+    {% else %}
+        {% if subject %}
+            <a href="{ url_for('subject', subject_name=subject) }">Back</a>
+        {% endif %}
+    {% endif %}        
+
 </body>
 </html>

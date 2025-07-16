@@ -57,6 +57,51 @@
 
     </table>
 
+    <h2>Files</h2>
+    <div id="file-tree"></div>
+    <p>TODO: for some reason the tree isnt showing!</p>
+    <p>{{ file_tree }} </p>
+    <script>
+        $(document).ready(function () {
+            $('#file-tree').jstree({
+                'core': {
+                    'data': [
+                        {
+                            //'text': 'Files under {{ subject }}/{{ study }}',
+                            'text': '',
+                            'state': { 'opened': true }, // Start collapsed
+                            'children': {{ file_tree|tojson }}
+                        }
+                    ]
+                },
+                'plugins': ['types'], // Enable types plugin
+                'types': {
+                    'jstree-folder': {
+                        'icon': 'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/folder.png' // Public folder icon
+                    },
+                    'jstree-file': {
+                        'icon': 'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/file.png' // Public file icon
+                    }
+                }
+            });
+
+            // Handle double-click on files and specific folders
+            $('#file-tree').on('select_node.jstree', function (e, data) {
+                const node = data.node;
+                const fileName = node.text;
+                const filePath = node.original.full_path;
+                const path = data.instance.get_path(data.node, '/');
+
+                // Check file extension and open in browser
+                if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.endsWith('.dcm') || fileName.endsWith('.png')) {
+                    const url = "{{ url_for('file_viewer', subject_name=None, study_name=None, process_id=process_info.pid, file_relative_path='') }}" + path;
+                    window.open(url, '_blank');
+                }
+
+            });
+        });
+    </script>
+
     <br>
     <a href="{{ url_for('processes') }}">All Processes</a>
 </body>

@@ -9,7 +9,8 @@ from utils import (  # Import the utility functions
     get_study_files, 
     get_sample_dicom_header, 
     get_file_tree,
-    get_series_number_from_folder
+    get_series_number_from_folder, 
+    get_process_file_path
 )
 from tools import *
 from process_manager import ProcessManager
@@ -186,11 +187,14 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
     if study_name is not None:
         # Study-associated file
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
+        readonly = False
     elif subject_name is not None:
         # Subject-associated file
         file_path = get_subject_file_path(subject_name, file_relative_path)
+        readonly = False
     elif process_id is not None:
-        file_path = get_processs_file_path(process_id)
+        file_path = get_process_file_path(process_id, file_relative_path)
+        readonly = True
     else:
         # Todo: project-associated files? Reports?
         print('file_viewer: unsupported file association')
@@ -243,7 +247,9 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
                             subject=subject_name, 
                             study=study_name, 
                             filepath=file_relative_path, 
-                            content=content)
+                            content=content, 
+                            readonly=readonly, 
+                            process_id = process_id)
     
     elif ext in ('nii'):
         # Note that I accidently deleted this logic when I "REmoved Collections"
@@ -425,11 +431,16 @@ def process_info(pid):
     # Get process information
     process_info = process_manager.get_process_info(pid)
 
+    # Generate file tree
+    file_tree = get_file_tree(get_process_file_path(pid))
+
     # If the process does not exist, return a 404 error
     if not process_info:
         abort(404, description=f"Process with PID {pid} not found.")
 
-    return render_template('process.html', process_info=process_info)
+    return render_template('process.html', 
+                           process_info=process_info, 
+                           file_tree=file_tree)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000
