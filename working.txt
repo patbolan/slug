@@ -1,5 +1,8 @@
 Later need to break up app.py. One other file for file handling (text, dicom) and one for tools
 
+nii-converter looks complete. However, I see that some studies make additional "mask" files in nii-original. 
+That's not right - shouldn't be callled original.
+
 Next Tool steps:
 * re-implement nii-coverter. Then refactor up to Tool
 * Prepare a second tool. I think the dicom-raw converter

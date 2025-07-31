@@ -34,33 +34,22 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
     :param async_mode: If True, execute the command asynchronously.
     """
     if tool_name == 'nii-converter':
-        # nii_converter = NiiConverter(subject_name, study_name)
-        # process_name = f'slug-{tool_name}'
-        # if command == 'run':
-        #     if async_mode:
-        #         # TESTING
-        #         pm = ProcessManager()
-        #         #pm.create_dummy_process()
-        #         # pm.spawn_process(name=process_name, target=nii_converter.run)
-        #         process_id = pm.spawn_process(tool=nii_converter, command='run')
+        nii_converter = NiiConverter(subject_name, study_name)
+        if command == 'run':
 
-        #         # Run asynchronously in a separate process
-        #         # process = Process(name=process_name, target=nii_converter.run)
-        #         # process.start()
-        #         # print(f"Started asynchronous process for {tool_name} with command '{command}'")
-        #         # this_process = os.getpid()
-        #         # print(f"pid={process.pid}, parent={this_process}, {process.name}")
+            if async_mode:
+                pm = ProcessManager()
+                ipid = pm.spawn_process(tool=nii_converter, command='run')
+                #print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
 
-        #     else:
-        #         # Run synchronously
-        #         nii_converter.run()
-        # elif command == 'undo':
-        #     nii_converter.undo()
-        # else:
-        #     raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
-        raise ValueError(f"Tool nii-converter disabled ")
-        
-        
+            else:
+                nii_converter.run()
+
+        elif command == 'undo':
+            nii_converter.undo()
+        else:
+            raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
+                
     elif tool_name == 'simple-tool': # Simple tool for testing
         simple_tool = SimpleTool(subject_name, study_name)
         if command == 'run':
@@ -104,6 +93,13 @@ class Tool(ABC):
     def undo(self):
         raise NotImplementedError("Subclasses should implement this method")
 
+    def get_context(self):
+        return {
+            'subject_name': self.subject_name,
+            'study_name': self.study_name,
+            'file_path': '' # Operating on a study, not a path
+        }
+
 
 class SimpleTool(Tool):
     """
@@ -117,12 +113,6 @@ class SimpleTool(Tool):
         # Specify the test file path
         self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
 
-    def get_context(self):
-        return {
-            'subject_name': self.subject_name,
-            'study_name': self.study_name,
-            'file_path': '' # Operating on a study, not a path
-        }
 
     def get_status_dict(self):
         # See if there is a running process first. This is inefficient
@@ -189,13 +179,6 @@ class NiiConverter(Tool):
         self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
 
-    def get_context(self):
-        return {
-            'subject-name': self.subject_name,
-            'study-name': self.study_name,
-            'file-path': ''
-        }
-
     # returns status, message
     def get_status_dict(self):
 
@@ -229,66 +212,38 @@ class NiiConverter(Tool):
         }
         
 
-    # Dummy functions, create and delete a folder "nii-temp"
-    def run(self, log_folder=None):
-        # status_dict = self.get_status_dict()       
-        # if status_dict['status'] != 'available':
-        #     raise Exception(f"NiiConverter cannot run: status={status_dict['status']}, message={status_dict['message']}")
+    def run(self):
+        print(f"Running {self.name} for subject {self.subject_name} and study {self.study_name}")
 
         # Run the module, a command-line script
         module_folder = '/home/bakken-raid8/pcad2/modules/'
         module_script = os.path.join(module_folder, 'convert2nii', 'run.sh')
         study_folder = get_study_path(self.subject_name, self.study_name)
-        #cmd = f'{module_script} {study_folder}'
         cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
-        print(f"Running command: {cmd}")
-
-        # # Prep a process folder
-        # study_process_folder_running = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'running'))    
-        # study_process_folder_completed = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'completed'))    
-        # if not os.path.exists(study_process_folder_running):
-        #     os.makedirs(study_process_folder_running)
-        # if not os.path.exists(study_process_folder_completed):
-        #     os.makedirs(study_process_folder_completed)
-
-        # # This process
-        # this_process_folder_name = f'{datetime.now().isoformat()}-{self.tool_name}-run'
-        # this_process_folder = os.path.join(study_process_folder_running, this_process_folder_name)
-        # print(f'Creating {this_process_folder}')
-        # if not os.path.exists(this_process_folder):
-        #     os.makedirs(this_process_folder)
-
-        if log_folder is not None:
-            with open(os.path.join(log_folder, 'command.txt'), 'w') as f:
-                f.write(' '.join(cmd))
+        print(f"***** Running command: {cmd}")
 
         result = subprocess.run(
             cmd,   # Replace with your command and arguments
             capture_output=True,            # Captures both stdout and stderr
             text=True                       # Returns output as strings instead of bytes
         )
-        print('Result:')
-        print(result)
 
-        # Add 10s pause 
-        time.sleep(10)
-                
-        # result.returncode is 0 if sucessful
-        print(f'Completed with return code: {result.returncode}')
+        # Print the output and error messages
+        if result.returncode != 0:
+            print(f"Command failed with return code {result.returncode}")
+            raise Exception(f"Command failed: {result.stderr}")
+        else:
+            print(f"Command completed successfully with return code {result.returncode}")
+        if result.stdout:
+            print('Standard Output:')
+            print(result.stdout)
+        if result.stderr:
+            print('Standard Error:')
+            print(result.stderr)    
+        else: 
+            print('No errors.')
 
-        with open(os.path.join(log_folder, 'stdout.txt'), 'w') as f:
-            f.write(result.stdout + '\n')
-        with open(os.path.join(log_folder, 'stderr.txt'), 'w') as f:
-            f.write(result.stderr + '\n')
-        with open(os.path.join(log_folder, 'returncode.txt'), 'w') as f:
-            f.write(f'{result.returncode}\n')
 
-        # Now move this process to completed
-        #shutil.move(this_process_folder, study_process_folder_completed)
-        # Process Manager should do this. But we don't know the os pid. 
-        # We do for this thread, but not for the command-line tool started by subprocess.run()
-
-        return result
 
 
     def undo(self):
