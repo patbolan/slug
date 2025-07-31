@@ -80,6 +80,8 @@ def get_process_file_path(process_id, file_relative_path=None):
         
     return return_path
 
+def get_module_folder():
+    return '/home/bakken-raid8/pcad2/modules/'
 
 # Get some DICOM header information
 def get_sample_dicom_header(subject_name, study_name):

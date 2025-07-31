@@ -1,4 +1,4 @@
-from utils import get_study_file_path, get_study_path
+from utils import get_study_file_path, get_study_path, get_module_folder
 import os
 import subprocess
 import shutil
@@ -34,41 +34,27 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
     :param async_mode: If True, execute the command asynchronously.
     """
     if tool_name == 'nii-converter':
-        nii_converter = NiiConverter(subject_name, study_name)
-        if command == 'run':
-
-            if async_mode:
-                pm = ProcessManager()
-                ipid = pm.spawn_process(tool=nii_converter, command='run')
-                #print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
-
-            else:
-                nii_converter.run()
-
-        elif command == 'undo':
-            nii_converter.undo()
-        else:
-            raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
-                
+        tool = NiiConverter(subject_name, study_name)
     elif tool_name == 'simple-tool': # Simple tool for testing
-        simple_tool = SimpleTool(subject_name, study_name)
-        if command == 'run':
-
-            if async_mode:
-                pm = ProcessManager()
-                ipid = pm.spawn_process(tool=simple_tool, command='run')
-                #print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
-
-            else:
-                simple_tool.run()
-
-        elif command == 'undo':
-            simple_tool.undo()
-        else:
-            raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
-
+        tool = SimpleTool(subject_name, study_name)
     else:
         raise ValueError(f"Unknown tool '{tool_name}'")
+            
+    # Now run the command on the tool object
+    if command == 'run':
+        if async_mode:
+            pm = ProcessManager()
+            ipid = pm.spawn_process(tool=tool, command='run')
+            print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
+        else:
+            tool.run()
+
+    elif command == 'undo':
+        tool.undo()
+
+    else:
+        raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
+                
     
 
 class Tool(ABC):
@@ -76,15 +62,20 @@ class Tool(ABC):
     Abstract base class for tools.
     Each tool should implement the get_status_dict, run, and undo methods.
     """
-    def get_status_dict(self):
-        raise NotImplementedError("Subclasses should implement this method")
+    # Initialize with the context of the tool, which includes subject name, study name, and file path 
+    # These parameters help to determine the scope of the tool
+    # e.g., whether it operates at the project level, subject level, or study level
+    def __init__(self, subject_name=None, study_name=None, file_path=None):
+        self.subject_name = subject_name # if no subject, project-level tool
+        self.study_name = study_name # if no study, subject-level tool
+        self.file_path = file_path  # if no file_path, study-level tool
+        self.name = 'base-tool' # Placeholder name, should be overridden by subclasses 
     
-    # Tools can operate at the subject, study, or project level. 
     def get_context(self):
         return {
-            'subject_name': '',
-            'study_name': '',
-            'file_path': ''
+            'subject_name': self.subject_name,
+            'study_name': self.study_name,
+            'file_path': self.file_path
         }
 
     def run(self):
@@ -93,27 +84,16 @@ class Tool(ABC):
     def undo(self):
         raise NotImplementedError("Subclasses should implement this method")
 
-    def get_context(self):
-        return {
-            'subject_name': self.subject_name,
-            'study_name': self.study_name,
-            'file_path': '' # Operating on a study, not a path
-        }
-
-
-class SimpleTool(Tool):
-    """
-    A simple tool for testing purposes.
-    """
-    def __init__(self, subject_name, study_name):
-        self.name = 'simple-tool'
-        self.subject_name = subject_name
-        self.study_name = study_name
-
-        # Specify the test file path
-        self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
-
-
+    # Check if the output files exist for this tool. Should be overridden by subclasses.
+    # This is used to determine the status of the tool.
+    def output_files_exist(self):
+        raise NotImplementedError("Subclasses should implement this method")
+    
+    # Get the status of the tool as a dictionary.
+    # This includes the name, status, message, commands available, and process ID if applicable
+    # Status can be 'available', 'running', or 'complete'
+    # Commands can be 'run', 'undo', or empty if not applicable
+    # Returns a dictionary with the tool's status which can be used in the UI
     def get_status_dict(self):
         # See if there is a running process first. This is inefficient
         pm = ProcessManager()
@@ -121,19 +101,19 @@ class SimpleTool(Tool):
         if pm.is_running(pid): 
                 print(f'Found running process {pid}')
                 tool_status = 'running'
-                message = 'Simple tool is running, refresh page to update'
+                message = f'{self.name} is running, refresh page to update'
                 commands = []        
         else: 
             print(f'Process {pid} is not running')
             # Either can't find process, or it is completed. Check outputs
-            if os.path.isfile(self.test_file_path):
+            if self.output_files_exist():
                 tool_status = 'complete'
-                message = 'Simple tool has run successfully'
+                message = f'{self.name} has run successfully'
                 commands = ['undo']
             else:
                 pid = None # It may have ran before, but don't like to that pid - confusing
                 tool_status = 'available'
-                message = 'Simple tool is ready to run'
+                message = f'{self.name} is ready to run'
                 commands = ['run']
 
         return {
@@ -143,6 +123,39 @@ class SimpleTool(Tool):
             'commands': commands,
             'pid': pid
         }
+    
+    # Helper function to print the output and error messages from a subprocess
+    # This is used to print the output of the command run in the run method
+    def print_subprocess_output(self, result):
+        if result.returncode != 0:
+            print(f"Command failed with return code {result.returncode}")
+            raise Exception(f"Command failed: {result.stderr}")
+        else:
+            print(f"Command completed successfully with return code {result.returncode}")
+        if result.stdout:
+            print('Standard Output:')
+            print(result.stdout)
+        if result.stderr:
+            print('Standard Error:')
+            print(result.stderr)    
+        else: 
+            print('No errors.') 
+
+
+# A simple tool for testing purposes.
+# It simulates a long-running process by sleeping for 5 seconds and creates a test file
+class SimpleTool(Tool):
+
+    def __init__(self, subject_name, study_name):
+        super().__init__(subject_name, study_name)
+        self.name = 'simple-tool'
+
+        # Specify the test file path
+        self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
+
+    def output_files_exist(self):
+        return os.path.isfile(self.test_file_path)
+
 
     def run(self):
         print(f"Running simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")
@@ -162,61 +175,24 @@ class SimpleTool(Tool):
 
 
 
-
-
-
-###############################################################################
 # The NiiConverter class is a tool for converting DICOM files to NIfTI format.
-# Currently not used - will come back to it
-
 class NiiConverter(Tool):
     def __init__(self, subject_name, study_name):
+        super().__init__(subject_name, study_name)
         self.name = 'nii-converter'
-        self.subject_name = subject_name
-        self.study_name = study_name
 
         # Folder paths
         self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
 
-    # returns status, message
-    def get_status_dict(self):
-
-        # See if there is a running process first. This is inefficient
-        pm = ProcessManager()
-        pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
-        if pm.is_running(pid): 
-                print(f'Found running process {pid}')
-                tool_status = 'running'
-                message = f'{self.name} is running, refresh page to update'
-                commands = []        
-        else: 
-            print(f'Process {pid} is not running')
-            # Either can't find process, or it is completed. Check outputs
-            if os.path.isdir(self.nii_folder):
-                tool_status = 'complete'
-                message = f'{self.name} has run successfully'
-                commands = ['undo']
-            else:
-                pid = None # It may have ran before, but don't like to that pid - confusing
-                tool_status = 'available'
-                message = f'{self.name} is ready to run'
-                commands = ['run']
-
-        return {
-            'name': self.name,
-            'status': tool_status,
-            'message': message,
-            'commands': commands,
-            'pid': pid
-        }
-        
+    def output_files_exist(self):
+        return os.path.isdir(self.nii_folder)
 
     def run(self):
         print(f"Running {self.name} for subject {self.subject_name} and study {self.study_name}")
 
         # Run the module, a command-line script
-        module_folder = '/home/bakken-raid8/pcad2/modules/'
+        module_folder = get_module_folder()
         module_script = os.path.join(module_folder, 'convert2nii', 'run.sh')
         study_folder = get_study_path(self.subject_name, self.study_name)
         cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
@@ -229,22 +205,7 @@ class NiiConverter(Tool):
         )
 
         # Print the output and error messages
-        if result.returncode != 0:
-            print(f"Command failed with return code {result.returncode}")
-            raise Exception(f"Command failed: {result.stderr}")
-        else:
-            print(f"Command completed successfully with return code {result.returncode}")
-        if result.stdout:
-            print('Standard Output:')
-            print(result.stdout)
-        if result.stderr:
-            print('Standard Error:')
-            print(result.stderr)    
-        else: 
-            print('No errors.')
-
-
-
+        self.print_subprocess_output(result)
 
     def undo(self):
         status_dict = self.get_status_dict()
