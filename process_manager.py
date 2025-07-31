@@ -145,8 +145,7 @@ class ProcessManager():
             print(f'   Yep!!')
             return True
         else:
-            print(f'    No. {process_info}')
-            print(f'     {"status" in process_info}')
+            print(f'    No. Process info = {process_info}')
             return False
 
     def get_process_info(self, pid):
@@ -156,6 +155,11 @@ class ProcessManager():
         return_code, end_time, and duration_s.
         If no such process is found, returns None.
         """
+        if pid is None:
+            print("Pid == None.")
+            return None
+
+
         # First look in running, then completed
         process_folder = os.path.join(self.running_folder, str(pid))        
         if os.path.isdir(process_folder):

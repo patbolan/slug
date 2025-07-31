@@ -1,34 +1,15 @@
 Later need to break up app.py. One other file for file handling (text, dicom) and one for tools
 
-Process/tool project
-Add a page for PID. Show files there. 
-Then go back and get nii-converter working well
-
-
-
-Got a first tool (nii-converter) working well. It runs as a subprocess, but undo is inline
-Added a process subfolder, contains all sorts of stuff about processes (stdout, etc)
-Note that processes are pretty lightweight. I could actually store a PID, and then you could GET the status of a specific PID. But I wanted something a little simpler for this. If the process fails you just need to clean up. But you can troubleshoot a little through the web.
-
 Next Tool steps:
+* re-implement nii-coverter. Then refactor up to Tool
 * Prepare a second tool. I think the dicom-raw converter
-* refactor the tool code. Probably need a separate processes class. Support for subproc and inline processes
-* prepare for processes at study, subject, and project level
-* add delete processes button to keep things clean
 * document up the tools a bit. Four states. 
+* reports
+
 
 ALSO
 * move the code to pcad2
-
-A tool 
-* applicable at different levels. Study, subject, file, etc 
-* Has states: running, completed, available, unavailable 
-* has commands which depend on state (run, undo)
-
-I'm trying to avoid a full process infrastructure. Like they are indpeendent objects, with ids and states. Some are associated with subjects, otehrs with studies. They are tracked through time. 
-Why do I think it's overkill? Need a separate set of routes, separate folders. 
-Maybe you should just do this. 
-Tools don't necessarily need to launch a process. Like NII converter, needs a process for conversion, just do the inline directly. So process is really like queued task. I think the words process and tool are OK.
+* lots of refactoring
 
 
 TODO:

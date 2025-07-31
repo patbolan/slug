@@ -15,12 +15,12 @@ import io
 def get_tools_for_study(subject_name, study_name):
 
     # returns a list of tools, each as a dictionary summarizing its current state
-    #nii_converter = NiiConverter(subject_name, study_name)  
-    #toolset = [nii_converter.get_status_dict()]
     simple_tool = SimpleTool(subject_name, study_name)
-    toolset = [simple_tool.get_status_dict()]
+    nii_converter = NiiConverter(subject_name, study_name)  
 
-    print(toolset)
+    # Put all tools (actually their status dictionaries) in a list
+    toolset = [simple_tool.get_status_dict(), nii_converter.get_status_dict()]
+    #toolset = [simple_tool.get_status_dict()]
 
     return toolset
 
@@ -113,17 +113,18 @@ class SimpleTool(Tool):
         self.name = 'simple-tool'
         self.subject_name = subject_name
         self.study_name = study_name
+
+        # Specify the test file path
         self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
 
     def get_context(self):
         return {
             'subject_name': self.subject_name,
             'study_name': self.study_name,
-            'file_path': '' # Operating on a study, not a pat
+            'file_path': '' # Operating on a study, not a path
         }
 
     def get_status_dict(self):
-
         # See if there is a running process first. This is inefficient
         pm = ProcessManager()
         pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
@@ -154,7 +155,6 @@ class SimpleTool(Tool):
         }
 
     def run(self):
-
         print(f"Running simple tool {self.name} for subject {self.subject_name} and study {self.study_name}")
 
         print('Sleeping for 5s as a test....')
@@ -181,11 +181,11 @@ class SimpleTool(Tool):
 
 class NiiConverter(Tool):
     def __init__(self, subject_name, study_name):
+        self.name = 'nii-converter'
         self.subject_name = subject_name
         self.study_name = study_name
-        self.tool_name = 'nii-converter'
 
-        # Temporoary folder
+        # Folder paths
         self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
 
@@ -199,35 +199,34 @@ class NiiConverter(Tool):
     # returns status, message
     def get_status_dict(self):
 
-        # Look for a running process
-        study_process_folder_running = get_study_file_path(self.subject_name, self.study_name, os.path.join('processes', 'running'))  
-        running_processes = glob.glob(os.path.join(study_process_folder_running, f'*{self.tool_name}*'))
-        if running_processes:
-            status = 'running'
-            message = 'refresh page to update'
-            commands = []
-        else:
-            # Check for nii-original
-            if os.path.exists(self.nii_folder):
-                status = 'complete'
-                message = 'nii-original folder exists'
+        # See if there is a running process first. This is inefficient
+        pm = ProcessManager()
+        pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
+        if pm.is_running(pid): 
+                print(f'Found running process {pid}')
+                tool_status = 'running'
+                message = f'{self.name} is running, refresh page to update'
+                commands = []        
+        else: 
+            print(f'Process {pid} is not running')
+            # Either can't find process, or it is completed. Check outputs
+            if os.path.isdir(self.nii_folder):
+                tool_status = 'complete'
+                message = f'{self.name} has run successfully'
                 commands = ['undo']
             else:
-                # Check for pre-reqs
-                if os.path.exists(self.dicom_original_path):
-                    status = 'available'
-                    message = 'dicom-original found, ready to convert'
-                    commands = ['run']
-                else:
-                    status = 'unavailable'
-                    message = 'dicom-original not found'
-                    commands = []
+                pid = None # It may have ran before, but don't like to that pid - confusing
+                tool_status = 'available'
+                message = f'{self.name} is ready to run'
+                commands = ['run']
 
-        # Format and return descriptor dictionary   
-        return {'name': self.tool_name,
-                'status': status,
-                'message': message,
-                'commands': commands}
+        return {
+            'name': self.name,
+            'status': tool_status,
+            'message': message,
+            'commands': commands,
+            'pid': pid
+        }
         
 
     # Dummy functions, create and delete a folder "nii-temp"
