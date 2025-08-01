@@ -1,4 +1,4 @@
-from utils import get_study_file_path, get_study_path, get_module_folder
+from utils import get_study_file_path, get_study_path, get_module_folder, get_series_number_from_folder, guess_tag_from_seriesname, get_sample_dicom_header
 import os
 import subprocess
 import shutil
@@ -26,6 +26,7 @@ def get_tools_for_study(subject_name, study_name):
     simple_tool = SimpleTool(subject_name, study_name)
     nii_converter = NiiConverter(subject_name, study_name)  
     dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
+    autotagger = AutoTagger(subject_name, study_name)
 
     # Consider only adding the raw storage cleaner if it's a Philips study
 
@@ -33,12 +34,13 @@ def get_tools_for_study(subject_name, study_name):
     #toolset = [simple_tool.get_status_dict(), nii_converter.get_status_dict()]
     toolset = [simple_tool.get_status_dict(), 
                dicom_raw_storage_cleaner.get_status_dict(), 
+               autotagger.get_status_dict(),
                nii_converter.get_status_dict()]
 
 
     return toolset
 
-def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
+def execute_tool(tool_name, command, subject_name, study_name, async_mode=False):
     """
     Execute a tool command, either synchronously or asynchronously.
     :param tool_name: Name of the tool.
@@ -53,6 +55,8 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=True):
         tool = SimpleTool(subject_name, study_name)
     elif tool_name == 'dicom-raw-storage-cleaner':
         tool = DicomRawStorageCleaner(subject_name, study_name)
+    elif tool_name == 'autotagger':
+        tool = AutoTagger(subject_name, study_name)
     else:
         raise ValueError(f"Unknown tool '{tool_name}'")
             
@@ -323,3 +327,62 @@ class NiiConverter(Tool):
 
 
 
+
+
+# Implements logic for identifying dicom series, applying tags, and storing them in the dicom_tags.csv file
+class AutoTagger(Tool):
+
+    def __init__(self, subject_name, study_name):
+        super().__init__(subject_name, study_name)
+        self.name = 'autotagger'
+
+        # Specify the test file path and dicom folder
+        self.tag_file = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'dicom_tags.csv'))
+        self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
+
+    def input_files_exist(self):
+        return os.path.isdir(self.dicom_original_path)
+    
+    def output_files_exist(self):
+        return os.path.isfile(self.tag_file)
+
+    def run(self):
+        print(f"Running {self.name} for subject {self.subject_name} and study {self.study_name}")
+
+        # Get a list of dicom series folders
+        series_folders = [f for f in glob.glob(os.path.join(self.dicom_original_path, '**'), recursive=True) if os.path.isdir(f)]
+        series_folders.sort()
+
+        # Create the tags file (it should not exist already)
+        with open(self.tag_file, 'w') as f:
+            f.write(f'seriesnum,tag\n')
+            for series_folder in series_folders:
+                series_name = os.path.basename(series_folder)
+                series_number = get_series_number_from_folder(series_name)
+                if series_number is None:
+                    print(f"Skipping folder {series_name} as it does not have a valid series number")
+                    continue
+
+                hdr = get_sample_dicom_header(self.subject_name, self.study_name, series_name)
+                manufacturer = hdr.get('Manufacturer', 'Unknown') if hdr else 'Unknown'
+
+                print(f"Processing series {series_number} with name '{series_name}' and manufacturer '{manufacturer}'")
+                
+                # Guess the tag from the series name and manufacturer
+                tag = guess_tag_from_seriesname(series_name, manufacturer)
+                if tag:
+                    f.write(f'{series_number},{tag}\n')
+                    print(f"Tagged series {series_number} with tag '{tag}'")
+                else:
+                    f.write(f'{series_number},\n')
+                    print(f"No tag found for series {series_number} with name '{series_name}' and manufacturer '{manufacturer}'")
+ 
+
+    # Disable this later - I don't want to delete the tags file so easily
+    def is_undoable(self):
+        return True
+    
+    def undo(self):
+        print(f"Undoing {self.name} for subject {self.subject_name} and study {self.study_name}")
+        if os.path.isfile(self.tag_file):
+            os.remove(self.tag_file)
