@@ -310,38 +310,18 @@ class NiiConverter(Tool):
         cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
         print(f"***** Running command: {cmd}")
 
-        # Note: these two options have the same result. The second one lets met get the pid
-        if True:
-            result = subprocess.run(
-                cmd,   # Replace with your command and arguments
-                capture_output=True,            # Captures both stdout and stderr
-                text=True                       # Returns output as strings instead of bytes
-            )
-        else:
-            result = None
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-
-            # Wait for the process to complete
-            stdout, stderr = process.communicate()
-            returncode = process.returncode
-
-            # Package the result in a CompletedProcess object to be consistent with subprocess.run
-            result = subprocess.CompletedProcess(
-                args=cmd,
-                returncode=returncode,  
-                stdout=stdout,        
-                stderr=stderr         
-            )
-            # Note the pid is process.pid, but I don't need it here
+        # Run the command in a subprocess
+        result = subprocess.run(
+            cmd,   # Replace with your command and arguments
+            capture_output=True,            # Captures both stdout and stderr
+            text=True                       # Returns output as strings instead of bytes
+        )
+        # If you need the pid you can replace subprocess.run() with subprocess.Popen(), but 
+        # it takes a little more code
 
         # Print the output and error messages
         self.print_subprocess_output(result)
-
+        return
 
     def undo(self):
         status_dict = self.get_status_dict()
@@ -353,9 +333,7 @@ class NiiConverter(Tool):
         if os.path.exists(self.nii_folder):
             shutil.rmtree(self.nii_folder)
 
-
-
-
+        return
 
 
 # Implements logic for identifying dicom series, applying tags, and storing them in the dicom_tags.csv file
@@ -416,9 +394,9 @@ class AutoTagger(Tool):
         # Now move the temporary file to the final tag file location
         os.replace(tempname, self.tag_file)
 
-    # Disable this later - I don't want to delete the tags file so easily
+    # Disable this undo - I don't want to delete the tags file so easily
     def is_undoable(self):
-        return True
+        return False
     
     def undo(self):
         print(f"Undoing {self.name} for subject {self.subject_name} and study {self.study_name}")

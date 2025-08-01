@@ -159,7 +159,6 @@ def study(subject_name, study_name):
                 series_number = get_series_number_from_folder(folder_name)
                 if series_number is not None:
                     tag = dicom_tags.get(series_number, "")
-                    # tag = dicom_tags.get(series_number, "No Tag")
                     dicom_folders.append({
                         'name': folder_name,
                         'relative_path': os.path.join('dicom-original', folder_name),
@@ -175,7 +174,7 @@ def study(subject_name, study_name):
                            files=files, 
                            file_tree=file_tree, 
                            dicom_folders=dicom_folders, 
-                           dicom_info = dicom_info)
+                           dicom_info=dicom_info)
 
 
 # But using the "path:" keyword, all the path information after will get assigned to one variable
