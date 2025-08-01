@@ -3,11 +3,16 @@ Later need to break up app.py. One other file for file handling (text, dicom) an
 nii-converter looks complete. However, I see that some studies make additional "mask" files in nii-original. 
 That's not right - shouldn't be callled original.
 
-Next Tool steps:
-* re-implement nii-coverter. Then refactor up to Tool
-* Prepare a second tool. I think the dicom-raw converter
-* document up the tools a bit. Four states. 
-* reports
+
+X dicom-raw converter
+Autotag
+registration module
+reports
+
+I think I can generalize tools a little more. Like make a version that handles modules. Look at the LONI structure to make that more consistent.
+Also I have a process running in a process. Might be better to reduce one layer - just run that subprocess and attach? If possible.
+
+Need to clean up the process stuff too. Lots of seraching. Maybe need a datastructure you build on the fly.
 
 
 ALSO

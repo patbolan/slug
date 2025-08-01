@@ -207,7 +207,7 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
 
     # Get File type
     _, ext = os.path.splitext(file_path)
-    ext = ext[1:]  # Get rid of the period
+    ext = ext[1:].lower()  # Get rid of the period
 
     if ext in ('txt', 'csv', 'json'):
         # Existing logic for text files
