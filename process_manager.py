@@ -30,7 +30,7 @@ class ProcessManager():
             os.makedirs(self.completed_folder)
 
 
-    def spawn_process(self, tool, command):
+    def spawn_process(self, tool, command, mode='async'):
         if not hasattr(tool, command):
             raise ValueError(f"Tool '{tool}' does not have command '{command}'")
         target = getattr(tool, command)
@@ -95,13 +95,16 @@ class ProcessManager():
             with open(os.path.join(this_process_folder, 'completion.json'), 'w') as json_file:
                 json.dump(completion_dict, json_file, indent=4)
 
-
             # Move the process folder to the completed folder   
             shutil.move(this_process_folder, self.completed_folder)
         
         watcher = threading.Thread(target=postprocess)
         watcher.start()
         print(f'Started a watcher thread to execute when pid={process.pid} terminates.')
+
+        # If mode is 'sync', wait for the process to complete
+        if mode == 'sync':
+            process.join()
 
         return process.pid
 
