@@ -2,7 +2,6 @@ from flask import Flask, render_template, abort, request, redirect, url_for, sen
 from utils import (  # Import the utility functions
     get_all_subjects,
     get_studies_for_subject,
-    get_subject_path,
     get_study_path,
     get_subject_file_path,
     get_study_file_path,
@@ -10,7 +9,7 @@ from utils import (  # Import the utility functions
     get_sample_dicom_header, 
     get_file_tree,
     get_series_number_from_folder, 
-    get_process_file_path
+    get_process_file_path, 
 )
 from tools import *
 from process_manager import ProcessManager

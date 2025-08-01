@@ -10,33 +10,11 @@ import sys
 import io
 import threading
 
-def run_task_in_process(tool_obj, method_name, conn):
 
-    if not hasattr(tool_obj, method_name):
-        raise ValueError(f"Tool '{tool_obj}' does not have command '{method_name}'")
-    target = getattr(tool_obj, method_name)
-    if not callable(target):
-        raise ValueError(f"Command '{method_name}' of tool '{tool_obj}' is not callable")
-
-    # Redirect stdout and stderr within this process
-    stdout_buffer = io.StringIO()
-    stderr_buffer = io.StringIO()
-    sys.stdout = stdout_buffer
-    sys.stderr = stderr_buffer
-
-    try:
-        target()
-    except Exception as e:
-        print(f"Exception in run: {e}", file=sys.stderr)
-    finally:
-        # Restore stdout/stderr and send output back
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-        conn.send((stdout_buffer.getvalue(), stderr_buffer.getvalue()))
-        conn.close()
-
-# TODO: This doesn't need to be a class, these could all just be functions. 
-# The state never changes. But maybe it's OK to be a class?
+# ProcessManager is responsible for managing the execution of tools in separate processes.
+# It spawns new processes, captures their output, and manages their lifecycle.
+# It also maintains a record of running and completed processes in designated folders.
+# Note this doesn't have meaningful state in this implementation.
 class ProcessManager():
     def __init__(self):
         self.process_root = get_process_root_folder()
@@ -62,13 +40,11 @@ class ProcessManager():
         # Configure the new process
         context_dict = tool.get_context()
         process_name = f'slug:{tool.name}:{command}'
-   
 
         # Create a new process
         print(f"Spawning process for {process_name} with command '{target.__name__}' on {context_dict}")
         parent_conn, child_conn = Pipe()
-        process = Process(name=process_name, target=run_task_in_process, args=(tool, command, child_conn))
-        #process = Process(name=process_name, target=target)
+        process = Process(name=process_name, target=self.run_task_in_process, args=(tool, command, child_conn))
         
         process.start() # the .pid is not available until after this call
         print(f"   --> started pid={process.pid}, parent={os.getpid()}, {process.name}")
@@ -103,8 +79,11 @@ class ProcessManager():
 
             with open(os.path.join(this_process_folder, 'stdout.txt'), 'w') as f:
                 f.write(stdout_data + '\n')
-            with open(os.path.join(this_process_folder, 'stderr.txt'), 'w') as f:
-                f.write(stderr_data + '\n')
+
+            # Only write stderr if there is any
+            if stderr_data:
+                with open(os.path.join(this_process_folder, 'stderr.txt'), 'w') as f:
+                    f.write(stderr_data + '\n')
             
             datetime_end = datetime.now()
             timestamp_end = datetime_end.strftime('%Y-%m-%dT%H:%M:%S')
@@ -126,6 +105,34 @@ class ProcessManager():
 
         return process.pid
 
+    # This function runs a task in a separate process and captures its stdout and stderr.
+    def run_task_in_process(self, tool_obj, method_name, conn):
+
+        if not hasattr(tool_obj, method_name):
+            raise ValueError(f"Tool '{tool_obj}' does not have command '{method_name}'")
+        target = getattr(tool_obj, method_name)
+        if not callable(target):
+            raise ValueError(f"Command '{method_name}' of tool '{tool_obj}' is not callable")
+
+        # Redirect stdout and stderr within this process
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        sys.stdout = stdout_buffer
+        sys.stderr = stderr_buffer
+
+        try:
+            target()
+        except Exception as e:
+            print(f"Exception in run: {e}", file=sys.stderr)
+        finally:
+            # Restore stdout/stderr and send output back
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            conn.send((stdout_buffer.getvalue(), stderr_buffer.getvalue()))
+            conn.close()
+
+    # Search for a process by subject_name, study_name, and tool_name
+    # Returns the pid of the process if found, otherwise None.
     def get_process_id(self, subject_name, study_name, tool_name):
 
         for folder_type in ['running', 'completed']:
@@ -138,13 +145,10 @@ class ProcessManager():
         return None
                     
     def is_running(self, pid):
-        print(f'   is {pid} running?')
         process_info = self.get_process_info(pid)
         if process_info is not None and ('status' in process_info) and process_info['status'] == 'running': 
-            print(f'   Yep!!')
             return True
         else:
-            print(f'    No. Process info = {process_info}')
             return False
 
     def get_process_info(self, pid):
@@ -155,9 +159,7 @@ class ProcessManager():
         If no such process is found, returns None.
         """
         if pid is None:
-            print("Pid == None.")
             return None
-
 
         # First look in running, then completed
         process_folder = os.path.join(self.running_folder, str(pid))        
@@ -168,7 +170,6 @@ class ProcessManager():
             if os.path.isdir(process_folder): 
                 status = 'completed' 
             else:
-                print(f"Process with pid {pid} not found in either running or completed folders.") 
                 return None       
 
         context_file = os.path.join(process_folder, 'context.json')
