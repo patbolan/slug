@@ -11,6 +11,7 @@ from abc import ABC
 import sys
 import io
 import pydicom
+import tempfile
 
 
 '''
@@ -40,14 +41,13 @@ def get_tools_for_study(subject_name, study_name):
 
     return toolset
 
-def execute_tool(tool_name, command, subject_name, study_name, async_mode=False):
+def execute_tool(tool_name, command, subject_name, study_name):
     """
-    Execute a tool command, either synchronously or asynchronously.
+    Execute a tool command
     :param tool_name: Name of the tool.
     :param command: Command to execute (e.g., 'run', 'undo').
     :param subject_name: Subject name.
     :param study_name: Study name.
-    :param async_mode: If True, execute the command asynchronously.
     """
     if tool_name == 'nii-converter':
         tool = NiiConverter(subject_name, study_name)
@@ -58,16 +58,11 @@ def execute_tool(tool_name, command, subject_name, study_name, async_mode=False)
     elif tool_name == 'autotagger':
         tool = AutoTagger(subject_name, study_name)
     else:
-        raise ValueError(f"Unknown tool '{tool_name}'")
+        raise ValueError(f"Unknown tool '{tool_name}'") 
             
     # Now run the command on the tool object
     if command == 'run':
-        if async_mode:
-            pm = ProcessManager()
-            ipid = pm.spawn_process(tool=tool, command='run')
-            print(f"Started asynchronous process for {tool_name} with command '{command}', ipid={ipid}") 
-        else:
-            tool.run()
+        tool.run_in_subprocess()
 
     elif command == 'undo':
         tool.undo()
@@ -100,6 +95,12 @@ class Tool(ABC):
 
     def run(self):
         raise NotImplementedError("Subclasses should implement this method")
+    
+    # This creates a subprocess to run the tool's run method asynchronously and capture the output
+    def run_in_subprocess(self):
+        pm = ProcessManager()
+        ipid = pm.spawn_process(tool=self, command='run')
+        print(f"Started asynchronous process for {self.name} with command 'run', ipid={ipid}") 
 
     def undo(self):
         raise NotImplementedError("Subclasses should implement this method")
@@ -178,6 +179,8 @@ class Tool(ABC):
             print(result.stderr)    
         else: 
             print('No errors.') 
+
+
 
 
 # A simple tool for testing purposes.
@@ -287,13 +290,15 @@ class NiiConverter(Tool):
         # Folder paths
         self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
+        self.dicom_tags_file = os.path.join(get_study_file_path(subject_name, study_name, 'dicom_tags.csv'))
 
     def output_files_exist(self):
         return os.path.isdir(self.nii_folder)
     
     def input_files_exist(self):
-        # Check if the dicom-original folder exists. Don't look for contents, just the folder
-        return os.path.isdir(self.dicom_original_path)
+        # Needs both the dicom_tags.csv file and the dicom-original folder to exist
+        return os.path.isdir(self.dicom_original_path) and os.path.isfile(self.dicom_tags_file)
+    
 
     def run(self):
         print(f"Running {self.name} for subject {self.subject_name} and study {self.study_name}")
@@ -305,14 +310,38 @@ class NiiConverter(Tool):
         cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
         print(f"***** Running command: {cmd}")
 
-        result = subprocess.run(
-            cmd,   # Replace with your command and arguments
-            capture_output=True,            # Captures both stdout and stderr
-            text=True                       # Returns output as strings instead of bytes
-        )
+        # Note: these two options have the same result. The second one lets met get the pid
+        if True:
+            result = subprocess.run(
+                cmd,   # Replace with your command and arguments
+                capture_output=True,            # Captures both stdout and stderr
+                text=True                       # Returns output as strings instead of bytes
+            )
+        else:
+            result = None
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            # Wait for the process to complete
+            stdout, stderr = process.communicate()
+            returncode = process.returncode
+
+            # Package the result in a CompletedProcess object to be consistent with subprocess.run
+            result = subprocess.CompletedProcess(
+                args=cmd,
+                returncode=returncode,  
+                stdout=stdout,        
+                stderr=stderr         
+            )
+            # Note the pid is process.pid, but I don't need it here
 
         # Print the output and error messages
         self.print_subprocess_output(result)
+
 
     def undo(self):
         status_dict = self.get_status_dict()
@@ -339,6 +368,7 @@ class AutoTagger(Tool):
         # Specify the test file path and dicom folder
         self.tag_file = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'dicom_tags.csv'))
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
+        self.study_folder = get_study_path(subject_name, study_name)
 
     def input_files_exist(self):
         return os.path.isdir(self.dicom_original_path)
@@ -353,9 +383,15 @@ class AutoTagger(Tool):
         series_folders = [f for f in glob.glob(os.path.join(self.dicom_original_path, '**'), recursive=True) if os.path.isdir(f)]
         series_folders.sort()
 
-        # Create the tags file (it should not exist already)
-        with open(self.tag_file, 'w') as f:
-            f.write(f'seriesnum,tag\n')
+        # Create the dicom_tags.csv file (it should not exist already)
+        assert not os.path.isfile(self.tag_file), f"Tag file {self.tag_file} already exists. Should not happen."
+
+        # I write to a temporary file first, then move it to the final location to prevent other processses 
+        # reading a half-written file. Note I write the temp file in the study folder so it can be copied. If 
+        # you write it in /tmp, then os.replace() can fail since its on a different filesystem.
+        with tempfile.NamedTemporaryFile('w', dir=self.study_folder, delete=False) as tf:
+            tempname = tf.name
+            tf.write(f'seriesnum,tag\n')
             for series_folder in series_folders:
                 series_name = os.path.basename(series_folder)
                 series_number = get_series_number_from_folder(series_name)
@@ -371,12 +407,14 @@ class AutoTagger(Tool):
                 # Guess the tag from the series name and manufacturer
                 tag = guess_tag_from_seriesname(series_name, manufacturer)
                 if tag:
-                    f.write(f'{series_number},{tag}\n')
+                    tf.write(f'{series_number},{tag}\n')
                     print(f"Tagged series {series_number} with tag '{tag}'")
                 else:
-                    f.write(f'{series_number},\n')
+                    tf.write(f'{series_number},\n')
                     print(f"No tag found for series {series_number} with name '{series_name}' and manufacturer '{manufacturer}'")
- 
+        
+        # Now move the temporary file to the final tag file location
+        os.replace(tempname, self.tag_file)
 
     # Disable this later - I don't want to delete the tags file so easily
     def is_undoable(self):

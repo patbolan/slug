@@ -94,7 +94,6 @@ class ProcessManager():
         with open(os.path.join(this_process_folder, 'context.json'), 'w') as json_file:
             json.dump(process_context, json_file, indent=4)
 
-
         # configure tasks to run once the process completes
         def postprocess():
             stdout_data, stderr_data = parent_conn.recv() 

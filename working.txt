@@ -3,9 +3,11 @@ Later need to break up app.py. One other file for file handling (text, dicom) an
 nii-converter looks complete. However, I see that some studies make additional "mask" files in nii-original. 
 That's not right - shouldn't be callled original.
 
+Processes are now ALL asycnrhonous. They can be quick, that's fine. 
+
 
 X dicom-raw converter
-Autotag
+X Autotag
 registration module
 reports
 
