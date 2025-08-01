@@ -24,10 +24,10 @@
     {% endif %}
     <br>
     {% if study %}
-        <a href="{ url_for('study', subject_name=subject, study_name=study) }">Back</a>
+        <a href="{{ url_for('study', subject_name=subject, study_name=study) }}">Back</a>
     {% else %}
         {% if subject %}
-            <a href="{ url_for('subject', subject_name=subject) }">Back</a>
+            <a href="{{ url_for('subject', subject_name=subject) }}">Back</a>
         {% endif %}
     {% endif %}        
 
