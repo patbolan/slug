@@ -5,7 +5,6 @@ That's not right - shouldn't be callled original.
 
 Processes are now ALL asycnrhonous. They can be quick, that's fine. 
 
-
 X dicom-raw converter
 X Autotag
 registration module
@@ -16,6 +15,9 @@ Also I have a process running in a process. Might be better to reduce one layer 
 
 Need to clean up the process stuff too. Lots of seraching. Maybe need a datastructure you build on the fly.
 
+
+BUGS:
+* back button while editing study notes.txt fails.
 
 ALSO
 * move the code to pcad2

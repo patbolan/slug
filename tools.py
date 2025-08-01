@@ -27,18 +27,15 @@ def get_tools_for_study(subject_name, study_name):
     nii_converter = NiiConverter(subject_name, study_name)  
     dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
     autotagger = AutoTagger(subject_name, study_name)
+    template_registration = TemplateRegistration(subject_name, study_name)
 
     # Consider only adding the raw storage cleaner if it's a Philips study
 
     # Put all tools (actually their status dictionaries) in a list
-    #toolset = [simple_tool.get_status_dict(), nii_converter.get_status_dict()]
-    toolset = [simple_tool.get_status_dict(), 
-               dicom_raw_storage_cleaner.get_status_dict(), 
-               autotagger.get_status_dict(),
-               nii_converter.get_status_dict()]
     toolset = [dicom_raw_storage_cleaner.get_status_dict(), 
                autotagger.get_status_dict(),
-               nii_converter.get_status_dict()]
+               nii_converter.get_status_dict(), 
+               template_registration.get_status_dict() ]
 
     return toolset
 
@@ -58,6 +55,8 @@ def execute_tool(tool_name, command, subject_name, study_name):
         tool = DicomRawStorageCleaner(subject_name, study_name)
     elif tool_name == 'autotagger':
         tool = AutoTagger(subject_name, study_name)
+    elif tool_name == 'template-registration':
+        tool = TemplateRegistration(subject_name, study_name)
     else:
         raise ValueError(f"Unknown tool '{tool_name}'") 
             
@@ -306,7 +305,6 @@ class NiiConverter(Tool):
         # Needs both the dicom_tags.csv file and the dicom-original folder to exist
         return os.path.isdir(self.dicom_original_path) and os.path.isfile(self.dicom_tags_file)
     
-
     def run(self):
         print(f"Running {self.name} for subject {self.subject_name} and study {self.study_name}")
 
@@ -328,19 +326,64 @@ class NiiConverter(Tool):
 
         # Print the output and error messages
         self.print_subprocess_output(result)
-        return
 
     def undo(self):
         status_dict = self.get_status_dict()
         if status_dict['status'] != 'complete':
-            raise Exception(f"NiiConverter cannot undo: {status_dict['message']}")
+            raise Exception(f"{self.name} cannot undo: {status_dict['message']}")
 
-        # Simulate undo (replace with actual undo logic)
         print(f"Deleting nii folder {self.nii_folder}")
         if os.path.exists(self.nii_folder):
             shutil.rmtree(self.nii_folder)
 
-        return
+        
+
+class TemplateRegistration(Tool):
+    def __init__(self, subject_name, study_name):
+        super().__init__(subject_name, study_name)
+        self.name = 'template-registration'
+
+        # Folder paths
+        self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
+        self.thermo_file = os.path.join(self.nii_folder, 'thermo.nii')
+        self.template_file = os.path.join(self.nii_folder, 'template.nii')
+
+    def output_files_exist(self):
+        return os.path.isfile(self.template_file)
+    
+    def input_files_exist(self):
+        return os.path.isfile(self.thermo_file)
+
+    def run(self):
+        print(f"Running {self.name} for subject {self.subject_name} and study {self.study_name}")
+
+        # Run the module, a command-line script
+        module_folder = get_module_folder()
+        module_script = os.path.join(module_folder, 'registration', 'run_registration.sh')
+        study_folder = get_study_path(self.subject_name, self.study_name)
+        cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
+        print(f"***** Running command: {cmd}")
+
+        # Run the command in a subprocess
+        result = subprocess.run(
+            cmd,   # Replace with your command and arguments
+            capture_output=True,            # Captures both stdout and stderr
+            text=True                       # Returns output as strings instead of bytes
+        )
+
+        # Print the output and error messages
+        self.print_subprocess_output(result)
+
+    def undo(self):
+        status_dict = self.get_status_dict()
+        if status_dict['status'] != 'complete':
+            raise Exception(f"{self.name} cannot undo: {status_dict['message']}")
+
+        # Simulate undo (replace with actual undo logic)
+        print(f"Deleting template.nii ")
+        if os.path.exists(self.template_file):
+            os.remove(self.template_file)
+
 
 
 
