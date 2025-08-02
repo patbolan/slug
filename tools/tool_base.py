@@ -55,12 +55,13 @@ class ToolBase(ABC):
         return True
 
     # These two methods are used to check if output/input files exist, which is used
-    # to determine if the tool can run or has already run.
+    # to determine if the tool can run or has already run. Subclasses should probably
+    # override
     def are_output_files_present(self):
-        raise NotImplementedError("Subclasses should implement this method")
+        return False
 
     def are_input_files_present(self):
-        raise NotImplementedError("Subclasses should implement this method")
+        return True
 
     def get_status_dict(self):
         """

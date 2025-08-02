@@ -19,7 +19,7 @@ class ResliceMask(ToolBase):
         self.nii_folder = get_study_file_path(subject_name, study_name, 'nii-original')
         self.template_file = os.path.join(self.nii_folder, 'template.nii')
 
-    def output_files_exist(self):
+    def are_output_files_present(self):
         if not os.path.isdir(self.nii_folder):  
             return False
 
@@ -28,7 +28,7 @@ class ResliceMask(ToolBase):
             mask_files = [f for f in os.listdir(self.nii_folder) if f.endswith('_mask.nii')]
             return (len(mask_files) > 0)
     
-    def input_files_exist(self):
+    def are_input_files_present(self):
         return os.path.isfile(self.template_file)
 
     def run(self):
