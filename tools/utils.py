@@ -1,0 +1,55 @@
+#from utils import get_study_file_path, get_study_path, get_module_folder, get_series_number_from_folder, get_sample_dicom_header
+
+def get_tools_for_study(subject_name, study_name):
+    from .simple_tool import SimpleTool
+    from .nii_converter import NiiConverter
+    from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
+    from .autotagger import AutoTagger
+    from .template_registration import TemplateRegistration
+    from .reslice_mask import ResliceMask
+
+    # Returns a list of tools, each as a dictionary summarizing its current state
+    simple_tool = SimpleTool(subject_name, study_name)
+    nii_converter = NiiConverter(subject_name, study_name)
+    dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
+    autotagger = AutoTagger(subject_name, study_name)
+    template_registration = TemplateRegistration(subject_name, study_name)
+    reslice_mask = ResliceMask(subject_name, study_name)
+
+    return [
+        dicom_raw_storage_cleaner.get_status_dict(),
+        autotagger.get_status_dict(),
+        nii_converter.get_status_dict(),
+        template_registration.get_status_dict(),
+        reslice_mask.get_status_dict(),
+    ]
+
+def execute_tool(tool_name, command, subject_name, study_name):
+    from .simple_tool import SimpleTool
+    from .nii_converter import NiiConverter
+    from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
+    from .autotagger import AutoTagger
+    from .template_registration import TemplateRegistration
+    from .reslice_mask import ResliceMask
+
+    if tool_name == 'nii-converter':
+        tool = NiiConverter(subject_name, study_name)
+    elif tool_name == 'simple-tool':
+        tool = SimpleTool(subject_name, study_name)
+    elif tool_name == 'dicom-raw-storage-cleaner':
+        tool = DicomRawStorageCleaner(subject_name, study_name)
+    elif tool_name == 'autotagger':
+        tool = AutoTagger(subject_name, study_name)
+    elif tool_name == 'template-registration':
+        tool = TemplateRegistration(subject_name, study_name)
+    elif tool_name == 'reslice-mask':
+        tool = ResliceMask(subject_name, study_name)
+    else:
+        raise ValueError(f"Unknown tool '{tool_name}'")
+
+    if command == 'run':
+        tool.run_in_subprocess()
+    elif command == 'undo':
+        tool.undo()
+    else:
+        raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")

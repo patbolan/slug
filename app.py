@@ -11,7 +11,7 @@ from utils import (  # Import the utility functions
     get_series_number_from_folder, 
     get_process_file_path, 
 )
-from tools import *
+from tools.utils import get_tools_for_study, execute_tool
 from process_manager import ProcessManager
 
 import os
