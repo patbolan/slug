@@ -65,7 +65,7 @@ def get_process_root_folder():
     return '/home/bakken-raid2/bolan/prj/slug/processes'
 
 def get_process_file_path(process_id, file_relative_path=None):
-    from process_manager import ProcessManager
+    from tools.process_manager import ProcessManager
 
     pm = ProcessManager()
     process_info = pm.get_process_info(process_id)

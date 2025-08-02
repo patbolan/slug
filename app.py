@@ -12,7 +12,7 @@ from utils import (  # Import the utility functions
     get_process_file_path, 
 )
 from tools.utils import get_tools_for_study, execute_tool
-from process_manager import ProcessManager
+from tools.process_manager import ProcessManager
 
 import os
 from datetime import datetime
@@ -443,30 +443,15 @@ def process_info(pid):
 
 @app.route('/clear-running-logs', methods=['POST'])
 def clear_running_logs():
-    process_manager = ProcessManager()
-    running_folder = process_manager.running_folder
-
-    # Delete all folders under the running folder
-    for folder_name in os.listdir(running_folder):
-        folder_path = os.path.join(running_folder, folder_name)
-        if os.path.isdir(folder_path):
-            shutil.rmtree(folder_path)
-            print(f"Deleted folder: {folder_path}")
+    pm = ProcessManager()
+    pm.clear_logs(folder_type='runing')
 
     return redirect(url_for('processes'))
 
-
 @app.route('/clear-completed-logs', methods=['POST'])
 def clear_completed_logs():
-    process_manager = ProcessManager()
-    completed_folder = process_manager.completed_folder
-
-    # Delete all folders under the completed folder
-    for folder_name in os.listdir(completed_folder):
-        folder_path = os.path.join(completed_folder, folder_name)
-        if os.path.isdir(folder_path):
-            shutil.rmtree(folder_path)
-            print(f"Deleted folder: {folder_path}")
+    pm = ProcessManager()
+    pm.clear_logs(folder_type='completed')
 
     return redirect(url_for('processes'))
 

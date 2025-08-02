@@ -1,8 +1,40 @@
-from utils import get_study_file_path, get_study_path, get_process_root_folder
+"""
+ProcessManager Module
+
+This module provides the `ProcessManager` class, which is responsible for 
+managing the execution of tools in separate processes. It spawns new processes,
+captures their output, and manages their lifecycle. It also maintains a record
+of running and completed processes in designated folders.
+
+Under the proces root folder, there are two folders, running and completed. 
+New processes are created in the running folder, with a folder for each process
+named using the OS's process id for that subprocess. Outputs from the process
+are saved as files in that folder. WHen the process completes the process folder
+is moved to the processes/completed folder. 
+
+Key Features:
+- Spawns new processes for tools and commands.
+- Captures stdout and stderr of processes.
+- Maintains process metadata in JSON files.
+- Supports querying running and completed processes.
+- Handles process cleanup and folder management.
+
+Classes:
+- ProcessManager: Manages the lifecycle of processes and provides utility 
+methods for process management.
+
+Dependencies:
+- Python Standard Libraries: os, subprocess, shutil, glob, json, datetime, 
+multiprocessing, sys, io, threading
+- Custom Utilities: get_process_root_folder (from utils.py)
+
+Author: Patrick Bolan
+Date: Aug 2025
+"""
+
+from utils import get_process_root_folder
 import os
-import subprocess
 import shutil
-import glob
 import json
 from datetime import datetime
 from multiprocessing import Process, Pipe
@@ -10,11 +42,13 @@ import sys
 import io
 import threading
 
-
-# ProcessManager is responsible for managing the execution of tools in separate processes.
-# It spawns new processes, captures their output, and manages their lifecycle.
-# It also maintains a record of running and completed processes in designated folders.
-# Note this doesn't have meaningful state in this implementation.
+""" 
+ProcessManager is responsible for managing the execution of tools in separate 
+processes. It spawns new processes, captures their output, and manages their 
+lifecycle. It also maintains a record of running and completed processes in 
+designated folders. Note this class doesn't have meaningful state in this 
+implementation.
+"""
 class ProcessManager():
     def __init__(self):
         self.process_root = get_process_root_folder()
@@ -28,7 +62,6 @@ class ProcessManager():
             os.makedirs(self.running_folder)
         if not os.path.exists(self.completed_folder):
             os.makedirs(self.completed_folder)
-
 
     def spawn_process(self, tool, command, mode='async'):
         if not hasattr(tool, command):
@@ -108,9 +141,11 @@ class ProcessManager():
 
         return process.pid
 
-    # This function runs a task in a separate process and captures its stdout and stderr.
     def run_task_in_process(self, tool_obj, method_name, conn):
-
+        """    
+        This function runs a task in a separate process and captures its stdout and stderr.
+        """
+              
         if not hasattr(tool_obj, method_name):
             raise ValueError(f"Tool '{tool_obj}' does not have command '{method_name}'")
         target = getattr(tool_obj, method_name)
@@ -134,10 +169,12 @@ class ProcessManager():
             conn.send((stdout_buffer.getvalue(), stderr_buffer.getvalue()))
             conn.close()
 
-    # Search for a process by subject_name, study_name, and tool_name
-    # Returns the pid of the process if found, otherwise None.
-    def get_process_id(self, subject_name, study_name, tool_name):
 
+    def get_process_id(self, subject_name, study_name, tool_name):
+        """
+        Search for a process by subject_name, study_name, and tool_name
+        Returns the pid of the process if found, otherwise None.
+        """
         for folder_type in ['running', 'completed']:
             processes = self.get_processes(folder_type=folder_type)
             for process_info in processes:  
@@ -230,6 +267,24 @@ class ProcessManager():
         # Sort processes by most recent start_time  
         processes = sorted(processes, key=lambda x: x['start_time'], reverse=True)  
         return processes
+    
+    def clear_logs(self, folder_type='running'):
+        """
+        Clears the logs of all processes in the specified folder.
+        :param folder_type: Either 'running' or 'completed' to specify which folder to clear.
+        """
+        if folder_type == 'running':
+            folder_path = self.running_folder
+        elif folder_type == 'completed':
+            folder_path = self.completed_folder
+        else:
+            raise ValueError("Invalid folder_type. Must be 'running' or 'completed'.")
+
+        for process_folder in os.listdir(folder_path):
+            process_folder_path = os.path.join(folder_path, process_folder)
+            if os.path.isdir(process_folder_path):
+                shutil.rmtree(process_folder_path)
+                print(f"Deleted folder: {process_folder_path}")
 
 
 

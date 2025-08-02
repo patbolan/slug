@@ -1,5 +1,5 @@
 from abc import ABC
-from process_manager import ProcessManager
+from tools.process_manager import ProcessManager
 
 class Tool(ABC):
     def __init__(self, subject_name=None, study_name=None, file_path=None):
