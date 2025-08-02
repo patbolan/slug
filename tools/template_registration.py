@@ -1,9 +1,17 @@
+"""
+TemplateRegistration Tool
+This tool is responsible for registering a template to the phantom images
+so the quantitative values can be extracted.
+
+See NiiConverter.py header for more information about wrapping a "module"
+"""
+
 import os
 import subprocess
-from .tool import Tool
+from .tool_base import ToolBase
 from utils import get_study_file_path, get_study_path, get_module_folder
 
-class TemplateRegistration(Tool):
+class TemplateRegistration(ToolBase):
     def __init__(self, subject_name, study_name):
         super().__init__(subject_name, study_name)
         self.name = 'template-registration'
@@ -13,10 +21,10 @@ class TemplateRegistration(Tool):
         self.thermo_file = os.path.join(self.nii_folder, 'thermo.nii')
         self.template_file = os.path.join(self.nii_folder, 'template.nii')
 
-    def output_files_exist(self):
+    def are_output_files_present(self):
         return os.path.isfile(self.template_file)
     
-    def input_files_exist(self):
+    def are_input_files_present(self):
         return os.path.isfile(self.thermo_file)
 
     def run(self):

@@ -1,4 +1,3 @@
-#from utils import get_study_file_path, get_study_path, get_module_folder, get_series_number_from_folder, get_sample_dicom_header
 
 def get_tools_for_study(subject_name, study_name):
     from .simple_tool import SimpleTool

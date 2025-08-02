@@ -1,11 +1,47 @@
+"""
+NiiConverter Tool
+
+This module defines the `NiiConverter` class, a tool for converting DICOM files
+to NIfTI format. It is a subclass of `ToolBase` and provides methods to check
+input/output file existence, run the conversion process, and undo the changes.
+
+This provides an example of how to wrap a "module" as a tool. A module is a 
+linux shell script that performs some processing. You can run this
+from the command line like:
+    /path/to/modules/conver2nii/run.sh study_name
+or more generally:
+    /path/to/modules/module_name/script_name.sh study_name
+This class performs that call in run(). It also checks if the input files are 
+available to run, if output files suggest that the tool has already run, and 
+provides logic to undo (performed inline, not as a subprocess). This can serve
+as an example for wrapping other modules.
+
+Key Features:
+- Converts DICOM files in the `dicom-original` folder to NIfTI format.
+- Requires `dicom_tags.csv` and `dicom-original` folder as inputs.
+- Outputs the converted files to the `nii-original` folder.
+- Supports undo functionality by deleting the `nii-original` folder.
+
+Classes:
+- NiiConverter: Handles the DICOM-to-NIfTI conversion process.
+
+Dependencies:
+- Python Standard Libraries: os, subprocess, shutil
+- Custom Utilities: get_study_file_path, get_study_path, get_module_folder
+- Base Class: ToolBase
+
+Author: Patrick Bolan
+Date: Aug 2025
+"""
+
 import os
 import subprocess
 import shutil
-from .tool import Tool
+from .tool_base import ToolBase
 from utils import get_study_file_path, get_study_path, get_module_folder
 
 # The NiiConverter class is a tool for converting DICOM files to NIfTI format.
-class NiiConverter(Tool):
+class NiiConverter(ToolBase):
     def __init__(self, subject_name, study_name):
         super().__init__(subject_name, study_name)
         self.name = 'nii-converter'
@@ -15,10 +51,10 @@ class NiiConverter(Tool):
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
         self.dicom_tags_file = os.path.join(get_study_file_path(subject_name, study_name, 'dicom_tags.csv'))
 
-    def output_files_exist(self):
+    def are_output_files_present(self):
         return os.path.isdir(self.nii_folder)
     
-    def input_files_exist(self):
+    def are_input_files_present(self):
         # Needs both the dicom_tags.csv file and the dicom-original folder to exist
         return os.path.isdir(self.dicom_original_path) and os.path.isfile(self.dicom_tags_file)
     

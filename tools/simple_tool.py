@@ -1,15 +1,21 @@
+"""
+SimpleTool Tool
+
+A testing tool that just creates and deletes a file. 
+"""
+
 import os
 import time
-from .tool import Tool
+from .tool_base import ToolBase
 from utils import get_study_file_path
 
-class SimpleTool(Tool):
+class SimpleTool(ToolBase):
     def __init__(self, subject_name, study_name):
         super().__init__(subject_name, study_name)
         self.name = 'simple-tool'
         self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
 
-    def output_files_exist(self):
+    def are_output_files_present(self):
         return os.path.isfile(self.test_file_path)
 
     def run(self):

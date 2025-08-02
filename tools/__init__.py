@@ -1,4 +1,4 @@
-from .tool import Tool
+from .tool_base import ToolBase
 from .simple_tool import SimpleTool
 from .nii_converter import NiiConverter
 from .dicom_raw_storage_cleaner import DicomRawStorageCleaner

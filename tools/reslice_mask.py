@@ -1,9 +1,16 @@
+"""
+ResliceMask Tool
+This tool reslices a mask to match a template image using a command-line script.
+
+See NiiConverter.py header for more information about wrapping a "module"
+"""
+
 import os
 import subprocess
-from .tool import Tool
+from .tool_base import ToolBase
 from utils import get_study_file_path, get_study_path, get_module_folder
 
-class ResliceMask(Tool):
+class ResliceMask(ToolBase):
     def __init__(self, subject_name, study_name):
         super().__init__(subject_name, study_name)
         self.name = 'reslice-mask'

@@ -1,35 +1,38 @@
+"""
+DicomRawStorageCleaner Tool 
+
+A tool for finding special Dicom Raw Storage files and removing them from the dicom-original folder tree
+In some Philips datasets there is a Raw Storage file, SOP Class UID = 1.2.840.10008.5.1.4.1.1.66. 
+The presence of htis file probably depends on how the data were exported.
+This function will look through all the dicom-original folders looking
+for these raw data files, determined by their SOPClassUID. If any are
+found they are moved to a folder called dicom-raw-storatge, because these will break all the
+other tools.
+
+This tool will create the dicom-raw-storage folder if it does not exist regardless of whether it finds any files, 
+just so you can tell that the tool has run.
+"""
 import os
 import pydicom 
 import glob
 import shutil
-from .tool import Tool
+from .tool_base import ToolBase
 from utils import get_study_file_path
 
-
-# A tool for finding special Dicom Raw Storage files and removing them from the dicom-original folder tree
-# In some Philips datasets there is a Raw Storage file, SOP Class UID = 1.2.840.10008.5.1.4.1.1.66. 
-# The presence of htis file probably depends on how the data were exported.
-# This function will look through all the dicom-original folders looking
-# for these raw data files, determined by their SOPClassUID. If any are
-# found they are moved to a folder called dicom-raw-storatge, because these will break all the
-# other tools.
-#
-# This tool will create the dicom-raw-storage folder if it does not exist regardless of whether it finds any files, 
-# just so you can tell that the tool has run.
-class DicomRawStorageCleaner(Tool):
+class DicomRawStorageCleaner(ToolBase):
     def __init__(self, subject_name, study_name):
         super().__init__(subject_name, study_name)
         self.name = 'dicom-raw-storage-cleaner'
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
         
-        # don't create the raw storage folder here, it will be created in the run method if needed
+        # don't create the raw storage folder here, it will be created in the run method 
         self.dicom_raw_storage_path = get_study_file_path(subject_name, study_name, 'dicom-raw-storage')
 
-    def output_files_exist(self):
+    def are_output_files_present(self):
         # Check for the dicom-raw-storage folder
         return os.path.isdir(self.dicom_raw_storage_path)
 
-    def input_files_exist(self):
+    def are_input_files_present(self):
         # Check if the dicom-original folder exists. Don't look for contents, just the folder
         return os.path.isdir(self.dicom_original_path)
 

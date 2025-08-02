@@ -1,7 +1,32 @@
+"""
+ToolBase Abstract Class
+
+This module defines the `ToolBase` abstract class, which serves as the base
+class for all tools in the application. It provides a common interface and
+shared functionality for tools, such as managing context, running processes,
+and determining tool status.
+
+Key Features:
+- Defines the interface for tools with abstract methods (`run`, `undo`).
+- Provides shared methods for running tools in subprocesses.
+- Implements logic for determining tool status (e.g., running, complete).
+- Supports undo functionality for tools.
+
+Classes:
+- ToolBase: Abstract base class for tools.
+
+Dependencies:
+- Python Standard Libraries: abc
+- Custom Modules: tools.process_manager (for managing subprocesses)
+
+Author: Patrick Bolan
+Date: Aug 2025
+"""
+
 from abc import ABC
 from tools.process_manager import ProcessManager
 
-class Tool(ABC):
+class ToolBase(ABC):
     def __init__(self, subject_name=None, study_name=None, file_path=None):
         self.subject_name = subject_name
         self.study_name = study_name
@@ -29,13 +54,21 @@ class Tool(ABC):
     def is_undoable(self):
         return True
 
-    def output_files_exist(self):
+    # These two methods are used to check if output/input files exist, which is used
+    # to determine if the tool can run or has already run.
+    def are_output_files_present(self):
         raise NotImplementedError("Subclasses should implement this method")
 
-    def input_files_exist(self):
-        return True
+    def are_input_files_present(self):
+        raise NotImplementedError("Subclasses should implement this method")
 
     def get_status_dict(self):
+        """
+        Returns a dictionary with the status of the tool.
+        The status can be 'running', 'complete', 'available', or 'unavailable'.
+        This dictionary is used by the UI to display the status of the tool and
+        what commands can be run
+        """
         pm = ProcessManager()
         pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
         if pm.is_running(pid):
@@ -46,7 +79,7 @@ class Tool(ABC):
                 'commands': [],
                 'pid': pid,
             }
-        elif self.output_files_exist():
+        elif self.are_output_files_present():
             return {
                 'name': self.name,
                 'status': 'complete',
@@ -54,7 +87,7 @@ class Tool(ABC):
                 'commands': ['undo'] if self.is_undoable() else [],
                 'pid': None,
             }
-        elif self.input_files_exist():
+        elif self.are_input_files_present():
             return {
                 'name': self.name,
                 'status': 'available',

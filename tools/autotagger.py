@@ -1,11 +1,26 @@
-from .tool import Tool
+"""
+AutoTagger Tool
+This tool look at the dicom series name and manufacturer string to figure out what 
+type of data it is. This is crude, ad-hoc logic, really just a time saver. The user
+will likely need to modify the tags due to repeated scans, non-standard naming, etc.
+The results of the tagging are saved in the dicom_tags.csv file, which can then be
+manually edited. 
+
+Disable the undo feature for production - it is useful for testing but will clobber
+any manual edits.
+
+If needed this logic can be extended to use more header information and make better
+choices. Right now it just uses the series description and manufacturer.
+"""
+
+from .tool_base import ToolBase
 import os
 from utils import get_study_file_path, get_study_path, get_sample_dicom_header, get_series_number_from_folder
 import tempfile
 import glob
 
 # Implements logic for identifying dicom series, applying tags, and storing them in the dicom_tags.csv file
-class AutoTagger(Tool):
+class AutoTagger(ToolBase):
 
     def __init__(self, subject_name, study_name):
         super().__init__(subject_name, study_name)
@@ -16,10 +31,10 @@ class AutoTagger(Tool):
         self.dicom_original_path = get_study_file_path(subject_name, study_name, 'dicom-original')
         self.study_folder = get_study_path(subject_name, study_name)
 
-    def input_files_exist(self):
+    def are_input_files_present(self):
         return os.path.isdir(self.dicom_original_path)
     
-    def output_files_exist(self):
+    def are_output_files_present(self):
         return os.path.isfile(self.tag_file)
 
     def run(self):
