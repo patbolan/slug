@@ -1,15 +1,24 @@
 import os
 import re
 import pydicom
+from config import Config
 
+# Utility functions to retrieve folder paths
+def get_data_folder():
+    config = Config()
+    return config.get('data_folder', '/default/data/folder')
 
+def get_process_root_folder():
+    config = Config()
+    return config.get('process_root_folder', '/default/process/root/folder')
 
-
-DATA_DIR = '/home/bakken-raid8/pcad2/data'
+def get_module_folder():
+    config = Config()
+    return config.get('module_folder', '/default/module/folder')
 
 def get_all_subjects():
-    pattern = re.compile(r'^[A-Z]{3}-\d{4}$')  # Pattern for XXX-0000
-    subjects = [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d)) and pattern.match(d)]
+    pattern = re.compile(r'^[A-Z]{3}-\d{4}$')  # Pattern for XXX-0000  
+    subjects = [d for d in os.listdir(get_data_folder()) if os.path.isdir(os.path.join(get_data_folder(), d)) and pattern.match(d)]
     subjects.sort()
     return subjects
 
@@ -23,7 +32,7 @@ def get_studies_for_subject(subject_name):
     return studies
 
 def get_subject_path(subject_name):
-    subject_path = os.path.join(DATA_DIR, subject_name)
+    subject_path = os.path.join(get_data_folder(), subject_name)
     if not os.path.isdir(subject_path):
         return None
     return subject_path
@@ -60,10 +69,6 @@ def get_study_files(subject_name, study_name):
             files.append({'name': file_name, 'full_path': full_path})
     return files
 
-def get_process_root_folder():
-    #return '/home/bakken-raid8/pcad2/processes'
-    return '/home/bakken-raid2/bolan/prj/slug/processes'
-
 def get_process_file_path(process_id, file_relative_path=None):
     from tools.process_manager import ProcessManager
 
@@ -83,8 +88,6 @@ def get_process_file_path(process_id, file_relative_path=None):
         
     return return_path
 
-def get_module_folder():
-    return '/home/bakken-raid8/pcad2/modules/'
 
 # Get some DICOM header information
 def get_sample_dicom_header(subject_name, study_name, series_name=None):
@@ -160,4 +163,3 @@ def get_series_number_from_folder(folder_name):
 
 
 
-                
