@@ -86,7 +86,7 @@ class ToolBase(ABC):
                 'status': 'complete',
                 'message': f'{self.name} has run successfully',
                 'commands': ['undo'] if self.is_undoable() else [],
-                'pid': None,
+                'pid': pid,
             }
         elif self.are_input_files_present():
             return {

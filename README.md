@@ -24,7 +24,6 @@ I need to demonstrate tools that operate on the subject and project level. Just 
 
 
 ## Next Steps
-* refactor my flask app into a few different files
 * move the code to pcad2. 
 * Push to github repository
 

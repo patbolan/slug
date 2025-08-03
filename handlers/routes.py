@@ -194,7 +194,6 @@ def dicom_series_viewer(subject_name, study_name, series_relative_path):
 @handlers_bp.route('/edit/subjects/<subject_name>/<path:file_relative_path>', methods=['POST'])
 @handlers_bp.route('/edit/<path:file_relative_path>', methods=['POST'])
 def edit_file(subject_name=None, study_name=None, file_relative_path=None):
-    print(f'*** edit_file: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}')
     # Construct the full file path based on whether study_name is provided
     if study_name:
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
@@ -225,7 +224,6 @@ def edit_file(subject_name=None, study_name=None, file_relative_path=None):
 @handlers_bp.route('/edit-page/subjects/<subject_name>/<path:file_relative_path>', methods=['GET'])
 @handlers_bp.route('/edit-page/<path:file_relative_path>', methods=['GET'])
 def edit_file_page(subject_name=None, study_name=None, file_relative_path=None):
-    print(f'*** edit_file_page: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}')
     # Construct the full file path based on whether study_name is provided
     if study_name:
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)

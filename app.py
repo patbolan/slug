@@ -148,6 +148,7 @@ def study(subject_name, study_name):
     # Get toolset 
     toolset = get_tools_for_study(subject_name, study_name) 
 
+
     # Process DICOM folders
     dicom_path = os.path.join(study_path, 'dicom-original')
     dicom_folders = []

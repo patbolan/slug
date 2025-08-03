@@ -66,7 +66,7 @@ class NiiConverter(ToolBase):
         module_script = os.path.join(module_folder, 'convert2nii', 'run.sh')
         study_folder = get_study_path(self.subject_name, self.study_name)
         cmd = [module_script, study_folder] # Important: cmd is a list, not a string with spaces!
-        print(f"***** Running command: {cmd}")
+        print(f"***** Running module command: {cmd}")
 
         # Run the command in a subprocess
         result = subprocess.run(
