@@ -68,7 +68,7 @@ def execute_tool(tool_name, command, subject_name=None, study_name=None):
 
     if tool_name == 'nii-converter':
         tool = NiiConverter(subject_name, study_name)
-    elif tool_name == 'simple-tool':
+    elif tool_name == 'simple-study-tool':
         tool = SimpleStudyTool(subject_name, study_name)
     elif tool_name == 'dicom-raw-storage-cleaner':
         tool = DicomRawStorageCleaner(subject_name, study_name)
