@@ -56,11 +56,11 @@ def clear_running_logs():
     pm = ProcessManager()
     pm.clear_logs(folder_type='runing')
 
-    return redirect(url_for('processes'))
+    return redirect(url_for('tools_bp.processes'))
 
 @tools_bp.route('/clear-completed-logs', methods=['POST'])
 def clear_completed_logs():
     pm = ProcessManager()
     pm.clear_logs(folder_type='completed')
 
-    return redirect(url_for('processes'))
+    return redirect(url_for('tools_bp.processes'))

@@ -18,7 +18,7 @@
     <pre>{{ content }}</pre>
     <br>
     {% if not readonly %}
-        <form action="{{ url_for('edit_file_page', subject_name=subject, study_name=study, file_relative_path=filepath) }}" method="GET">
+        <form action="{{ url_for('handlers_bp.edit_file_page', subject_name=subject, study_name=study, file_relative_path=filepath) }}" method="GET">
             <button type="submit">Edit File</button>
         </form>
     {% endif %}

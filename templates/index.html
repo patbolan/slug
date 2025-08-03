@@ -58,7 +58,7 @@
                 const path = data.instance.get_path(data.node, '/');
 
                 if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.endsWith('.dcm') || fileName.endsWith('.png')) {
-                    const url = "{{ url_for('file_viewer', file_relative_path='') }}" + path;
+                    const url = "{{ url_for('handlers_bp.file_viewer', file_relative_path='') }}" + path;
                     window.open(url, '_blank');
                 }
             });

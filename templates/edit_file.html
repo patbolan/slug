@@ -14,11 +14,11 @@
 
     <!-- Link URLs are different depending on level (study, subject, project, process) -->
     {% if study %}
-        {% set edit_url = url_for('edit_file', subject_name=subject, study_name=study, file_relative_path=filepath) %}
-        {% set cancel_url = url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path=filepath) %}
+        {% set edit_url = url_for('handlers_bp.edit_file', subject_name=subject, study_name=study, file_relative_path=filepath) %}
+        {% set cancel_url = url_for('handlers_bp.file_viewer', subject_name=subject, study_name=study, file_relative_path=filepath) %}
     {% else %}
-        {% set edit_url = url_for('edit_file', subject_name=subject, file_relative_path=filepath) %}
-        {% set cancel_url = url_for('file_viewer', subject_name=subject, file_relative_path=filepath) %}
+        {% set edit_url = url_for('handlers_bp.edit_file', subject_name=subject, file_relative_path=filepath) %}
+        {% set cancel_url = url_for('handlers_bp.file_viewer', subject_name=subject, file_relative_path=filepath) %}
     {% endif %}
 
     <form method="POST" action="{{ edit_url }}">

@@ -12,7 +12,7 @@
     <script type="text/javascript">
         // Papaya configuration parameters
         var params = [];
-        params["images"] = ["{{ url_for('serve_nifti', filename=file_path) }}"];
+        params["images"] = ["{{ url_for('handlers_bp.serve_nifti', filename=file_path) }}"];
         params["worldSpace"] = true;
         params["kioskMode"] = false; // show full UI
         params["expandable"] = true;

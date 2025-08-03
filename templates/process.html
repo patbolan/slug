@@ -103,7 +103,7 @@
 
                 // Check file extension and open in browser
                 if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.endsWith('.dcm') || fileName.endsWith('.png')) {
-                    const url = "{{ url_for('file_viewer', subject_name=None, study_name=None, process_id=process_info.pid, file_relative_path='') }}" + path;
+                    const url = "{{ url_for('handlers_bp.file_viewer', subject_name=None, study_name=None, process_id=process_info.pid, file_relative_path='') }}" + path;
                     window.open(url, '_blank');
                 }
 

@@ -25,13 +25,13 @@
     <h1>{{ subject }}/{{ study }}</h1>
     <h2>Study Notes</h2>
     <p><pre>{{ notes }}</pre></p>
-    <form id="edit-study-note-form" method="GET" action="{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path='notes.txt') }}">
+    <form id="edit-study-note-form" method="GET" action="{{ url_for('handlers_bp.file_viewer', subject_name=subject, study_name=study, file_relative_path='notes.txt') }}">
         <button type="button" onclick="editStudyNote()">Edit Study Note</button>
     </form>
 
     <script>
         function editStudyNote() {
-            const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path='notes.txt') }}";
+            const url = "{{ url_for('handlers_bp.file_viewer', subject_name=subject, study_name=study, file_relative_path='notes.txt') }}";
             fetch(url, { method: 'GET' })
                 .then(response => {
                     if (response.ok) {
@@ -92,14 +92,14 @@
 
                 // Check file extension and open in browser
                 if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.toLowerCase().endsWith('.dcm') || fileName.endsWith('.png')) {
-                    const url = "{{ url_for('file_viewer', subject_name=subject, study_name=study, file_relative_path='') }}" + path;
+                    const url = "{{ url_for('handlers_bp.file_viewer', subject_name=subject, study_name=study, file_relative_path='') }}" + path;
                     window.open(url, '_blank');
                 }
 
                 // Handle folders starting with "MR-SExxx"
                 const folderPattern = /^MR-SE\d{3}/;
                 if (folderPattern.test(fileName)) {
-                    const url = "{{ url_for('dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path='') }}" + path;
+                    const url = "{{ url_for('handlers_bp.dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path='') }}" + path;
                     window.open(url, '_blank');
                 }
             });
@@ -250,7 +250,7 @@
                 <tr>
                     <td>{{ folder.series_number }}</td>
                     <td>
-                        <a href="{{ url_for('dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path=folder.relative_path) }}" target="_blank">
+                        <a href="{{ url_for('handlers_bp.dicom_series_viewer', subject_name=subject, study_name=study, series_relative_path=folder.relative_path) }}" target="_blank">
                             {{ folder.name }}
                         </a>
                     </td>

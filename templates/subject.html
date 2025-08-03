@@ -24,13 +24,13 @@
     <h1>Subject {{ subject }}</h1>
     <h2>Notes</h2>
     <p><pre>{{ notes }}</pre></p>
-    <form id="edit-subject-note-form" method="GET" action="{{ url_for('file_viewer', subject_name=subject, file_relative_path='notes.txt') }}">
+    <form id="edit-subject-note-form" method="GET" action="{{ url_for('handlers_bp.file_viewer', subject_name=subject, file_relative_path='notes.txt') }}">
         <button type="button" onclick="editSubjectNote()">Edit Subject Note</button>
     </form>
 
     <script>
         function editSubjectNote() {
-            const url = "{{ url_for('file_viewer', subject_name=subject, file_relative_path='notes.txt') }}";
+            const url = "{{ url_for('handlers_bp.file_viewer', subject_name=subject, file_relative_path='notes.txt') }}";
             fetch(url, { method: 'GET' })
                 .then(response => {
                     if (response.ok) {
@@ -104,7 +104,7 @@
                 const path = data.instance.get_path(data.node, '/');
 
                 if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.endsWith('.dcm') || fileName.endsWith('.png')) {
-                    const url = "{{ url_for('file_viewer', subject_name=subject, file_relative_path='') }}" + path;
+                    const url = "{{ url_for('handlers_bp.file_viewer', subject_name=subject, file_relative_path='') }}" + path;
                     window.open(url, '_blank');
                 }
             });
