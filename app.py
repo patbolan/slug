@@ -31,8 +31,6 @@ import shutil  # Add this import for removing directories
 app = Flask(__name__)
 
 
-
-
 # Middleware (?) to handle method overrides 
 @app.before_request
 def handle_method_override():
@@ -371,7 +369,7 @@ def dicom_series_viewer(subject_name, study_name, series_relative_path):
 @app.route('/edit/subjects/<subject_name>/<path:file_relative_path>', methods=['POST'])
 @app.route('/edit/<path:file_relative_path>', methods=['POST'])
 def edit_file(subject_name=None, study_name=None, file_relative_path=None):
-
+    print(f'*** edit_file: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}')
     # Construct the full file path based on whether study_name is provided
     if study_name:
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
@@ -393,12 +391,16 @@ def edit_file(subject_name=None, study_name=None, file_relative_path=None):
         f.write(updated_content)
 
     # Redirect back to the viewer route
-    return redirect(url_for('file_viewer', subject_name=subject_name, study_name=study_name, file_relative_path=file_relative_path))
+    return redirect(url_for('file_viewer', 
+                            subject_name=subject_name, 
+                            study_name=study_name, 
+                            file_relative_path=file_relative_path))
 
 @app.route('/edit-page/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['GET'])
 @app.route('/edit-page/subjects/<subject_name>/<path:file_relative_path>', methods=['GET'])
 @app.route('/edit-page/<path:file_relative_path>', methods=['GET'])
 def edit_file_page(subject_name=None, study_name=None, file_relative_path=None):
+    print(f'*** edit_file_page: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}')
     # Construct the full file path based on whether study_name is provided
     if study_name:
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
