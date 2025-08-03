@@ -11,7 +11,7 @@ from utils import (  # Import the utility functions
     get_series_number_from_folder, 
     get_process_file_path, 
 )
-from tools.utils import get_tools_for_study, execute_tool
+from tools.utils import get_tools_for_study, get_tools_for_subject, execute_tool
 from tools.process_manager import ProcessManager
 
 import os
@@ -95,10 +95,14 @@ def subject(subject_name):
     else:
         file_tree = []
 
+    # Get toolset 
+    toolset = get_tools_for_subject(subject_name) 
+
     return render_template('subject.html', 
                            subject=subject_name, 
                            studies=studies, 
                            notes=notes, 
+                           toolset=toolset,
                            file_tree=file_tree)
 
 
@@ -404,6 +408,14 @@ def tool_command(tool_name, command, subject_name, study_name):
     print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
     execute_tool(tool_name, command, subject_name, study_name)
     return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
+
+# Subject- level tool commands
+@app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/', methods=['POST'])
+def subject_tool_command(tool_name, command, subject_name):
+
+    print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}")
+    execute_tool(tool_name, command, subject_name)
+    return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}'", 200
 
 @app.route('/processes')
 def processes():

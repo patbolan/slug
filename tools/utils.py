@@ -1,5 +1,8 @@
 
 def get_tools_for_study(subject_name, study_name):
+    """
+    Returns a list of tools for a given study, each as a dictionary summarizing its current state
+    """
     from .simple_tool import SimpleTool
     from .nii_converter import NiiConverter
     from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
@@ -7,7 +10,7 @@ def get_tools_for_study(subject_name, study_name):
     from .template_registration import TemplateRegistration
     from .reslice_mask import ResliceMask
 
-    # Returns a list of tools, each as a dictionary summarizing its current state
+
     simple_tool = SimpleTool(subject_name, study_name)
     nii_converter = NiiConverter(subject_name, study_name)
     dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
@@ -16,6 +19,7 @@ def get_tools_for_study(subject_name, study_name):
     reslice_mask = ResliceMask(subject_name, study_name)
 
     return [
+        simple_tool.get_status_dict(), 
         dicom_raw_storage_cleaner.get_status_dict(),
         autotagger.get_status_dict(),
         nii_converter.get_status_dict(),
@@ -23,13 +27,26 @@ def get_tools_for_study(subject_name, study_name):
         reslice_mask.get_status_dict(),
     ]
 
-def execute_tool(tool_name, command, subject_name, study_name):
+def get_tools_for_subject(subject_name):
+    """ 
+    Returns a list of tools suitable for a subject, each as a dictionary summarizing its current state
+    """
+    from .simple_subject_tool import SimpleSubjectTool
+    simple_subject_tool = SimpleSubjectTool(subject_name)
+
+    return [
+        simple_subject_tool.get_status_dict(),
+    ]
+
+
+def execute_tool(tool_name, command, subject_name, study_name=None):
     from .simple_tool import SimpleTool
     from .nii_converter import NiiConverter
     from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
     from .autotagger import AutoTagger
     from .template_registration import TemplateRegistration
     from .reslice_mask import ResliceMask
+    from .simple_subject_tool import SimpleSubjectTool
 
     if tool_name == 'nii-converter':
         tool = NiiConverter(subject_name, study_name)
@@ -43,6 +60,8 @@ def execute_tool(tool_name, command, subject_name, study_name):
         tool = TemplateRegistration(subject_name, study_name)
     elif tool_name == 'reslice-mask':
         tool = ResliceMask(subject_name, study_name)
+    elif tool_name == 'simple-subject-tool':
+        tool = SimpleSubjectTool(subject_name)
     else:
         raise ValueError(f"Unknown tool '{tool_name}'")
 

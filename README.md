@@ -41,6 +41,6 @@ I need to demonstrate tools that operate on the subject and project level. Just 
 * Use a better dicom viewer. Cornerstone.js?
 * Make a nice frontend in React
 * The file trees are a little awkward. Browse files like github does.
-* Add Projects
+* Add Projects for highest level organization
 * Add Users, groups, and permissions.
 * Provide a new study or new subject feature. Upload dicoms, parse them out. 
