@@ -18,7 +18,7 @@
         <a href="{{ url_for('index') }}">Home</a>, 
         <a href="{{ url_for('subjects') }}">Subjects</a>, 
         <a href="{{ url_for('studies') }}">Studies</a>, 
-        <a href="{{ url_for('processes') }}">Processes</a>, 
+        <a href="{{ url_for('tools_bp.processes') }}">Processes</a>, 
         <a href="{{ url_for('subject', subject_name=subject) }}">Back to Subject</a>
     </header>
 
@@ -124,7 +124,7 @@
                     <td>{{ tool.status }}</td>
                     <td align="center">
                         {% if tool.pid %}
-                            <a href="{{ url_for('process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
+                            <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
 
                         {% endif %}
                     </td>

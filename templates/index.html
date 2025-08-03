@@ -22,7 +22,7 @@
     <br>
     <a href="{{ url_for('studies') }}">All Studies</a>
     <br>
-    <a href="{{ url_for('processes') }}">Processes</a>
+    <a href="{{ url_for('tools_bp.processes') }}">Processes</a>
 
     {% if file_tree %}
     <h2>Project_Reports</h2>
@@ -84,7 +84,7 @@
                     <td>{{ tool.status }}</td>
                     <td align="center">
                         {% if tool.pid %}
-                            <a href="{{ url_for('process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
+                            <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
 
                         {% endif %}
                     </td>

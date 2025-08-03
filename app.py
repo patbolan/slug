@@ -12,8 +12,8 @@ from utils import (  # Import the utility functions
     get_process_file_path, 
     get_data_folder
 )
-from tools.utils import get_tools_for_study, get_tools_for_subject, get_tools_for_project, execute_tool
-from tools.process_manager import ProcessManager
+
+from tools.utils import get_tools_for_project, get_tools_for_subject, get_tools_for_study
 
 import os
 import csv  # Add this import for handling CSV files
@@ -28,8 +28,13 @@ from io import BytesIO
 import base64
 import shutil  # Add this import for removing directories
 
+from tools.routes import tools_bp   
+
+
 app = Flask(__name__)
 
+# Blueprints (routes in )
+app.register_blueprint(tools_bp)    
 
 # Middleware (?) to handle method overrides 
 @app.before_request
@@ -424,63 +429,7 @@ def edit_file_page(subject_name=None, study_name=None, file_relative_path=None):
                            filepath=file_relative_path, 
                            content=content)
 
-# Tool commands. Supports study-level, subject-level, and project-level tools.
-@app.route('/tools/<tool_name>/<command>/', methods=['POST'])
-@app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/', methods=['POST'])
-@app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/studies/<study_name>/', methods=['POST'])
-def tool_command(tool_name, command, subject_name=None, study_name=None):
 
-    print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
-    execute_tool(tool_name, command, subject_name, study_name)
-    return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
-
-
-@app.route('/processes')
-def processes():
-    # Create an instance of ProcessManager
-    process_manager = ProcessManager()
-
-    # Get the list of running and completed processes
-    running_processes = process_manager.get_processes(folder_type='running')
-    completed_processes = process_manager.get_processes(folder_type='completed')
-
-    # Render the processes.html template with both lists
-    return render_template('processes.html', 
-                           running_processes=running_processes, 
-                           completed_processes=completed_processes)
-
-@app.route('/process/<pid>')
-def process_info(pid):
-    # Create an instance of ProcessManager
-    process_manager = ProcessManager()
-
-    # Get process information
-    process_info = process_manager.get_process_info(pid)
-
-    # Generate file tree
-    file_tree = get_file_tree(get_process_file_path(pid))
-
-    # If the process does not exist, return a 404 error
-    if not process_info:
-        abort(404, description=f"Process with PID {pid} not found.")
-
-    return render_template('process.html', 
-                           process_info=process_info, 
-                           file_tree=file_tree)
-
-@app.route('/clear-running-logs', methods=['POST'])
-def clear_running_logs():
-    pm = ProcessManager()
-    pm.clear_logs(folder_type='runing')
-
-    return redirect(url_for('processes'))
-
-@app.route('/clear-completed-logs', methods=['POST'])
-def clear_completed_logs():
-    pm = ProcessManager()
-    pm.clear_logs(folder_type='completed')
-
-    return redirect(url_for('processes'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run on all interfaces at port 5000

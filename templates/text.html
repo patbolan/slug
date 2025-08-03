@@ -30,7 +30,7 @@
             <a href="{{ url_for('subject', subject_name=subject) }}">Back</a>
         {% else %}
             {% if process_id %}
-                <a href="{{ url_for('processes', process_id=process_id) }}">Back</a>
+                <a href="{{ url_for('tools_bp.processes', process_id=process_id) }}">Back</a>
             {% else %}
                 <a href="{{ url_for('index') }}">Back to Home</a>
             {% endif %}

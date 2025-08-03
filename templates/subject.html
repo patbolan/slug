@@ -130,7 +130,7 @@
                     <td>{{ tool.status }}</td>
                     <td align="center">
                         {% if tool.pid %}
-                            <a href="{{ url_for('process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
+                            <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
 
                         {% endif %}
                     </td>
