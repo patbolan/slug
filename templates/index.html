@@ -2,6 +2,17 @@
 <html>
 <head>
     <title>Slug: PCAD2 project</title>
+    <!-- Include jsTree CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <!-- Include jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Include jsTree JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+    <style>
+        #file-tree {
+            font-family: monospace; /* Use fixed-width font */
+        }
+    </style>
 </head>
 <body>
     <h1><i>Slug</i>: PCAD2 project</h1>
@@ -12,5 +23,116 @@
     <a href="{{ url_for('studies') }}">All Studies</a>
     <br>
     <a href="{{ url_for('processes') }}">Processes</a>
+
+    {% if file_tree %}
+    <h2>Project_Reports</h2>
+    <div id="file-tree"></div>
+
+    <script>
+        $(document).ready(function () {
+            $('#file-tree').jstree({
+                'core': {
+                    'data': [
+                        {
+                            'text': 'Project_Reports',
+                            'state': { 'opened': false }, // Start collapsed
+                            'children': {{ file_tree|tojson }}
+                        }
+                    ]
+                },
+                'plugins': ['types'], // Enable types plugin
+                'types': {
+                    'jstree-folder': {
+                        'icon': 'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/folder.png' // Public folder icon
+                    },
+                    'jstree-file': {
+                        'icon': 'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/file.png' // Public file icon
+                    }
+                }
+            });
+
+            // Handle double-click on files
+            $('#file-tree').on('select_node.jstree', function (e, data) {
+                const node = data.node;
+                const fileName = node.text;
+                const path = data.instance.get_path(data.node, '/');
+
+                if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.nii') || fileName.endsWith('.dcm') || fileName.endsWith('.png')) {
+                    const url = "{{ url_for('file_viewer', file_relative_path='') }}" + path;
+                    window.open(url, '_blank');
+                }
+            });
+        });
+    </script>
+    {% endif %}
+
+    <h2>Processing Tools</h2>
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>PID</th>
+                <th>Commands</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tool in toolset %}
+                <tr>
+                    <td>{{ tool.name }}</td>
+                    <td>{{ tool.status }}</td>
+                    <td align="center">
+                        {% if tool.pid %}
+                            <a href="{{ url_for('process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
+
+                        {% endif %}
+                    </td>
+                    <td align="center">
+                        {% if tool.commands %}
+                            {% for command in tool.commands %}
+                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ command }}')">
+                                    {{ command }}
+                                </button>
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td>{{ tool.message if tool.message else '' }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function runToolCommand(toolName, command) {
+            const url = `/tools/${toolName}/${command}/`;
+            
+            // Change cursor to wait
+            document.body.style.cursor = 'wait';
+
+            // Send POST request
+            fetch(url, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('Failed to execute command');
+                    }
+                })
+                .then(data => {
+                    console.log(data); // Log the server response
+                    // Reload the page to update the study page
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('An error occurred while executing the command.');
+                })
+                .finally(() => {
+                    // Reset cursor to default
+                    document.body.style.cursor = 'default';
+                });
+        }
+    </script>
 </body>
 </html>

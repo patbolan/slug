@@ -3,7 +3,7 @@ def get_tools_for_study(subject_name, study_name):
     """
     Returns a list of tools for a given study, each as a dictionary summarizing its current state
     """
-    from .simple_tool import SimpleTool
+    from .simple_study_tool import SimpleStudyTool
     from .nii_converter import NiiConverter
     from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
     from .autotagger import AutoTagger
@@ -11,7 +11,7 @@ def get_tools_for_study(subject_name, study_name):
     from .reslice_mask import ResliceMask
 
 
-    simple_tool = SimpleTool(subject_name, study_name)
+    simple_tool = SimpleStudyTool(subject_name, study_name)
     nii_converter = NiiConverter(subject_name, study_name)
     dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
     autotagger = AutoTagger(subject_name, study_name)
@@ -38,20 +38,38 @@ def get_tools_for_subject(subject_name):
         simple_subject_tool.get_status_dict(),
     ]
 
+def get_tools_for_project():
+    """ 
+    Returns a list of tools suitable for the whole project
+    """
+    from .simple_project_tool import SimpleProjectTool
+    simple_project_tool = SimpleProjectTool()
 
-def execute_tool(tool_name, command, subject_name, study_name=None):
-    from .simple_tool import SimpleTool
+    return [
+        simple_project_tool.get_status_dict(),
+    ]
+
+def execute_tool(tool_name, command, subject_name=None, study_name=None):
+    """
+    Executes a tool command.
+    Supports tools that at study level, subject level, or project level.
+    If subject_name and study_name are provided, it will execute a study-level tool.
+    If study_name is not provided, it will execute a subject-level tool.
+    If neither is provided, it will execute a project-level tool.
+    """
+    from .simple_study_tool import SimpleStudyTool
     from .nii_converter import NiiConverter
     from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
     from .autotagger import AutoTagger
     from .template_registration import TemplateRegistration
     from .reslice_mask import ResliceMask
     from .simple_subject_tool import SimpleSubjectTool
+    from .simple_project_tool import SimpleProjectTool
 
     if tool_name == 'nii-converter':
         tool = NiiConverter(subject_name, study_name)
     elif tool_name == 'simple-tool':
-        tool = SimpleTool(subject_name, study_name)
+        tool = SimpleStudyTool(subject_name, study_name)
     elif tool_name == 'dicom-raw-storage-cleaner':
         tool = DicomRawStorageCleaner(subject_name, study_name)
     elif tool_name == 'autotagger':
@@ -62,6 +80,8 @@ def execute_tool(tool_name, command, subject_name, study_name=None):
         tool = ResliceMask(subject_name, study_name)
     elif tool_name == 'simple-subject-tool':
         tool = SimpleSubjectTool(subject_name)
+    elif tool_name == 'simple-project-tool':
+        tool = SimpleProjectTool()
     else:
         raise ValueError(f"Unknown tool '{tool_name}'")
 

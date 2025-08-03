@@ -24,7 +24,7 @@ I need to demonstrate tools that operate on the subject and project level. Just 
 
 
 ## Next Steps
-* Demo tools at subject and project levels
+* Fix the back logic on text file edits. Too many ifs
 * refactor my flask app into a few different files
 * move the code to pcad2. 
 * Push to github repository

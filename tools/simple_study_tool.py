@@ -9,10 +9,10 @@ import time
 from .tool_base import ToolBase
 from utils import get_study_file_path
 
-class SimpleTool(ToolBase):
+class SimpleStudyTool(ToolBase):
     def __init__(self, subject_name, study_name):
         super().__init__(subject_name, study_name)
-        self.name = 'simple-tool'
+        self.name = 'simple-study-tool'
         self.test_file_path = os.path.join(get_study_file_path(self.subject_name, self.study_name, 'testfile.txt'))
 
     def are_output_files_present(self):

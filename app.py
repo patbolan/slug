@@ -10,8 +10,9 @@ from utils import (  # Import the utility functions
     get_file_tree,
     get_series_number_from_folder, 
     get_process_file_path, 
+    get_data_folder
 )
-from tools.utils import get_tools_for_study, get_tools_for_subject, execute_tool
+from tools.utils import get_tools_for_study, get_tools_for_subject, get_tools_for_project, execute_tool
 from tools.process_manager import ProcessManager
 
 import os
@@ -46,7 +47,20 @@ def handle_method_override():
 # Home 
 @app.route('/')
 def index():
-    return render_template('index.html')
+
+    # Generate file tree for the Project_reports
+    project_reports_path = os.path.join(get_data_folder(), 'Project_Reports')
+    if os.path.isdir(project_reports_path):
+        file_tree = get_file_tree(project_reports_path)
+    else:
+        file_tree = []
+
+    # Get toolset 
+    toolset = get_tools_for_project()
+
+    return render_template('index.html', 
+                           toolset=toolset,
+                           file_tree=file_tree)
 
 # List all subjects
 @app.route('/subjects')
@@ -180,6 +194,7 @@ def study(subject_name, study_name):
 # But using the "path:" keyword, all the path information after will get assigned to one variable
 @app.route('/viewer/subjects/<subject_name>/studies/<study_name>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
 @app.route('/viewer/subjects/<subject_name>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
+@app.route('/viewer/files/<path:file_relative_path>', methods=['GET', 'PUT'])
 @app.route('/viewer/process/<process_id>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
 def file_viewer(file_relative_path, subject_name=None, study_name=None, process_id=None):
     print(f'file_viewer: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}, process_id={process_id}')
@@ -196,9 +211,8 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
         file_path = get_process_file_path(process_id, file_relative_path)
         readonly = True
     else:
-        # Todo: project-associated files? Reports?
-        print('file_viewer: unsupported file association')
-        abort(404)
+        file_path = os.path.join(get_data_folder(), file_relative_path)
+        readonly = False
 
     # HACK - the javascript sometimes adds an extra path delimiter. 
     file_path = re.sub(r'/+', '/', file_path)
@@ -352,17 +366,20 @@ def dicom_series_viewer(subject_name, study_name, series_relative_path):
     return render_template('dicom_series.html', dicom_urls=dicom_urls)
 
 
-
+# TODO Not sure this function is used. There's a edit_file_page, and a file_viewer. Clean up
 @app.route('/edit/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['POST'])
 @app.route('/edit/subjects/<subject_name>/<path:file_relative_path>', methods=['POST'])
-def edit_file(subject_name, study_name=None, file_relative_path=None):
+@app.route('/edit/<path:file_relative_path>', methods=['POST'])
+def edit_file(subject_name=None, study_name=None, file_relative_path=None):
 
     # Construct the full file path based on whether study_name is provided
     if study_name:
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
-    else:
+    elif subject_name:
         file_path = get_subject_file_path(subject_name, file_relative_path)
-    
+    else:
+        file_path = os.path.join(get_data_folder(), file_relative_path)
+
     # Check if the file exists
     if not os.path.isfile(file_path):
         print('edit_file: Invalid file path:', file_path)
@@ -380,12 +397,15 @@ def edit_file(subject_name, study_name=None, file_relative_path=None):
 
 @app.route('/edit-page/subjects/<subject_name>/studies/<study_name>/<path:file_relative_path>', methods=['GET'])
 @app.route('/edit-page/subjects/<subject_name>/<path:file_relative_path>', methods=['GET'])
-def edit_file_page(subject_name, study_name=None, file_relative_path=None):
+@app.route('/edit-page/<path:file_relative_path>', methods=['GET'])
+def edit_file_page(subject_name=None, study_name=None, file_relative_path=None):
     # Construct the full file path based on whether study_name is provided
     if study_name:
         file_path = get_study_file_path(subject_name, study_name, file_relative_path)
-    else:
+    elif subject_name:
         file_path = get_subject_file_path(subject_name, file_relative_path)
+    else:
+        file_path = os.path.join(get_data_folder(), file_relative_path)
 
     # Check if the file exists
     if not os.path.isfile(file_path):
@@ -402,10 +422,11 @@ def edit_file_page(subject_name, study_name=None, file_relative_path=None):
                            filepath=file_relative_path, 
                            content=content)
 
-# Tool commands. Supports both study-level and subject-level tools.
+# Tool commands. Supports study-level, subject-level, and project-level tools.
+@app.route('/tools/<tool_name>/<command>/', methods=['POST'])
 @app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/', methods=['POST'])
 @app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/studies/<study_name>/', methods=['POST'])
-def tool_command(tool_name, command, subject_name, study_name=None):
+def tool_command(tool_name, command, subject_name=None, study_name=None):
 
     print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
     execute_tool(tool_name, command, subject_name, study_name)
