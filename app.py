@@ -402,20 +402,15 @@ def edit_file_page(subject_name, study_name=None, file_relative_path=None):
                            filepath=file_relative_path, 
                            content=content)
 
+# Tool commands. Supports both study-level and subject-level tools.
+@app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/', methods=['POST'])
 @app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/studies/<study_name>/', methods=['POST'])
-def tool_command(tool_name, command, subject_name, study_name):
+def tool_command(tool_name, command, subject_name, study_name=None):
 
     print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
     execute_tool(tool_name, command, subject_name, study_name)
     return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
 
-# Subject- level tool commands
-@app.route('/tools/<tool_name>/<command>/subjects/<subject_name>/', methods=['POST'])
-def subject_tool_command(tool_name, command, subject_name):
-
-    print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}")
-    execute_tool(tool_name, command, subject_name)
-    return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}'", 200
 
 @app.route('/processes')
 def processes():
