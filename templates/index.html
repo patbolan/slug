@@ -17,7 +17,6 @@
 <body>
     <h1><i>Slug</i>: PCAD2 project</h1>
     <p>Prototype replacement for the Matlab <i>mmanager</i> program</p>
-    
     <a href="{{ url_for('subjects') }}">All Subjects</a>
     <br>
     <a href="{{ url_for('studies') }}">All Studies</a>
@@ -134,5 +133,25 @@
                 });
         }
     </script>
+    
+
 </body>
+<footer>
+    <p>Slug is a prototype replacement for the Matlab <i>mmanager</i> program.</p>
+    <table border="1" cellpadding="2" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, value in server_env.items() %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </html>

@@ -8,9 +8,9 @@ from utils import (  # Import the utility functions
     get_study_files, 
     get_sample_dicom_header, 
     get_file_tree,
-    get_series_number_from_folder, 
-    get_process_file_path, 
-    get_data_folder
+    get_series_number_from_folder,
+    get_data_folder, 
+    get_server_environment
 )
 
 from tools.utils import get_tools_for_project, get_tools_for_subject, get_tools_for_study
@@ -27,6 +27,8 @@ from matplotlib import pyplot as plt
 from io import BytesIO
 import base64
 import shutil  # Add this import for removing directories
+import pwd
+import getpass  # For getting the current username
 
 from tools.routes import tools_bp   
 from handlers.routes import handlers_bp  # Import the handlers blueprint    
@@ -62,9 +64,13 @@ def index():
     # Get toolset 
     toolset = get_tools_for_project()
 
+    # Get running environment data
+    server_env = get_server_environment()
+
     return render_template('index.html', 
                            toolset=toolset,
-                           file_tree=file_tree)
+                           file_tree=file_tree, 
+                           server_env=server_env)
 
 # List all subjects
 @app.route('/subjects')

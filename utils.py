@@ -161,5 +161,26 @@ def get_series_number_from_folder(folder_name):
         return int(match.group(1))
     return None
 
+def get_server_environment():
+    import getpass
+    import os
 
+    try:
+        with open('/proc/self/comm', 'r') as f:
+            process_name_proc = f.read().strip()
+    except Exception:
+        process_name_proc = None    
+
+    env = {
+        'username': getpass.getuser(),
+        'cwd': os.getcwd(),
+        'process_name': os.path.basename(__file__),
+        'process_name_proc': process_name_proc, 
+        'command_line': ' '.join(os.sys.argv), 
+        'pid': os.getpid(),
+        'data_folder': get_data_folder(),
+        'process_root_folder': get_process_root_folder(),
+        'module_folder': get_module_folder()
+    }
+    return env
 
