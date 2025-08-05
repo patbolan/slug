@@ -100,6 +100,9 @@ def studies():
         for study in subject_studies:
             all_studies.append({'subject': subject, 'study': study})
 
+    # Sort all_studies by study name, in reverse order
+    all_studies.sort(key=lambda x: x['study'], reverse=True)
+
     return render_template('studies.html', studies=all_studies)
 
 # Details for one subject. By default this will include a list of all studies
