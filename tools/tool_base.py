@@ -104,3 +104,22 @@ class ToolBase(ABC):
                 'commands': [],
                 'pid': None,
             }
+        
+    def print_subprocess_output(self, result):
+        """
+        Helper function to print the output and error messages from a subprocess
+        This is used to print the output of the command run in the run method
+        """
+        if result.returncode != 0:
+            print(f"Command failed with return code {result.returncode}")
+            raise Exception(f"Command failed: {result.stderr}")
+        else:
+            print(f"Command completed successfully with return code {result.returncode}")
+        if result.stdout:
+            print('Standard Output:')
+            print(result.stdout)
+        if result.stderr:
+            print('Standard Error:')
+            print(result.stderr)    
+        else: 
+            print('No errors.') 

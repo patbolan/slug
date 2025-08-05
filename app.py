@@ -10,7 +10,8 @@ from utils import (  # Import the utility functions
     get_file_tree,
     get_series_number_from_folder,
     get_data_folder, 
-    get_server_environment
+    get_server_environment, 
+    is_subject_human
 )
 
 from tools.utils import get_tools_for_project, get_tools_for_subject, get_tools_for_study
@@ -80,7 +81,11 @@ def subjects():
 
     for subject in subjects:
         studies = get_studies_for_subject(subject)
-        subjects_with_counts.append((subject, len(studies)))
+        subjects_with_counts.append({
+            'subject_name': subject,
+            'is_human': is_subject_human(subject),
+            'study_count': len(studies)
+        })
 
     return render_template('subjects.html', subjects=subjects_with_counts)
 

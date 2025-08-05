@@ -1,3 +1,5 @@
+from utils import is_subject_human
+
 
 def get_tools_for_study(subject_name, study_name):
     """
@@ -11,24 +13,29 @@ def get_tools_for_study(subject_name, study_name):
     from .reslice_mask import ResliceMask
     from .parse_dicom_folder import ParseDicomFolder
 
-
-    simple_tool = SimpleStudyTool(subject_name, study_name)
+    #simple_tool = SimpleStudyTool(subject_name, study_name)
     nii_converter = NiiConverter(subject_name, study_name)
     parse_dicom_folder = ParseDicomFolder(subject_name, study_name)
-    dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
+    #dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
     autotagger = AutoTagger(subject_name, study_name)
     template_registration = TemplateRegistration(subject_name, study_name)
     reslice_mask = ResliceMask(subject_name, study_name)
 
-    return [
-        simple_tool.get_status_dict(), 
-        parse_dicom_folder.get_status_dict(),
-        dicom_raw_storage_cleaner.get_status_dict(),
-        autotagger.get_status_dict(),
-        nii_converter.get_status_dict(),
-        template_registration.get_status_dict(),
-        reslice_mask.get_status_dict(),
-    ]
+    # Different tools for humans and phantoms
+    if is_subject_human(subject_name):
+        return [
+            parse_dicom_folder.get_status_dict(),
+            autotagger.get_status_dict(),
+            nii_converter.get_status_dict(),
+        ]
+    else:
+        return [
+            parse_dicom_folder.get_status_dict(),
+            autotagger.get_status_dict(),
+            nii_converter.get_status_dict(),
+            template_registration.get_status_dict(),
+            reslice_mask.get_status_dict(),
+        ]
 
 def get_tools_for_subject(subject_name):
     """ 

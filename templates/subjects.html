@@ -15,16 +15,24 @@
         <thead>
             <tr>
                 <th>Subject Name</th>
+                <th>Type</th>
                 <th>Number of Studies</th>
             </tr>
         </thead>
         <tbody>
-            {% for subject, study_count in subjects %}
+            {% for subject in subjects %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('subject', subject_name=subject) }}">{{ subject }}</a>
+                        <a href="{{ url_for('subject', subject_name=subject.subject_name) }}">{{ subject.subject_name }}</a>
                     </td>
-                    <td>{{ study_count }}</td>
+                    <td>
+                        {% if subject.is_human %}
+                            human
+                        {% else %}
+                            phantom
+                        {% endif %}
+                    </td>
+                    <td>{{ subject.study_count }}</td>
                 </tr>
             {% endfor %}
         </tbody>
