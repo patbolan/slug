@@ -1,3 +1,14 @@
+"""
+ParseDicomFolder Tool
+
+This tool is a wrapper aroudn the parse_dicom_folder() function, which has been converted 
+from Matlab code. 
+
+When createing a new file, the raw dicom can be put into a folder called `dicom-raw` and 
+this tool will parse it, copying the files to a new folder called `dicom-original`, using
+naming conventions suppported by this project. Very similar to EJA's  modified dcmtk 
+receiver with human-readable names (thanks Eddie!)
+"""
 import os
 import re
 import shutil
@@ -48,6 +59,14 @@ def parse_dicom_folder(dirname, targetdir=None):
     """
     Parse a folder for DICOM files, print tags, and optionally copy them to a new target directory 
     in a human-readable hierarchical format.
+
+    This function lists all the files in a directory and lists some of the
+    dicom tags. If a targetdir is provided, it will copy all those files to a
+    new area using a human-readable hierarchical file format.
+
+    This version is updated to support GE, where teh series numbers can be
+    up to 100k. Also not using ST001 in file and folder names
+    Also adding acquisition numbers    
     """
 
     # Recursively get all files

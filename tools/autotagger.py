@@ -79,7 +79,7 @@ class AutoTagger(ToolBase):
 
     # Disable this undo - I don't want to delete the tags file so easily
     def is_undoable(self):
-        return True
+        return False
     
     def undo(self):
         print(f"Undoing {self.name} for subject {self.subject_name} and study {self.study_name}")
