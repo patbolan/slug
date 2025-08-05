@@ -9,23 +9,38 @@
         body { margin: 0; padding: 0; }
         .papaya { width: 100vw; height: 100vh; }
     </style>
-    <script type="text/javascript">
-        // Papaya configuration parameters
-        var params = [];
-        params["images"] = ["{{ url_for('handlers_bp.serve_nifti', filename=file_path) }}"];
-        params["worldSpace"] = true;
-        params["kioskMode"] = false; // show full UI
-        params["expandable"] = true;
-        params["showControls"] = true;
-        params["showTime"] = true; // enable time slider for 4D
-        params["showSliceSlider"] = true;
-        params["showZoom"] = true;
-        params["showOrientation"] = true;
-        params["showCrosshairs"] = true;
-        params["showColorBar"] = true;
-    </script>
 </head>
 <body>
-    <div class="papaya" data-params="params"></div>
+    <!-- Papaya container with properly formatted JSON parameters -->
+    <!-- Many of these parameters seem to be ignored
+        Reference: https://github.com/rii-mango/Papaya/wiki/Configuration#images
+        "kioskMode": false,
+        "expandable": true,
+        "showControls": true,
+        "showTime": true,
+        "showSliceSlider": true,
+        "showZoom": true,
+        "showOrientation": true,
+        "showCrosshairs": false,
+        "showColorBar": true, 
+        "smoothDisplay": false
+    -->
+    <div class="papaya" data-params='{
+        "images": ["{{ url_for("handlers_bp.serve_nifti", filename=file_path) }}"],
+        "worldSpace": false,
+        "radiological": true,
+        "ignoreNiftiTransforms": true,
+        "showControls": true,
+        "showTime": true,
+        "showSliceSlider": true, 
+        "showRuler": true
+    }'></div>
+
+    <script type="text/javascript">
+        // Initialize Papaya viewer
+        document.addEventListener("DOMContentLoaded", function () {
+            papaya.Container.start();
+        });
+    </script>
 </body>
 </html>
