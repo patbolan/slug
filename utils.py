@@ -174,8 +174,6 @@ def get_server_environment():
     env = {
         'username': getpass.getuser(),
         'cwd': os.getcwd(),
-        'process_name': os.path.basename(__file__),
-        'process_name_proc': process_name_proc, 
         'command_line': ' '.join(os.sys.argv), 
         'pid': os.getpid(),
         'data_folder': get_data_folder(),

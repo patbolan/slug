@@ -9,10 +9,12 @@ def get_tools_for_study(subject_name, study_name):
     from .autotagger import AutoTagger
     from .template_registration import TemplateRegistration
     from .reslice_mask import ResliceMask
+    from .parse_dicom_folder import ParseDicomFolder
 
 
     simple_tool = SimpleStudyTool(subject_name, study_name)
     nii_converter = NiiConverter(subject_name, study_name)
+    parse_dicom_folder = ParseDicomFolder(subject_name, study_name)
     dicom_raw_storage_cleaner = DicomRawStorageCleaner(subject_name, study_name)
     autotagger = AutoTagger(subject_name, study_name)
     template_registration = TemplateRegistration(subject_name, study_name)
@@ -20,6 +22,7 @@ def get_tools_for_study(subject_name, study_name):
 
     return [
         simple_tool.get_status_dict(), 
+        parse_dicom_folder.get_status_dict(),
         dicom_raw_storage_cleaner.get_status_dict(),
         autotagger.get_status_dict(),
         nii_converter.get_status_dict(),
@@ -65,6 +68,7 @@ def execute_tool(tool_name, command, subject_name=None, study_name=None):
     from .reslice_mask import ResliceMask
     from .simple_subject_tool import SimpleSubjectTool
     from .simple_project_tool import SimpleProjectTool
+    from .parse_dicom_folder import ParseDicomFolder    
 
     if tool_name == 'nii-converter':
         tool = NiiConverter(subject_name, study_name)
@@ -82,6 +86,8 @@ def execute_tool(tool_name, command, subject_name=None, study_name=None):
         tool = SimpleSubjectTool(subject_name)
     elif tool_name == 'simple-project-tool':
         tool = SimpleProjectTool()
+    elif tool_name == 'parse-dicom-folder':
+        tool = ParseDicomFolder(subject_name, study_name)
     else:
         raise ValueError(f"Unknown tool '{tool_name}'")
 
