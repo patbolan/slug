@@ -16,6 +16,10 @@ def get_module_folder():
     config = Config()
     return config.get('module_folder', '/default/module/folder')
 
+def get_web_browser_path():
+    config = Config()
+    return config.get('web_browser_path', '/usr/bin/firefox')
+
 def get_all_subjects():
     pattern = re.compile(r'^[A-Z]{3}-\d{4}$')  # Pattern for XXX-0000  
     subjects = [d for d in os.listdir(get_data_folder()) if os.path.isdir(os.path.join(get_data_folder(), d)) and pattern.match(d)]

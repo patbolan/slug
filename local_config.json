@@ -1,5 +1,6 @@
 {
     "data_folder": "/home/bakken-raid8/pcad2/data_dev",
     "process_root_folder": "/home/bakken-raid2/bolan/prj/slug/processes",
-    "module_folder": "/home/bakken-raid8/pcad2/modules/"
+    "module_folder": "/home/bakken-raid8/pcad2/modules/", 
+    "web_browser_path": "/usr/bin/firefox"
 }
