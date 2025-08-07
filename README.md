@@ -24,8 +24,11 @@ To make a proper server we'll need
 * server management (start, stop, update)
 
 Explored flaskwebui and pywebview. Maybe pywebview is appropriate, but recognoize that other users
-on the server can access the port.
+on the server can access the port. Note pywebvie doesn't support tabs.
 
+So, for now I implemented --mode=local and --mode=network. Local starts a background service that 
+listens only on localhost, then opens a browser on Bakken with that URL. When the browser is closed 
+the service is stopped. This is the secure option
 
 
 ## Progress Notes
