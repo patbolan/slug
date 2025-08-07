@@ -21,6 +21,7 @@ import csv
 # Create a Blueprint
 main_bp = Blueprint('main_bp', __name__)
 
+
 # Home route
 @main_bp.route('/')
 def index():
