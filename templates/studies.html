@@ -5,8 +5,8 @@
 </head>
 <body>
     <header>
-        <a href="{{ url_for('index') }}">Home</a>, 
-        <a href="{{ url_for('subjects') }}">Subjects</a>
+        <a href="{{ url_for('main_bp.index') }}">Home</a>, 
+        <a href="{{ url_for('main_bp.subjects') }}">Subjects</a>
     </header>
 
     <h1>All Studies</h1>
@@ -22,10 +22,10 @@
             {% for study in studies %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('subject', subject_name=study.subject) }}">{{ study.subject }}</a>
+                        <a href="{{ url_for('main_bp.subject', subject_name=study.subject) }}">{{ study.subject }}</a>
                     </td>
                     <td>
-                        <a href="{{ url_for('study', subject_name=study.subject, study_name=study.study) }}">{{ study.study }}</a>
+                        <a href="{{ url_for('main_bp.study', subject_name=study.subject, study_name=study.study) }}">{{ study.study }}</a>
                     </td>
                 </tr>
             {% endfor %}

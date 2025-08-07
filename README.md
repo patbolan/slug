@@ -13,14 +13,27 @@ Processing tools were written by Leo Bao. Integration of the system and code was
 Metzger, and Bolan. The name *Slug* is just an arbitrary code word: I use random four-letter animal 
 names for programing projects, and this is a little more advanced than the *Worm* project. 
 
+## IMplementation issues
+The initial version of this app will not be a proper server. Instead each user logs into server (bakken) and
+starts up their own server, then uses the browser on server to interact. Somewaht inconvenient,
+but allows tight security (only localhost), simplicity.
+
+To make a proper server we'll need
+* https and certificates
+* authentication (system-specific users, x.500, token)
+* server management (start, stop, update)
+
+Explored flaskwebui and pywebview. Maybe pywebview is appropriate, but recognoize that other users
+on the server can access the port.
+
+
+
 ## Progress Notes
 Was starting to implement reports, and I think we should meet and discuss instead of plow ahead. 
 First, they way we're going right now the reports (and convert, etc) can be implemented as command-line modules
 Maybe we should continue like that? Could help modularize the development. 
 
 If so, need Leo to start moving his code up to server. 
-
-I need to demonstrate tools that operate on the subject and project level. Just some demo tools. 
 
 
 ## Next Steps
@@ -33,6 +46,7 @@ I need to demonstrate tools that operate on the subject and project level. Just 
 
 ## Bugs
 * Leo, report_functions line 1993
+
 
 
 ## Future

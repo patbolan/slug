@@ -15,6 +15,6 @@
     <pre>{{ header_info }}</pre>
 
     <br>
-    <a href="{% if study %}{{ url_for('study', subject_name=subject, study_name=study) }}{% else %}{{ url_for('subject', subject_name=subject) }}{% endif %}">Back</a>
+    <a href="{% if study %}{{ url_for('main_bp.study', subject_name=subject, study_name=study) }}{% else %}{{ url_for('main_bp.subject', subject_name=subject) }}{% endif %}">Back</a>
 </body>
 </html>

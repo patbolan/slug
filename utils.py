@@ -186,3 +186,19 @@ def get_server_environment():
     }
     return env
 
+def get_port_for_user(username):
+    """
+    Returns a port number for the given username.
+    Defaults to 5000 if the username is not recognized.
+    """
+
+    # Hardwire a port dictionary. COuld get this from a file
+    port_dict = {
+        'bolan': 5001,
+        'gmetzger': 5002,
+        'bao00122' : 5003
+    }
+    if username in port_dict:
+        return port_dict[username]  
+    else:
+        return 5000

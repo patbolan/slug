@@ -24,15 +24,15 @@
     {% endif %}
     <br>
     {% if study %}
-        <a href="{{ url_for('study', subject_name=subject, study_name=study) }}">Back</a>
+        <a href="{{ url_for('main_bp.study', subject_name=subject, study_name=study) }}">Back</a>
     {% else %}
         {% if subject %}
-            <a href="{{ url_for('subject', subject_name=subject) }}">Back</a>
+            <a href="{{ url_for('main_bp.subject', subject_name=subject) }}">Back</a>
         {% else %}
             {% if process_id %}
                 <a href="{{ url_for('tools_bp.processes', process_id=process_id) }}">Back</a>
             {% else %}
-                <a href="{{ url_for('index') }}">Back to Home</a>
+                <a href="{{ url_for('main_bp.index') }}">Back to Home</a>
             {% endif %}
         {% endif %}
     {% endif %}        

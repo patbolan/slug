@@ -15,11 +15,11 @@
 </head>
 <body>
     <header>
-        <a href="{{ url_for('index') }}">Home</a>, 
-        <a href="{{ url_for('subjects') }}">Subjects</a>, 
-        <a href="{{ url_for('studies') }}">Studies</a>, 
+        <a href="{{ url_for('main_bp.index') }}">Home</a>, 
+        <a href="{{ url_for('main_bp.subjects') }}">Subjects</a>, 
+        <a href="{{ url_for('main_bp.studies') }}">Studies</a>, 
         <a href="{{ url_for('tools_bp.processes') }}">Processes</a>, 
-        <a href="{{ url_for('subject', subject_name=subject) }}">Back to Subject</a>
+        <a href="{{ url_for('main_bp.subject', subject_name=subject) }}">Back to Subject</a>
     </header>
 
     <h1>{{ subject }}/{{ study }}</h1>
@@ -260,7 +260,7 @@
     </table>
 
     <br>
-    <a href="{{ url_for('subject', subject_name=subject) }}">Back to Studies</a>
+    <a href="{{ url_for('main_bp.subject', subject_name=subject) }}">Back to Studies</a>
 
 
 </body>
