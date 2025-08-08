@@ -31,6 +31,12 @@ listens only on localhost, then opens a browser on Bakken with that URL. When th
 the service is stopped. This is the secure option
 
 
+* Scripts for starting. Check permissions. run_local_live, run_local_dev, run_network_dev
+* get it on github
+* pull from github to pcad2
+
+
+
 ## Progress Notes
 Was starting to implement reports, and I think we should meet and discuss instead of plow ahead. 
 First, they way we're going right now the reports (and convert, etc) can be implemented as command-line modules

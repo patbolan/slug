@@ -2,11 +2,16 @@ import os
 import re
 import pydicom
 from config import Config
+from flask import g 
 
 # Utility functions to retrieve folder paths
 def get_data_folder():
     config = Config()
-    return config.get('data_folder', '/default/data/folder')
+    data_source = Config.get_param('data_source')
+    if data_source == 'dev':
+        return config.get('data_dev_folder')
+    elif data_source == 'live':
+        return config.get('data_folder')
 
 def get_process_root_folder():
     config = Config()
