@@ -78,7 +78,7 @@ if __name__ == '__main__':
     port = get_port_for_user(username)
 
     if args.mode == "network":
-        host = '127.0.0.1'
+        host = '0.0.0.0'
         app.logger.info(f'Starting server on host {host}:{port} for user {username}')
         app.run(host=host, port=port)  # Run on all interfaces at port 5000
 
