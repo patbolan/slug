@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort, redirect, url_for, send_file, request
+from flask import Blueprint, render_template, abort, redirect, url_for, send_file, request, current_app
 
 from utils import get_process_file_path, get_file_tree, get_study_file_path, get_subject_file_path, get_data_folder
 import os
@@ -20,7 +20,7 @@ handlers_bp = Blueprint('handlers_bp', __name__)
 @handlers_bp.route('/viewer/files/<path:file_relative_path>', methods=['GET', 'PUT'])
 @handlers_bp.route('/viewer/process/<process_id>/files/<path:file_relative_path>', methods=['GET', 'PUT'])
 def file_viewer(file_relative_path, subject_name=None, study_name=None, process_id=None):
-    print(f'file_viewer: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}, process_id={process_id}')
+    current_app.logger.info(f'file_viewer: subject_name={subject_name}, file_relative_path={file_relative_path}, study_name={study_name}, process_id={process_id}')
     # Construct the full file path based on whether study_name is provided
     if study_name is not None:
         # Study-associated file
@@ -39,7 +39,7 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
 
     # HACK - the javascript sometimes adds an extra path delimiter. 
     file_path = re.sub(r'/+', '/', file_path)
-    print(f'file_viewer: file_path = {file_path}')
+    current_app.logger.info(f'file_viewer: file_path = {file_path}')
 
     # Get File type
     _, ext = os.path.splitext(file_path)
@@ -52,15 +52,15 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
             if not os.path.isfile(file_path):
                 with open(file_path, 'w') as f:
                     f.write("")  # Write an empty string to create the file
-                print(f"Created blank file: {file_path}")
+                current_app.logger.info(f"Created blank file: {file_path}")
                 return f"Created blank file: {file_relative_path}", 201
             else:
-                print(f"File already exists: {file_path}")
+                current_app.logger.info(f"File already exists: {file_path}")
                 return f"File already exists: {file_relative_path}", 409
 
         # Check if the file exists for GET requests
         if not os.path.isfile(file_path):
-            print('file_viewer: Invalid file path:', file_path)
+            current_app.logger.warning('file_viewer: Invalid file path:', file_path)
             abort(404)
 
         if ext == 'txt':
@@ -86,11 +86,11 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
                             filepath=file_relative_path, 
                             content=content, 
                             readonly=readonly, 
-                            process_id = process_id)
+                            process_id=process_id)
     
     elif ext in ('nii'):
         # Note that I accidently deleted this logic when I "REmoved Collections"
-        print('Rendering NIFTI:', file_path)
+        current_app.logger.info('Rendering NIFTI:', file_path)
         if not os.path.isfile(file_path):
             abort(404)
 
@@ -101,7 +101,7 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
     elif ext in ('png'):
         # Handle PNG files
         if not os.path.isfile(file_path):
-            print('file_viewer: Invalid file path:', file_path)
+            current_app.logger.warning('file_viewer: Invalid file path:', file_path)
             abort(404)
         return send_file(file_path, mimetype='image/png')
         
@@ -109,7 +109,7 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
     elif ext == 'dcm':
         # Handle DICOM files
         if not os.path.isfile(file_path):
-            print('file_viewer: Invalid file path:', file_path)
+            current_app.logger.warning('file_viewer: Invalid file path:', file_path)
             abort(404)
 
         # Read the DICOM file
@@ -140,7 +140,7 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
                                header_info=header_info,
                                image_base64=image_base64)
     else:
-        print('file_viewer: Invalid file type:', file_path)
+        current_app.logger.warning('file_viewer: Invalid file type:', file_path)
         abort(404) 
 
 
@@ -148,7 +148,7 @@ def file_viewer(file_relative_path, subject_name=None, study_name=None, process_
 def serve_nifti(filename):
     # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
     file_path = '/' + filename
-    print('Serving NIFTI file:', file_path)
+    current_app.logger.info('Serving NIFTI file:', file_path)
     if not os.path.isfile(file_path):
         abort(404)
     return send_file(file_path)
@@ -158,14 +158,13 @@ def serve_nifti(filename):
 def serve_dicom_file(filename):  
     # For reasons I don't understand, the leading slash is stripped from the filename. Add it back
     filename = '/' + filename
-    #print('Serving DICOM file:', filename) # Called many times
     if not os.path.isfile(filename):
         abort(404)
     return send_file(filename, mimetype='application/dicom')
 
 @handlers_bp.route('/dicom-series/subjects/<subject_name>/studies/<study_name>/<path:series_relative_path>', methods=['GET'])
 def dicom_series_viewer(subject_name, study_name, series_relative_path):
-    print(f'dicom_series_viewer: subject_name={subject_name}, study_name={study_name}, \
+    current_app.logger.info(f'dicom_series_viewer: subject_name={subject_name}, study_name={study_name}, \
           series_relative_path={series_relative_path}')
 
     # Construct the full path to the DICOM series
@@ -173,7 +172,7 @@ def dicom_series_viewer(subject_name, study_name, series_relative_path):
 
     # Check if the series path exists
     if not os.path.isdir(series_path):
-        print('dicom_series_viewer: Invalid series path:', series_path)
+        current_app.logger.info('dicom_series_viewer: Invalid series path:', series_path)
         abort(404)
 
     # Get all DICOM files in the series
@@ -181,10 +180,6 @@ def dicom_series_viewer(subject_name, study_name, series_relative_path):
     dicom_files.sort() # TODO: needs special sorting
 
     dicom_urls = [url_for('handlers_bp.serve_dicom_file', filename=f ) for f in dicom_files] 
-
-    # print('Here are the URLs:')
-    # for url in dicom_urls:
-    #     print(url)
 
     return render_template('dicom_series.html', dicom_urls=dicom_urls)
 
@@ -204,7 +199,7 @@ def edit_file(subject_name=None, study_name=None, file_relative_path=None):
 
     # Check if the file exists
     if not os.path.isfile(file_path):
-        print('edit_file: Invalid file path:', file_path)
+        current_app.logger.error('edit_file: Invalid file path:', file_path)
         abort(404)
 
     # Get the updated content from the form
@@ -234,7 +229,7 @@ def edit_file_page(subject_name=None, study_name=None, file_relative_path=None):
 
     # Check if the file exists
     if not os.path.isfile(file_path):
-        print('edit_file_page: Invalid file path:', file_path)
+        current_app.logger.error('edit_file_page: Invalid file path:', file_path)
         abort(404)
 
     # Read the file content

@@ -12,6 +12,7 @@ other tools.
 This tool will create the dicom-raw-storage folder if it does not exist regardless of whether it finds any files, 
 just so you can tell that the tool has run.
 """
+from flask import current_app
 import os
 import pydicom 
 import glob

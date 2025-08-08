@@ -12,7 +12,7 @@ any manual edits.
 If needed this logic can be extended to use more header information and make better
 choices. Right now it just uses the series description and manufacturer.
 """
-
+from flask import current_app
 from .tool_base import ToolBase
 import os
 from utils import get_study_file_path, get_study_path, get_sample_dicom_header, get_series_number_from_folder
@@ -82,7 +82,7 @@ class AutoTagger(ToolBase):
         return False
     
     def undo(self):
-        print(f"Undoing {self.name} for subject {self.subject_name} and study {self.study_name}")
+        current_app.logger.info(f"Undoing {self.name} for subject {self.subject_name} and study {self.study_name}")
         if os.path.isfile(self.tag_file):
             os.remove(self.tag_file)
 

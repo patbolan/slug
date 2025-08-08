@@ -40,6 +40,7 @@ class ToolBase(ABC):
             'file_path': self.file_path,
         }
 
+    # Note when override rideing this method use "print" not loggers
     def run(self):
         raise NotImplementedError("Subclasses should implement this method")
 

@@ -33,7 +33,7 @@ Dependencies:
 Author: Patrick Bolan
 Date: Aug 2025
 """
-
+from flask import current_app
 import os
 import subprocess
 import shutil
@@ -85,6 +85,6 @@ class NiiConverter(ToolBase):
         if status_dict['status'] != 'complete':
             raise Exception(f"{self.name} cannot undo: {status_dict['message']}")
 
-        print(f"Deleting nii folder {self.nii_folder}")
+        current_app.logger.info(f"Deleting nii folder {self.nii_folder}")
         if os.path.exists(self.nii_folder):
             shutil.rmtree(self.nii_folder)
