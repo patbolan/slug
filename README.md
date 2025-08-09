@@ -13,7 +13,7 @@ Processing tools were written by Leo Bao. Integration of the system and code was
 Metzger, and Bolan. The name *Slug* is just an arbitrary code word: I use random four-letter animal 
 names for programing projects, and this is a little more advanced than the *Worm* project. 
 
-## IMplementation issues
+## Implementation issues
 The initial version of this app will not be a proper server. Instead each user logs into server (bakken) and
 starts up their own server, then uses the browser on server to interact. Somewaht inconvenient,
 but allows tight security (only localhost), simplicity.
@@ -31,11 +31,6 @@ listens only on localhost, then opens a browser on Bakken with that URL. When th
 the service is stopped. This is the secure option
 
 
-* Scripts for starting. Check permissions. run_local_live, run_local_dev, run_network_dev
-* get it on github
-* pull from github to pcad2
-
-
 
 ## Progress Notes
 Was starting to implement reports, and I think we should meet and discuss instead of plow ahead. 
@@ -46,8 +41,9 @@ If so, need Leo to start moving his code up to server.
 
 
 ## Next Steps
-* move the code to pcad2. 
-* Push to github repository
+* Test some github operations.
+* pull from github to  pcad2. 
+
 
 
 ## TODO
