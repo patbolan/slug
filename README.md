@@ -9,8 +9,8 @@ built over ~15 years for managing a variety of research studies. This initial ve
 specifically to support Greg Metzger's quantitative protate studies, funded under 
 [R01CA241159-04](https://reporter.nih.gov/search/3TEMqajQiU6ytIJmAYJcLw/project-details/10919247).
 
-Processing tools were written by Leo Bao. Integration of the system and code was performed by Bao, 
-Metzger, and Bolan. The name *Slug* is just an arbitrary code word: I use random four-letter animal 
+Processing tools were written mostly by Leo Bao. Integration of the system and code was performed by 
+Bao, Metzger, and Bolan. The name *Slug* is just an arbitrary code word: I use random four-letter animal 
 names for programing projects, and this is a little more advanced than the *Worm* project. 
 
 ## Implementation issues
@@ -18,7 +18,7 @@ The initial version of this app will not be a proper server. Instead each user l
 starts up their own server, then uses the browser on server to interact. Somewaht inconvenient,
 but allows tight security (only localhost), simplicity.
 
-To make a proper server we'll need
+To make a proper server we'll need: 
 * https and certificates
 * authentication (system-specific users, x.500, token)
 * server management (start, stop, update)
