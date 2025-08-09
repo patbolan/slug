@@ -23,41 +23,16 @@ To make a proper server we'll need
 * authentication (system-specific users, x.500, token)
 * server management (start, stop, update)
 
-Explored flaskwebui and pywebview. Maybe pywebview is appropriate, but recognoize that other users
-on the server can access the port. Note pywebvie doesn't support tabs.
-
 So, for now I implemented --mode=local and --mode=network. Local starts a background service that 
 listens only on localhost, then opens a browser on Bakken with that URL. When the browser is closed 
 the service is stopped. This is the secure option
 
-
-
-## Progress Notes
-Was starting to implement reports, and I think we should meet and discuss instead of plow ahead. 
-First, they way we're going right now the reports (and convert, etc) can be implemented as command-line modules
-Maybe we should continue like that? Could help modularize the development. 
-
-If so, need Leo to start moving his code up to server. 
-
-
 ## Next Steps
-* Test some github operations.
-* pull from github to  pcad2. 
-
-
-
-## TODO
-
-
-## Bugs
-* Leo, report_functions line 1993
-
-
+* pull from github to  pcad2. Test, and notify Leo and Greg
+* reports
 
 ## Future
 * Use a better dicom viewer. Cornerstone.js?
 * Make a nice frontend in React
 * The file trees are a little awkward. Browse files like github does.
 * Add Projects for highest level organization
-* Add Users, groups, and permissions.
-* Provide a new study or new subject feature. Upload dicoms, parse them out. 
