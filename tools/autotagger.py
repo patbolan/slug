@@ -79,7 +79,7 @@ class AutoTagger(ToolBase):
 
     # Disable this undo - I don't want to delete the tags file so easily
     def is_undoable(self):
-        return False
+        return True
     
     def undo(self):
         current_app.logger.info(f"Undoing {self.name} for subject {self.subject_name} and study {self.study_name}")
@@ -93,47 +93,58 @@ class AutoTagger(ToolBase):
         def ci_contains(haystack, needle):
             return needle.lower() in haystack.lower()
         
-        # Set manufacturer variable
-        manufact = ''
+        # Determine manufacturer
         if ci_contains(manufacturer, 'SIEMENS'):
             manufact = 'Siemens'
         elif ci_contains(manufacturer, 'Philips'):
             manufact = 'Philips'
         elif ci_contains(manufacturer, 'GE'):
             manufact = 'GE'
-        
+        else:
+            manufact = ''
+
         series = ''
-        
-        # Siemens matching
+
+        # SIEMENS logic
         if ci_contains(manufacturer, 'SIEMENS'):
             manufact = 'Siemens'
             if ci_contains(series_name, 'b1map-6iso'):
                 series = 'b1map'
-            elif ci_contains(series_name, 'b1map'):
-                series = 'b1map_x2'
-            elif ci_contains(series_name, 't2_ana_axial'):
-                series = 't2_ref'
-            elif ci_contains(series_name, 'axial_1x1x1'):
-                series = 'template'
-            elif ci_contains(series_name, 'gre-axial'):
-                series = 'thermo'
-            elif ci_contains(series_name, 'vfa'):
-                series = 't1_vfa'
             elif ci_contains(series_name, 'post_pelvis'):
                 series = 't1_post'
             elif ci_contains(series_name, 'dynamic_sub'):
                 series = 'dce_sub'
             elif ci_contains(series_name, 'dynamic'):
                 series = 'dce_source'
-            elif ci_contains(series_name, 'vibe'):
+            elif ci_contains(series_name, 'b1map'):
+                series = 'b1map_x2'
+            elif ci_contains(series_name, 't2_ana_axial'):
+                series = 't2_ref'
+            elif ci_contains(series_name, 'te107'):
+                series = 't2_ref'
+            elif ci_contains(series_name, '_grappa2'):
+                series = 't2_tse'
+            elif ci_contains(series_name,'axial_1x1x1') or ci_contains(series_name,'1mm_iso'):
+                series = 'template'
+            elif ci_contains(series_name, 'gre-axial'):
+                series = 'thermo'
+            elif ci_contains(series_name, 'vibe_ax_fs'):
+                series = 't1_vfa3'
+            elif ci_contains(series_name, 'vfa'):
+                series = 't1_vfa'
+            elif ci_contains(series_name, 'fl3d_vibe'):
                 series = 't1_vfa2'
             elif ci_contains(series_name, 'tse-ir'):
                 series = 't1_tse'
             elif ci_contains(series_name, 'tfl_ti'):
                 series = 't1_tfl'
-            elif (ci_contains(series_name, 'semc') or ci_contains(series_name, 'se_mc')) and ci_contains(series_name, 'original'):
+            elif (ci_contains(series_name, 'semc') or ci_contains(series_name, '30os')):
+                series = 't2_semc3'
+            elif ((ci_contains(series_name, 'semc') or ci_contains(series_name, 'se_mc')) 
+                and ci_contains(series_name, 'original')):
                 series = 't2_semc2'
-            elif (ci_contains(series_name, 'semc') or ci_contains(series_name, 'se_mc')) and ci_contains(series_name, '1x1x5'):
+            elif ((ci_contains(series_name, 'semc') or ci_contains(series_name, 'se_mc')) 
+                and ci_contains(series_name, '1x1x5')):
                 series = 't2_semc'
             elif ci_contains(series_name, 't2map') or ci_contains(series_name, 't2_map'):
                 series = 't2_semc'
@@ -141,16 +152,22 @@ class AutoTagger(ToolBase):
                 series = 't2_ref'
             elif ci_contains(series_name, 't2_tse_ax'):
                 series = 't2_tse'
-            elif ci_contains(series_name, 'b1600'):
+            elif ci_contains(series_name,'b1600'):
                 series = 'dwi_highb'
-            elif ci_contains(series_name, 'space'):
+            elif ci_contains(series_name,'space') and not ci_contains(series_name,'mpr'):
                 series = 't2_3d'
-            elif ci_contains(series_name, '_trace') and ci_contains(series_name, 'zoomit'):
+            elif ci_contains(series_name, '_trace') and ci_contains(series_name, '-zoomit'):
                 series = 'dwi_source2'
-            elif ci_contains(series_name, 'adc') and ci_contains(series_name, 'zoomit'):
+            elif ci_contains(series_name, 'adc') and ci_contains(series_name, '-zoomit'):
                 series = 'dwi_adc2'
-            elif ci_contains(series_name, '_calc') and ci_contains(series_name, 'zoomit'):
+            elif ci_contains(series_name, '_calc') and ci_contains(series_name, '-zoomit'):
                 series = 'dwi_calc2'
+            elif ci_contains(series_name, '_trace') and ci_contains(series_name, '_zoomit_b0'):
+                series = 'dwi_source3'
+            elif ci_contains(series_name, 'adc') and ci_contains(series_name, '_zoomit_b0'):
+                series = 'dwi_adc3'
+            elif ci_contains(series_name, '_calc') and ci_contains(series_name, '_zoomit_b0'):
+                series = 'dwi_calc3'
             elif ci_contains(series_name, '_trace') and ci_contains(series_name, '-notzoomit'):
                 series = 'dwi_source'
             elif ci_contains(series_name, 'adc') and ci_contains(series_name, '-notzoomit'):
@@ -160,9 +177,9 @@ class AutoTagger(ToolBase):
             else:
                 series = ''
                 manufact = ''
-        
-        # GE matching
-        if ci_contains(manufacturer, 'GE'):
+
+        # GE logic
+        elif ci_contains(manufacturer, 'GE'):
             manufact = 'GE'
             if ci_contains(series_name, 'b1map-optimized_rfdrive'):
                 series = 'b1map'
@@ -178,51 +195,75 @@ class AutoTagger(ToolBase):
                 series = 'thermo'
             elif ci_contains(series_name, 't1_vfa'):
                 series = 't1_vfa'
-            elif ci_contains(series_name, 'dce_flip'):
+            elif ci_contains(series_name, 'dce_flip') or ci_contains(series_name, 'disco'):
                 series = 't1_vfa2'
-            elif ci_contains(series_name, 'disco'):
-                series = 't1_vfa2'
-            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc') and not ci_contains(series_name, 'R_squared') and not ci_contains(series_name, 'orig') and not ci_contains(series_name, 'T1_map[') and ci_contains(series_name, 'HR40')):
+            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc')
+                and not ci_contains(series_name, 'R_squared')
+                and not ci_contains(series_name, 'orig')
+                and not ci_contains(series_name, 'T1_map[')
+                and ci_contains(series_name, 'HR40')):
                 series = 't1_smart1_hr40'
-            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc') and not ci_contains(series_name, 'R_squared') and ci_contains(series_name, 'orig') and not ci_contains(series_name, 'T1_map[') and ci_contains(series_name, 'HR40')):
+            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc')
+                and not ci_contains(series_name, 'R_squared')
+                and ci_contains(series_name, 'orig')
+                and not ci_contains(series_name, 'T1_map[')
+                and ci_contains(series_name, 'HR40')):
                 series = 't1_smart1_hr40_raw'
-            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc') and not ci_contains(series_name, 'R_squared') and not ci_contains(series_name, 'T1_map[') and not ci_contains(series_name, 'orig') and ci_contains(series_name, 'HR70')):
+            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc')
+                and not ci_contains(series_name, 'R_squared')
+                and not ci_contains(series_name, 'T1_map[')
+                and not ci_contains(series_name, 'orig')
+                and ci_contains(series_name, 'HR70')):
                 series = 't1_smart1_hr70'
-            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc') and not ci_contains(series_name, 'R_squared') and ci_contains(series_name, 'orig') and not ci_contains(series_name, 'T1_map[') and ci_contains(series_name, 'HR70')):
+            elif (ci_contains(series_name, 'smart1') and ci_contains(series_name, 'loc')
+                and not ci_contains(series_name, 'R_squared')
+                and not ci_contains(series_name, 'T1_map[')
+                and ci_contains(series_name, 'orig')
+                and ci_contains(series_name, 'HR70')):
                 series = 't1_smart1_hr70_raw'
             elif ci_contains(series_name, 'fse_ir') and not ci_contains(series_name, 'R_squared'):
                 series = 't1_tse'
-            elif ci_contains(series_name, 'T2map') and not ci_contains(series_name, 'R_squared') and not ci_contains(series_name, 'orig'):
+            elif (ci_contains(series_name, 'T2map')
+                and not ci_contains(series_name, 'R_squared')
+                and not ci_contains(series_name, 'orig')):
                 series = 't2_semc2'
-            elif ci_contains(series_name, 'T2map') and not ci_contains(series_name, 'R_squared') and ci_contains(series_name, 'orig'):
+            elif (ci_contains(series_name, 'T2map')
+                and not ci_contains(series_name, 'R_squared')
+                and ci_contains(series_name, 'orig')):
                 series = 't2_semc2_raw'
-            elif ci_contains(series_name, 'pros_ax_t2') and not ci_contains(series_name, 'R_squared') and not ci_contains(series_name, 'orig'):
+            elif (ci_contains(series_name, 'pros_ax_t2')
+                and not ci_contains(series_name, 'R_squared')
+                and not ci_contains(series_name, 'orig')):
                 series = 't2_tse'
-            elif ci_contains(series_name, 'pros_ax_t2') and not ci_contains(series_name, 'R_squared') and ci_contains(series_name, 'orig'):
+            elif (ci_contains(series_name, 'pros_ax_t2')
+                and not ci_contains(series_name, 'R_squared')
+                and ci_contains(series_name, 'orig')):
                 series = 't2_tse_raw'
-            elif ci_contains(series_name, 'b1600'):
+            elif ci_contains(series_name,'b1600'):
                 series = 'dwi_highb'
-            elif ci_contains(series_name, '3d_t2'):
+            elif ci_contains(series_name,'3d_t2'):
                 series = 't2_3d'
-            elif ci_contains(series_name, 'dynamic'):
-                series = 'dce_source'
-            elif ci_contains(series_name, 'dynamic_sub'):
+            elif ci_contains(series_name,'dynamic_sub'):
                 series = 'dce_sub'
-            elif ci_contains(series_name, 'post_pelvis'):
+            elif ci_contains(series_name,'dynamic'):
+                series = 'dce_source'
+            elif ci_contains(series_name,'post_pelvis'):
                 series = 't1_post'
             elif ci_contains(series_name, 'dwi_b600') and not ci_contains(series_name, 'R_squared'):
                 series = 'dwi_source'
-            elif ci_contains(series_name, 'focus_b50_800') and not ci_contains(series_name, 'R_squared') and not ci_contains(series_name, 'synthetic'):
+            elif (ci_contains(series_name, 'focus_b50_800')
+                and not ci_contains(series_name, 'R_squared')
+                and not ci_contains(series_name, 'synthetic')):
                 series = 'dwi_source2'
             elif ci_contains(series_name, 'dwi_b1000') and not ci_contains(series_name, 'synthetic'):
                 series = 'dwi_source2_x2'
             else:
                 series = ''
                 manufact = ''
-        
-        # Philips matching
-        if ci_contains(manufacturer, 'PHILIPS'):
-            manufact = 'philips'
+
+        # PHILIPS logic
+        elif ci_contains(manufacturer, 'PHILIPS'):
+            manufact = 'Philips'
             if ci_contains(series_name, 'b1map'):
                 series = 'b1map'
             elif ci_contains(series_name, 'te108'):
@@ -245,11 +286,11 @@ class AutoTagger(ToolBase):
                 series = 't2_semc2'
             elif ci_contains(series_name, '32echoes'):
                 series = 't2_semc'
-            elif ci_contains(series_name, 'b1600'):
+            elif ci_contains(series_name,'b1600'):
                 series = 'dwi_highb'
-            elif ci_contains(series_name, '3D_T2'):
+            elif ci_contains(series_name,'3D_T2'):
                 series = 't2_3d'
-            elif ci_contains(series_name, 'post_pelvis'):
+            elif ci_contains(series_name,'post_pelvis'):
                 series = 't1_post'
             elif ci_contains(series_name, '-Reg_-_DWI'):
                 series = 'dwi_source2'
@@ -260,6 +301,5 @@ class AutoTagger(ToolBase):
             else:
                 series = ''
                 manufact = ''
-        
-        tag = series
-        return tag
+
+        return series
