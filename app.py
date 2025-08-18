@@ -8,6 +8,7 @@ from utils import (  # Import the utility functions
 import getpass
 import argparse
 import logging
+import os
 
 from tools.routes import tools_bp   
 from handlers.routes import handlers_bp  # Import the handlers blueprint    
@@ -23,6 +24,13 @@ app.register_blueprint(handlers_bp)  # Assuming handlers_bp is defined in handle
 
 # Show all logs
 app.logger.setLevel(logging.DEBUG)
+
+# Set a umask for the whole app. Should 
+# Set a new umask
+new_umask = 0o007 # u=rwx,g=rwx,o-rwx
+old_umask = os.umask(new_umask)
+print(f"Changed process umask from {oct(old_umask)} to {oct(new_umask)}")
+
 
 # Middleware (?) to handle method overrides 
 @app.before_request

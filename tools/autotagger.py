@@ -15,6 +15,7 @@ choices. Right now it just uses the series description and manufacturer.
 from flask import current_app
 from .tool_base import ToolBase
 import os
+import shutil
 from utils import get_study_file_path, get_study_path, get_sample_dicom_header, get_series_number_from_folder
 import tempfile
 import glob
@@ -75,7 +76,11 @@ class AutoTagger(ToolBase):
                     print(f"No tag found for series {series_number} with name '{series_name}' and manufacturer '{manufacturer}'")
         
         # Now move the temporary file to the final tag file location
-        os.replace(tempname, self.tag_file)
+        # Note the temp file has restricted permissions. After moving it to the correct filename, 
+        # set the permissions to be the standard for a new file from this process
+        shutil.copy(tempname, self.tag_file)
+        os.chmod(self.tag_file, 0o666 & ~os.umask(0))
+        os.unlink(tempname)
 
     # Disable this undo - I don't want to delete the tags file so easily
     def is_undoable(self):
