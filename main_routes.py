@@ -3,6 +3,7 @@ from utils import (
     get_all_subjects,
     get_studies_for_subject,
     get_study_path,
+    get_subject_path,
     get_subject_file_path,
     get_study_file_path,
     get_study_files,
@@ -65,8 +66,11 @@ def subject(subject_name):
     notes_file_path = get_subject_file_path(subject_name, 'notes.txt')
     notes = open(notes_file_path, 'r').read() if os.path.isfile(notes_file_path) else ""
     studies = get_studies_for_subject(subject_name)
-    subject_reports_path = get_subject_file_path(subject_name, 'Subject_Reports')
-    file_tree = get_file_tree(subject_reports_path) if os.path.isdir(subject_reports_path) else []
+
+    file_tree = get_file_tree(get_subject_path(subject_name)) 
+    # remove the studies: entries in file_tree that start with "MR-"
+    file_tree = [entry for entry in file_tree if not entry['text'].startswith('MR-')]
+
     toolset = get_tools_for_subject(subject_name)
     return render_template('subject.html', subject=subject_name, studies=studies, notes=notes, toolset=toolset, file_tree=file_tree)
 
