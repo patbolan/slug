@@ -100,7 +100,8 @@ if __name__ == '__main__':
         #server_thread = Thread(target=app.run, kwargs={'port': port})
         # HEre is a hack - I am opening up the server to all interfaces, so that it can be accessed 
         # from other devices on the network. Suitable for debugging. 
-        server_thread = Thread(target=app.run, kwargs={'port': port, 'host': '0.0.0.0'})
+        #server_thread = Thread(target=app.run, kwargs={'port': port, 'host': '0.0.0.0'})
+        server_thread = Thread(target=app.run, kwargs={'port': port})
         server_thread.start()
 
         # Tried to webbrowser module, but it returns right away, and I want to wait for the proc to finish

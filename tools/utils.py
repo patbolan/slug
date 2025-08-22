@@ -12,6 +12,7 @@ def get_tools_for_study(subject_name, study_name):
     from .template_registration import TemplateRegistration
     from .reslice_mask import ResliceMask
     from .parse_dicom_folder import ParseDicomFolder
+    from .run_fits import RunFits
 
     #simple_tool = SimpleStudyTool(subject_name, study_name)
     nii_converter = NiiConverter(subject_name, study_name)
@@ -20,6 +21,7 @@ def get_tools_for_study(subject_name, study_name):
     autotagger = AutoTagger(subject_name, study_name)
     template_registration = TemplateRegistration(subject_name, study_name)
     reslice_mask = ResliceMask(subject_name, study_name)
+    run_all_fits = RunFits(subject_name, study_name)    
 
     # Different tools for humans and phantoms
     if is_subject_human(subject_name):
@@ -35,6 +37,7 @@ def get_tools_for_study(subject_name, study_name):
             nii_converter.get_status_dict(),
             template_registration.get_status_dict(),
             reslice_mask.get_status_dict(),
+            run_all_fits.get_status_dict(),
         ]
 
 def get_tools_for_subject(subject_name):
@@ -75,7 +78,8 @@ def execute_tool(tool_name, command, subject_name=None, study_name=None):
     from .reslice_mask import ResliceMask
     from .simple_subject_tool import SimpleSubjectTool
     from .simple_project_tool import SimpleProjectTool
-    from .parse_dicom_folder import ParseDicomFolder    
+    from .parse_dicom_folder import ParseDicomFolder  
+    from .run_fits import RunFits  
 
     if tool_name == 'nii-converter':
         tool = NiiConverter(subject_name, study_name)
@@ -95,6 +99,8 @@ def execute_tool(tool_name, command, subject_name=None, study_name=None):
         tool = SimpleProjectTool()
     elif tool_name == 'parse-dicom-folder':
         tool = ParseDicomFolder(subject_name, study_name)
+    elif tool_name == 'run-all-fits':
+        tool = RunFits(subject_name, study_name)
     else:
         raise ValueError(f"Unknown tool '{tool_name}'")
 

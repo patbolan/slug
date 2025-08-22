@@ -28,8 +28,10 @@ class ParseDicomFolder(ToolBase):
         self.dicom_raw = get_study_file_path(subject_name, study_name, 'dicom-raw')
 
     def are_output_files_present(self):
-        # Check for the dicom-raw-storage folder
-        return os.path.isdir(self.dicom_original_path)
+        # A little strange, but we'll always say false. Can't tell if the dicom-original folder 
+        # was created manually or by this tool.
+        #return os.path.isdir(self.dicom_original_path)
+        return False
 
     def are_input_files_present(self):
         # Check if the dicom-original folder exists. Don't look for contents, just the folder
@@ -44,7 +46,7 @@ class ParseDicomFolder(ToolBase):
         parse_dicom_folder(self.dicom_raw, targetdir=self.dicom_original_path)
 
     def is_undoable(self):      
-        return True
+        return False
 
     def undo(self):
         """ 
