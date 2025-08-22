@@ -1,0 +1,59 @@
+Was about to work on reports, but got stuck on some permissions issues
+Got those fixed, pushining up.
+Then I have to first do fitting, 
+then do reports.
+
+Choices:
+* do one, most likely tool, run_all. Takes a long time, and some parts may break, so I think
+they'll want to break it up.
+* make tools for all small things and options. run_t2_semc_roi_center. Nice part about that 
+is you can do inputs/outputs fine. Lots of tools. Could maybe use one configurable class
+* Do both of the above. Typically run the big tool, but you have option to run all little 
+tools with all possible options. Or, put them all in there, and have an "order" field. Like 
+1, 2, 3, 3a, 3b, 3c, 3d, etc. I like this because you can track the file/folder requirements
+for each little step
+* A configureable tool. Dropdown on first page, or a 2nd page. Make the fitting a separate 
+table, so you have slice/VOI controls different for each. I don't like this complexity, too
+much getting into the GUI. 
+
+
+OK, i implemented run_all_fits. Since I can't tell if it can run or has run, I don't have 
+the process id listed. And I can't tell about errors. I think I want a version that
+has --undo at the command line
+
+
+***
+For this test case, let's run all first on command line
+PXX-0001/MR-20250304
+
+t2_tse
+t2_semc
+t1_vfa
+t1_tse
+t1_tse (with tfls?)
+t1_tse (with _smart?)
+dwi_source
+b1map
+
+
+./run_t2_tse.sh -i /home/bakken-raid8/pcad2/data_dev/PXX-0001/MR-20250304 -t t2_tse -s both -f both
+outputs: t2_tse folder, ROI_stats/t2_tse*
+same for t2_semc
+
+
+
+
+./run_t2_semc.sh -i "/home/bakken-raid8/pcad2/data_dev/PXX-0001/MR-20250505" -t "t2_semc"
+needs t2_semc_mask.nii
+produces folder t2_semc
+-s [whole, middle, both]
+-f [ROI, Voxel, both]
+
+params.txt has a timestamp. If you run whole,
+Can't get archive working
+
+
+Same with run_t2_tse
+
+
+Or, run_all_fits study folder
