@@ -9,6 +9,7 @@ from utils import get_data_folder, get_study_path, get_module_folder
 import os
 import subprocess
 import json     
+import shutil
 
 class ModuleWrapper():
     def __init__(self, module_name=None, module_folder=None, module_script=None):
@@ -96,16 +97,31 @@ class ModuleWrapper():
         }
 
     # Note when overriding this method use "print" not loggers
-    def run(self):
-        raise NotImplementedError("Subclasses should implement this method")
+    def run_command_line(self, command, target_path):
+        print(f"Running {self.name} for target {target_path}")
+
+        # Run the module, a command-line script
+        cmd_line = [self.script_path, command, '--target', target_path] # Important: cmd is a list, not a string with spaces!
+        print(f"***** Running module command line: {cmd_line}")
+
+        # Run the command in a subprocess
+        result = subprocess.run(
+            cmd_line,   # Replace with your command and arguments
+            capture_output=True,            # Captures both stdout and stderr
+            text=True                       # Returns output as strings instead of bytes
+        )
+        # If you need the pid you can replace subprocess.run() with subprocess.Popen(), but 
+        # it takes a little more code
+
+        # Print the output and error messages
+        self.print_subprocess_output(result)
 
     def run_in_subprocess(self):
         pm = ProcessManager()
         ipid = pm.spawn_process(tool=self, command='run', mode='sync')
         print(f"Started asynchronous process for {self.name} with command 'run', ipid={ipid}")
 
-    def undo(self):
-        raise NotImplementedError("Subclasses should implement this method")
+
 
     def is_undoable(self):
         return self.properties.get('undoable', False)

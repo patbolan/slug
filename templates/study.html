@@ -132,9 +132,15 @@
                         </td>
                         <td align="center">
                             {% if tool.command %}
+                                <!-- Original button code -->
                                 <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}')">
                                     {{ tool.command }}
                                 </button>
+                        
+                                <!-- Hypertext link. Usfeul to see the URL -->
+                                <!-- <a href="/tools/{{ tool.name }}/{{ tool.command }}/subjects/{{ subject }}/studies/{{ study }}/" target="_blank">
+                                    {{ tool.command }}
+                                </a> -->
                             {% endif %}
                         </td>
                         <td>not yet

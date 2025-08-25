@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, abort, redirect, url_for
 
-from tools.utils import execute_tool
-from tools.process_manager import ProcessManager
-from utils import get_process_file_path, get_file_tree
+from tools.utils import execute_tool, execute_module_tool
+#from tools.process_manager import ProcessManager
+from tools.process_module_manager import ProcessModuleManager
+from utils import get_process_file_path, get_file_tree, get_study_path
+
 
 
 tools_bp = Blueprint('tools_bp', __name__)
@@ -14,14 +16,17 @@ tools_bp = Blueprint('tools_bp', __name__)
 def tool_command(tool_name, command, subject_name=None, study_name=None):
 
     print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
-    execute_tool(tool_name, command, subject_name, study_name)
+    #execute_tool(tool_name, command, subject_name, study_name)
+    execute_module_tool(tool_name, command, subject_name, study_name)
     return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
+
+
 
 
 @tools_bp.route('/processes')
 def processes():
     # Create an instance of ProcessManager
-    process_manager = ProcessManager()
+    process_manager = ProcessModuleManager()
 
     # Get the list of running and completed processes
     running_processes = process_manager.get_processes(folder_type='running')
@@ -35,7 +40,7 @@ def processes():
 @tools_bp.route('/process/<pid>')
 def process_info(pid):
     # Create an instance of ProcessManager
-    process_manager = ProcessManager()
+    process_manager = ProcessModuleManager()
 
     # Get process information
     process_info = process_manager.get_process_info(pid)
@@ -53,7 +58,7 @@ def process_info(pid):
 
 @tools_bp.route('/clear-running-logs', methods=['POST'])
 def clear_running_logs():
-    pm = ProcessManager()
+    pm = ProcessModuleManager()
     pm.clear_logs(folder_type='runing')
 
     return redirect(url_for('tools_bp.processes'))

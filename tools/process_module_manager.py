@@ -43,13 +43,17 @@ import io
 import threading
 
 """ 
-ProcessManager is responsible for managing the execution of tools in separate 
+ProcessModuleManager is responsible for managing the execution of tools in separate 
 processes. It spawns new processes, captures their output, and manages their 
 lifecycle. It also maintains a record of running and completed processes in 
 designated folders. Note this class doesn't have meaningful state in this 
 implementation.
+
+With ProcessModuleManager instead of ProcessManager, the manager has more knowledge. 
+The module is just an interface (wrapper) to the actual moduule, which is a command line script. 
+The moduule and wrapper donn't know about the options and parameters
 """
-class ProcessManager():
+class ProcessModuleManager():
     def __init__(self):
         self.process_root = get_process_root_folder()
         self.running_folder = os.path.join(self.process_root, 'running')
