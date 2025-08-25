@@ -22,6 +22,7 @@
     </header>
 
     <h1>Subject {{ subject }}</h1>
+    <p>Subject type = {{ subject_type}} </p>
     <h2>Notes</h2>
     <p><pre>{{ notes }}</pre></p>
     <form id="edit-subject-note-form" method="GET" action="{{ url_for('handlers_bp.file_viewer', subject_name=subject, file_relative_path='notes.txt') }}">
@@ -56,15 +57,18 @@
     <table border="1" cellpadding="2" cellspacing="0">
         <thead>
             <tr>
-                <th>Study</th>
+                <th>Study Name</th>
+                <th>Study Type</th>
             </tr>
+
         </thead>
         <tbody>
             {% for study in studies %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('main_bp.study', subject_name=subject, study_name=study) }}">{{ study }}</a>
+                        <a href="{{ url_for('main_bp.study', subject_name=subject, study_name=study.name) }}">{{ study.name }}</a>
                     </td>
+                    <td>{{ study.study_type }}</td>
                 </tr>
             {% endfor %}
         </tbody>

@@ -12,7 +12,8 @@ from utils import (
     get_series_number_from_folder,
     get_data_folder,
     get_server_environment,
-    is_subject_human,
+    get_subject_type,
+    get_study_type
 )
 
 from tools.utils import get_tools_for_project, get_tools_for_subject, get_tools_for_study
@@ -40,7 +41,7 @@ def subjects():
     subjects_with_counts = [
         {
             'subject_name': subject,
-            'is_human': is_subject_human(subject),
+            'subject_type': get_subject_type(subject),
             'study_count': len(get_studies_for_subject(subject)),
         }
         for subject in subjects
@@ -55,7 +56,8 @@ def studies():
     for subject in subjects:
         subject_studies = get_studies_for_subject(subject)
         for study in subject_studies:
-            all_studies.append({'subject': subject, 'study': study})
+            study_type = get_study_type(subject, study)
+            all_studies.append({'subject': subject, 'study': study, "study_type": study_type})
     all_studies.sort(key=lambda x: x['study'], reverse=True)
     return render_template('studies.html', studies=all_studies)
 
@@ -65,14 +67,19 @@ def studies():
 def subject(subject_name):
     notes_file_path = get_subject_file_path(subject_name, 'notes.txt')
     notes = open(notes_file_path, 'r').read() if os.path.isfile(notes_file_path) else ""
+    subject_type = get_subject_type(subject_name)
     studies = get_studies_for_subject(subject_name)
+    all_studies = []
+    for study in studies:
+        study_type = get_study_type(subject_name, study)
+        all_studies.append({'name':study, "study_type": study_type})
 
     file_tree = get_file_tree(get_subject_path(subject_name)) 
     # remove the studies: entries in file_tree that start with "MR-"
     file_tree = [entry for entry in file_tree if not entry['text'].startswith('MR-')]
 
     toolset = get_tools_for_subject(subject_name)
-    return render_template('subject.html', subject=subject_name, studies=studies, notes=notes, toolset=toolset, file_tree=file_tree)
+    return render_template('subject.html', subject=subject_name, subject_type = subject_type, studies=all_studies, notes=notes, toolset=toolset, file_tree=file_tree)
 
 # Details for one study
 @main_bp.route('/subjects/<subject_name>/studies/<study_name>')

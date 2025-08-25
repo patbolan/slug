@@ -25,13 +25,7 @@
                     <td>
                         <a href="{{ url_for('main_bp.subject', subject_name=subject.subject_name) }}">{{ subject.subject_name }}</a>
                     </td>
-                    <td>
-                        {% if subject.is_human %}
-                            human
-                        {% else %}
-                            phantom
-                        {% endif %}
-                    </td>
+                    <td>{{ subject.subject_type }}</td>
                     <td>{{ subject.study_count }}</td>
                 </tr>
             {% endfor %}

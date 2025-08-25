@@ -1,0 +1,28 @@
+{
+    "study": {
+        "phantom":[
+            {"name":"parse-dicom"},
+            {"name":"nii-converter"},
+            {"name":"template-registration"},
+            {"name":"reslice-mask"},
+            {"name":"fit-all"},
+            {"name":"fit-t2-semc","options":{"fitting-mode":"loglin"}},
+            {"name":"fit-t2-tse","options":{"fitting-mode":"nlls"}},
+            {"name":"make-study-reports"}
+        ], 
+        "invivo":[
+            {"name":"nii-converter"},
+            {"name":"run-invivo-segmentation"},
+            {"name":"fit-all"},
+            {"name":"fit-t2-semc","options":{"fitting-mode":"nlls"}},
+            {"name":"fit-t2-tse","options":{"fitting-mode":"nlls"}},
+            {"name":"make-study-reports"}
+        ]
+    }, 
+    "subject": [
+        {"name": "make-subject-reports"}
+    ], 
+    "project": [
+        {"name": "make-intersubject-reports"}
+    ]
+}

@@ -16,6 +16,7 @@
             <tr>
                 <th>Subject</th>
                 <th>Study Name</th>
+                <th>Study Type</th>
             </tr>
         </thead>
         <tbody>
@@ -27,6 +28,7 @@
                     <td>
                         <a href="{{ url_for('main_bp.study', subject_name=study.subject, study_name=study.study) }}">{{ study.study }}</a>
                     </td>
+                    <td>{{study.study_type}}</td>
                 </tr>
             {% endfor %}
         </tbody>

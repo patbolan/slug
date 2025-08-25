@@ -78,9 +78,23 @@ def get_study_files(subject_name, study_name):
             files.append({'name': file_name, 'full_path': full_path})
     return files
 
-# Diagnostic or Volunteers are human subjects. Otherwise phantom
-def is_subject_human(subject_name):
-    return (subject_name.startswith('D') or subject_name.startswith('V'))
+def get_subject_type(subject_name):
+    """
+    Returns 'human' for Diagnostic or Volunteers, otherwise 'phantom'.
+    """
+    if subject_name.startswith('D'):
+        return 'human'
+    elif subject_name.startswith('V'):
+        return 'human'
+    else:
+        return 'phantom'
+    
+def get_study_type(subject_name, study_name):
+    """
+    For now these are all -mri
+    """
+    subject_type = get_subject_type(subject_name)
+    return f"{subject_type}-mri"
 
 def get_process_file_path(process_id, file_relative_path=None):
     from tools.process_manager import ProcessManager

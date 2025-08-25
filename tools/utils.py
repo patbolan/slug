@@ -1,10 +1,41 @@
-from utils import is_subject_human
+from utils import get_subject_type, get_module_folder
+import os
 
 
 def get_tools_for_study(subject_name, study_name):
     """
-    Returns a list of tools for a given study, each as a dictionary summarizing its current state
+    The processing tools are determined by the module_configuration.json
     """
+
+    study_type = get_subject_type(subject_name)
+    json_config_path = os.path.join(get_module_folder(), 'module_configuration.json')
+    if os.path.isfile(json_config_path):
+        import json
+        with open(json_config_path, 'r') as f:
+            module_configuration = json.load(f)
+        
+        keyname = f'study-{study_type}'
+        if keyname in module_configuration:
+            tools = module_configuration[keyname]
+
+
+        """
+        Ok. For each of the tools in the config file, we get its name. If it has options,
+        we also pass them to the tool constructor.
+        Need probably a new tool base. 
+        
+        Also want to read module_configuration.json only once, not every time this function is called.
+        """
+
+
+        return None
+    else:   
+        return None
+    
+
+    """
+    removing all this code. Keep it as comment for reference.
+    
     from .simple_study_tool import SimpleStudyTool
     from .nii_converter import NiiConverter
     from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
@@ -39,6 +70,7 @@ def get_tools_for_study(subject_name, study_name):
             reslice_mask.get_status_dict(),
             run_all_fits.get_status_dict(),
         ]
+    """
 
 def get_tools_for_subject(subject_name):
     """ 
