@@ -16,7 +16,7 @@ from utils import (
     get_study_type
 )
 
-from tools.utils import get_tools_for_project, get_tools_for_subject, get_tools_for_study
+from tools.utils import get_tools_for_project, get_tools_for_subject, get_tool_menu_for_study
 import os
 import csv
 
@@ -92,7 +92,7 @@ def study(subject_name, study_name):
     notes = open(notes_file, 'r').read() if os.path.isfile(notes_file) else ""
     files = get_study_files(subject_name, study_name)
     file_tree = get_file_tree(study_path)
-    toolset = get_tools_for_study(subject_name, study_name)
+    toolset = get_tool_menu_for_study(subject_name, study_name)
 
     dicom_path = os.path.join(study_path, 'dicom-original')
     dicom_folders = []

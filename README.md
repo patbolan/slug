@@ -36,3 +36,5 @@ the service is stopped. This is the secure option
 * Make a nice frontend in React
 * The file trees are a little awkward. Browse files like github does.
 * Add Projects for highest level organization
+* Refactor to make terms for object model clearer and consistent. Is it study name or study id? 
+* get the logging cleaned up. No prints. Need the app as a global?

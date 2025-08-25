@@ -113,9 +113,10 @@
                 <tr>
                     <th>Name</th>
                     <th>Status</th>
+                    <th>Message</th>
                     <th>PID</th>
                     <th>Commands</th>
-                    <th>Message</th>
+                    <th>Options</th>
                 </tr>
             </thead>
             <tbody>
@@ -123,21 +124,21 @@
                     <tr>
                         <td>{{ tool.name }}</td>
                         <td>{{ tool.status }}</td>
+                        <td>{{ tool.message if tool.message else '' }}</td>
                         <td align="center">
                             {% if tool.pid %}
                                 <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
                             {% endif %}
                         </td>
                         <td align="center">
-                            {% if tool.commands %}
-                                {% for command in tool.commands %}
-                                    <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ command }}')">
-                                        {{ command }}
-                                    </button>
-                                {% endfor %}
+                            {% if tool.command %}
+                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}')">
+                                    {{ tool.command }}
+                                </button>
                             {% endif %}
                         </td>
-                        <td>{{ tool.message if tool.message else '' }}</td>
+                        <td>not yet
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
