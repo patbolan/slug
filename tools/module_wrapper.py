@@ -108,7 +108,7 @@ class ModuleWrapper():
         raise NotImplementedError("Subclasses should implement this method")
 
     def is_undoable(self):
-        return True
+        return self.properties.get('undoable', False)
 
     # These two methods are used to check if output/input files exist, which is used
     # to determine if the tool can run or has already run. Subclasses should probably
