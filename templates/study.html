@@ -125,25 +125,21 @@
                         <td>{{ tool.name }}</td>
                         <td>{{ tool.status }}</td>
                         <td>{{ tool.message if tool.message else '' }}</td>
-                        <td align="center">
-                            {% if tool.pid %}
-                                <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
-                            {% endif %}
-                        </td>
+                        <td>fake pid</td>
                         <td align="center">
                             {% if tool.command %}
-                                <!-- Original button code -->
-                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}')">
+                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}', '{{ tool.name }}-tool-options')">
                                     {{ tool.command }}
                                 </button>
-                        
-                                <!-- Hypertext link. Usfeul to see the URL -->
-                                <!-- <a href="/tools/{{ tool.name }}/{{ tool.command }}/subjects/{{ subject }}/studies/{{ study }}/" target="_blank">
-                                    {{ tool.command }}
-                                </a> -->
                             {% endif %}
                         </td>
-                        <td>not yet
+                        <td>
+                            <label for="{{ tool.name }}-tool-options">Mode</label>
+                            <select id="{{ tool.name }}-tool-options" name="mode">
+                                <option value="nlls" selected>nlls</option>
+                                <option value="loglin">loglin</option>
+                                <option value="cnn">CNN</option>
+                            </select>
                         </td>
                     </tr>
                 {% endfor %}
@@ -154,12 +150,18 @@
     {% endif %}
 
     <script>
-        function runToolCommand(toolName, command) {
-            const url = `/tools/${toolName}/${command}/subjects/{{ subject }}/studies/{{ study }}/`;
-            
+        function runToolCommand(toolName, command, selectId) {
+            // Get the selected value from the dropdown
+            const selectElement = document.getElementById(selectId);
+            const selectedOption = selectElement ? selectElement.value : null;
+    
+            // Construct the URL with the extra parameter
+            const url = `/tools/${toolName}/${command}/subjects/{{ subject }}/studies/{{ study }}/` + 
+                        (selectedOption ? `?mode=${selectedOption}` : '');
+    
             // Change cursor to wait
             document.body.style.cursor = 'wait';
-
+    
             // Send POST request
             fetch(url, { method: 'POST' })
                 .then(response => {

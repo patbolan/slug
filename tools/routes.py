@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort, redirect, url_for
+from flask import Blueprint, render_template, abort, redirect, url_for, request
 
 from tools.utils import execute_module_tool
 #from tools.process_manager import ProcessManager
@@ -14,10 +14,20 @@ tools_bp = Blueprint('tools_bp', __name__)
 @tools_bp.route('/tools/<tool_name>/<command>/subjects/<subject_name>/', methods=['POST'])
 @tools_bp.route('/tools/<tool_name>/<command>/subjects/<subject_name>/studies/<study_name>/', methods=['POST'])
 def tool_command(tool_name, command, subject_name=None, study_name=None):
-
+    # Print the basic tool information
     print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
-    #execute_tool(tool_name, command, subject_name, study_name)
+
+    # Check for options in the query parameters
+    options = request.args.to_dict()
+    print(f"********* Options: {options}")
+    if options:
+        print("Options received:")
+        for key, value in options.items():
+            print(f"  {key}: {value}")
+
+    # Execute the tool command
     execute_module_tool(tool_name, command, subject_name, study_name)
+
     return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
 
 
