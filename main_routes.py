@@ -16,7 +16,7 @@ from utils import (
     get_study_type
 )
 
-from tools.utils import get_tools_for_project, get_tools_for_subject, get_tool_menu_for_study
+from tools.utils import get_tool_menu_for_study
 import os
 import csv
 
@@ -29,7 +29,8 @@ main_bp = Blueprint('main_bp', __name__)
 def index():
     project_reports_path = os.path.join(get_data_folder(), 'Project_Reports')
     file_tree = get_file_tree(project_reports_path) if os.path.isdir(project_reports_path) else []
-    toolset = get_tools_for_project()
+    #toolset = get_tools_for_project()
+    toolset = None
     server_env = get_server_environment()
 
     return render_template('index.html', toolset=toolset, file_tree=file_tree, server_env=server_env)
@@ -78,7 +79,8 @@ def subject(subject_name):
     # remove the studies: entries in file_tree that start with "MR-"
     file_tree = [entry for entry in file_tree if not entry['text'].startswith('MR-')]
 
-    toolset = get_tools_for_subject(subject_name)
+    #toolset = get_tools_for_subject(subject_name)
+    toolset = None
     return render_template('subject.html', subject=subject_name, subject_type = subject_type, studies=all_studies, notes=notes, toolset=toolset, file_tree=file_tree)
 
 # Details for one study

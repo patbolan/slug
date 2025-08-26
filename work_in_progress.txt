@@ -2,6 +2,35 @@ Major revision of the tools/modules/processes
 First, let's get the new module structure to look at the correct folder. 
 Implement only nii_converter first
 
+Need to revise the way processes are run. Too complicated. 
+Right now here is the path:
+
+main routes
+    utils.get_tool_menu
+        uses wrapper to get deets and return GUI get_tool_menu
+
+Running is like this:
+tool routes, command
+    tools.utils.execute_module_tool
+        creates wrapper
+        wrapper.run_in_subprocess
+            creates PM
+            PM.spawn process(wrapper)
+                makes a Process object
+                    wrapper.run_coimmand_line
+                        build command line string
+                        subporcess.run()
+
+That all works, but it is too many cooks!
+1) get some options going
+2) minimize this. In the route, assemble what you need. Call it.
+
+
+
+
+
+
+
 A few ideas
 X get the nii-converter code updated - CHECK
 * subject types are human, phantom, Study types are human-mri, phantom-mri

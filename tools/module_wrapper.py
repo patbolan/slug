@@ -4,7 +4,7 @@ that work on subjects, projects, etc. Will get this working first then generaliz
 
 Not supporting options yet, ither
 """
-from tools.process_manager import ProcessManager
+from tools.process_module_manager import ProcessModuleManager
 from utils import get_data_folder, get_study_path, get_module_folder
 import os
 import subprocess
@@ -117,7 +117,7 @@ class ModuleWrapper():
         self.print_subprocess_output(result)
 
     def run_in_subprocess(self):
-        pm = ProcessManager()
+        pm = ProcessModuleManager()
         ipid = pm.spawn_process(tool=self, command='run', mode='sync')
         print(f"Started asynchronous process for {self.name} with command 'run', ipid={ipid}")
 
@@ -126,14 +126,7 @@ class ModuleWrapper():
     def is_undoable(self):
         return self.properties.get('undoable', False)
 
-    # These two methods are used to check if output/input files exist, which is used
-    # to determine if the tool can run or has already run. Subclasses should probably
-    # override
-    def are_output_files_present(self):
-        return False
 
-    def are_input_files_present(self):
-        return True
 
     def get_status_dict(self):
         """
@@ -142,7 +135,7 @@ class ModuleWrapper():
         This dictionary is used by the UI to display the status of the tool and
         what commands can be run
         """
-        pm = ProcessManager()
+        pm = ProcessModuleManager()
         pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
         if pm.is_running(pid):
             return {

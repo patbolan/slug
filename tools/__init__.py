@@ -1,11 +1,13 @@
-from .tool_base import ToolBase
-from .simple_study_tool import SimpleStudyTool
-from .simple_subject_tool import SimpleSubjectTool  
-from .simple_project_tool import SimpleProjectTool
-from .nii_converter import NiiConverter
-from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
-from .autotagger import AutoTagger
-from .template_registration import TemplateRegistration
-from .reslice_mask import ResliceMask
+# from .tool_base import ToolBase
+# from .simple_study_tool import SimpleStudyTool
+# from .simple_subject_tool import SimpleSubjectTool  
+# from .simple_project_tool import SimpleProjectTool
+# from .nii_converter import NiiConverter
+# from .dicom_raw_storage_cleaner import DicomRawStorageCleaner
+# from .autotagger import AutoTagger
+# from .template_registration import TemplateRegistration
+# from .reslice_mask import ResliceMask
+
+#from module_wrapper import ModuleWrapper
 
 from .routes import tools_bp

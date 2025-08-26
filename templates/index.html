@@ -65,75 +65,7 @@
     </script>
     {% endif %}
 
-    <h2>Processing Tools</h2>
-    <table border="1" cellpadding="2" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>PID</th>
-                <th>Commands</th>
-                <th>Message</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tool in toolset %}
-                <tr>
-                    <td>{{ tool.name }}</td>
-                    <td>{{ tool.status }}</td>
-                    <td align="center">
-                        {% if tool.pid %}
-                            <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
-
-                        {% endif %}
-                    </td>
-                    <td align="center">
-                        {% if tool.commands %}
-                            {% for command in tool.commands %}
-                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ command }}')">
-                                    {{ command }}
-                                </button>
-                            {% endfor %}
-                        {% endif %}
-                    </td>
-                    <td>{{ tool.message if tool.message else '' }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <script>
-        function runToolCommand(toolName, command) {
-            const url = `/tools/${toolName}/${command}/`;
-            
-            // Change cursor to wait
-            document.body.style.cursor = 'wait';
-
-            // Send POST request
-            fetch(url, { method: 'POST' })
-                .then(response => {
-                    if (response.ok) {
-                        return response.text();
-                    } else {
-                        throw new Error('Failed to execute command');
-                    }
-                })
-                .then(data => {
-                    console.log(data); // Log the server response
-                    // Reload the page to update the study page
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('An error occurred while executing the command.');
-                })
-                .finally(() => {
-                    // Reset cursor to default
-                    document.body.style.cursor = 'default';
-                });
-        }
-    </script>
-    
+   
     <h2>Server Environment</h2>
     <table border="1" cellpadding="2" cellspacing="0">
         <thead>

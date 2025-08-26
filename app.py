@@ -22,6 +22,8 @@ app.register_blueprint(main_bp)
 app.register_blueprint(tools_bp)   
 app.register_blueprint(handlers_bp)  # Assuming handlers_bp is defined in handlers/__init__.py 
 
+app.config['DEBUG'] = True
+
 # Show all logs
 app.logger.setLevel(logging.DEBUG)
 

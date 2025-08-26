@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, abort, redirect, url_for
 
-from tools.utils import execute_tool, execute_module_tool
+from tools.utils import execute_module_tool
 #from tools.process_manager import ProcessManager
 from tools.process_module_manager import ProcessModuleManager
 from utils import get_process_file_path, get_file_tree, get_study_path
@@ -65,7 +65,7 @@ def clear_running_logs():
 
 @tools_bp.route('/clear-completed-logs', methods=['POST'])
 def clear_completed_logs():
-    pm = ProcessManager()
+    pm = ProcessModuleManager()
     pm.clear_logs(folder_type='completed')
 
     return redirect(url_for('tools_bp.processes'))
