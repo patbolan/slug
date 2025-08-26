@@ -128,18 +128,27 @@
                         <td>fake pid</td>
                         <td align="center">
                             {% if tool.command %}
-                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}', '{{ tool.name }}-tool-options')">
+                            <!-- TODO TODO TODO Note this hardwired takes 3rd parameter with selectId=toolname-options. Make that flex.-->
+                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}')">
                                     {{ tool.command }}
                                 </button>
                             {% endif %}
                         </td>
                         <td>
-                            <label for="{{ tool.name }}-tool-options">Mode</label>
-                            <select id="{{ tool.name }}-tool-options" name="mode">
-                                <option value="nlls" selected>nlls</option>
-                                <option value="loglin">loglin</option>
-                                <option value="cnn">CNN</option>
-                            </select>
+                            {% if tool.options %}
+                                {% for option in tool.options %}
+                                    <label for="{{ tool.name }}-{{ option.name }}">{{ option.name }}:</label>
+                                    <select id="{{ tool.name }}-{{ option.name }}" name="{{ option.name }}">
+                                        {% for choice in option.choices %}
+                                            <option value="{{ choice }}" {% if choice == option.default %}selected{% endif %}>{{ choice }}</option>
+                                        {% endfor %}
+
+                                    </select>   
+                                {% endfor %}
+
+                            {% else %}
+                                -                    
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
@@ -150,14 +159,20 @@
     {% endif %}
 
     <script>
-        function runToolCommand(toolName, command, selectId) {
-            // Get the selected value from the dropdown
-            const selectElement = document.getElementById(selectId);
-            const selectedOption = selectElement ? selectElement.value : null;
+        function runToolCommand(toolName, command) {
+            // Collect all select elements for the tool
+            const selectElements = document.querySelectorAll(`select[id^="${toolName}-"]`);
+            const params = new URLSearchParams();
     
-            // Construct the URL with the extra parameter
-            const url = `/tools/${toolName}/${command}/subjects/{{ subject }}/studies/{{ study }}/` + 
-                        (selectedOption ? `?mode=${selectedOption}` : '');
+            // Iterate over each select element and add its value to the query parameters
+            selectElements.forEach(select => {
+                const paramName = select.name;
+                const paramValue = select.value;
+                params.append(paramName, paramValue);
+            });
+    
+            // Construct the URL with the query parameters
+            const url = `/tools/${toolName}/${command}/subjects/{{ subject }}/studies/{{ study }}/?` + params.toString();
     
             // Change cursor to wait
             document.body.style.cursor = 'wait';

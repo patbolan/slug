@@ -82,8 +82,8 @@ def get_tool_menu_for_study(subject_name, study_name):
             'message': rationale_string,
             'command': command,
             'options': [
-                {"name": "mode", "values": ["nlls", "loglin", "cnn"], }, 
-                {"name": "execution", "values": ["inline","queued"] }
+                {"name": "mode", "choices": ["nlls", "loglin", "cnn"], }, 
+                {"name": "execution", "choices": ["inline","queued"] }
             ],
             'pid': None,
         }
