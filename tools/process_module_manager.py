@@ -38,6 +38,7 @@ import shutil
 import json
 from datetime import datetime
 from multiprocessing import Process, Pipe
+import subprocess
 import sys
 import io
 import threading
@@ -66,6 +67,87 @@ class ProcessModuleManager():
             os.makedirs(self.running_folder)
         if not os.path.exists(self.completed_folder):
             os.makedirs(self.completed_folder)
+
+
+
+    def run_commandline(self, command_list, blocking=True, output_dir=None):
+        """
+        Run a command line command with captured output, time measurement, and postprocessing.
+        Output files are written into a subdirectory named after the process id inside output_dir.
+        The subdirectory is created immediately after Popen starts the process.
+
+        Args:
+            command_list (list): Command and arguments as list, e.g. ['ls', '-l']
+            blocking (bool): If True, block until command completes.
+                            If False, run in background thread.
+            output_dir (str or None): Full path to folder where a subdirectory (named by pid) will be created
+                                    to save stdout.txt, stderr.txt, and completion.json.
+                                    If None, files are not written.
+
+        Returns:
+            If blocking: tuple (stdout, stderr, returncode, start_time, end_time, duration_seconds)
+            If non-blocking: threading.Thread instance (command runs in background)
+        """
+        def _postprocess(stdout, stderr, returncode, start_time, end_time, pid):
+            duration = (end_time - start_time).total_seconds()
+
+            if output_dir:
+                pid_dir = os.path.join(output_dir, str(pid))
+                os.makedirs(pid_dir, exist_ok=True)
+
+                with open(os.path.join(pid_dir, 'stdout.txt'), 'w', encoding='utf-8') as f_out:
+                    f_out.write(stdout or "")
+
+                with open(os.path.join(pid_dir, 'stderr.txt'), 'w', encoding='utf-8') as f_err:
+                    f_err.write(stderr or "")
+
+                completion_data = {
+                    "returncode": returncode,
+                    "start_time": start_time.isoformat(),
+                    "end_time": end_time.isoformat(),
+                    "duration": duration
+                }
+                with open(os.path.join(pid_dir, 'completion.json'), 'w', encoding='utf-8') as f_json:
+                    json.dump(completion_data, f_json, indent=4)
+
+            print(f"Command completed with return code {returncode} (pid {pid})")
+            print(f"Started at: {start_time.isoformat()}")
+            print(f"Ended at: {end_time.isoformat()}")
+            print(f"Duration (seconds): {duration}")
+            if stdout:
+                print("Standard Output:")
+                print(stdout)
+            if stderr:
+                print("Standard Error:")
+                print(stderr)
+
+        def _run():
+            start_time = datetime.now()
+            process = subprocess.Popen(
+                command_list,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            pid = process.pid
+            # Create output subdirectory immediately after starting process
+            if output_dir:
+                pid_dir = os.path.join(output_dir, str(pid))
+                os.makedirs(pid_dir, exist_ok=True)
+
+            stdout, stderr = process.communicate()
+            end_time = datetime.now()
+            _postprocess(stdout, stderr, process.returncode, start_time, end_time, pid)
+            return stdout, stderr, process.returncode, start_time, end_time, (end_time - start_time).total_seconds()
+
+        if blocking:
+            return _run()
+        else:
+            thread = threading.Thread(target=_run)
+            thread.start()
+            return thread
+
+
 
     def spawn_process(self, tool, command, mode='async'):
         if not hasattr(tool, command):

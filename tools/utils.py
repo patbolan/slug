@@ -92,8 +92,55 @@ def get_tool_menu_for_study(subject_name, study_name):
 
     return tool_menu
 
+
+# TEMP Load everything up from disk. 
+# Later, we will load all modules and properties at startup, and then pull them from a memory structure.
+def get_module_wrapper(tool_name):
+    """
+    Looks up the module folder and script for a given tool name from the CSV file.
+    Returns (module_folder, module_script) or (None, None) if not found.
+    """
+    import csv
+    csv_path = os.path.join(get_module_folder(), 'module_definitions.csv')
+    if os.path.isfile(csv_path):
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row['name'] == tool_name:
+                    # Now get a module wrapper
+                    wrapper = ModuleWrapper(
+                        module_name=tool_name,  
+                        module_folder=row['folder'],
+                        module_script=row['script'])
+                    return wrapper
+
+    print(f"Module '{tool_name}' not found in module_definitions.csv")            
+    return None   
+
+
+# This is my new, simplified interface for executing a module tool.
+def execute_module_tool_simply(tool_name, command, target, options):
+    print(f"execute_module_tool_simply: {tool_name}, command: {command}, target: {target}, options: {options}")
+
+    module_wrapper = get_module_wrapper(tool_name)
+    if module_wrapper is None:
+        raise ValueError(f"Module wrapper not found for tool '{tool_name}'")
+
+    tmp_output_folder = '/home/bakken-raid2/bolan/prj/slug/processes/temporary'
+
+    command_list = [module_wrapper.script_path, command, '--target', target] # ADD OPTIONS
+
+    pm = ProcessModuleManager()
+    pm.run_commandline(command_list, blocking=False, output_dir=tmp_output_folder)
+        
     
-# TODO needs options, better interface for --target
+    
+    return None
+
+
+
+# TEMP
+# This one works but is very complex. 
 def execute_module_tool(tool_name, command, subject_name, study_name):
 
     print(f"Executing module tool: {tool_name}, command: {command}, subject: {subject_name}, study: {study_name}")

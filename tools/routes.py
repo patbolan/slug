@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, abort, redirect, url_for, request
 
-from tools.utils import execute_module_tool
+from tools.utils import execute_module_tool, execute_module_tool_simply
 #from tools.process_manager import ProcessManager
 from tools.process_module_manager import ProcessModuleManager
 from utils import get_process_file_path, get_file_tree, get_study_path
@@ -14,21 +14,25 @@ tools_bp = Blueprint('tools_bp', __name__)
 @tools_bp.route('/tools/<tool_name>/<command>/subjects/<subject_name>/', methods=['POST'])
 @tools_bp.route('/tools/<tool_name>/<command>/subjects/<subject_name>/studies/<study_name>/', methods=['POST'])
 def tool_command(tool_name, command, subject_name=None, study_name=None):
+
+    # Calculate the target paths
+    if subject_name and study_name:
+        target_path = get_study_path(subject_name, study_name)
+    elif subject_name:
+        target_path = get_study_path(subject_name)
+    else:   
+        target_path = None # Should be project, at some point.
+
     # Print the basic tool information
-    print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}")
+    print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}, target_path: {target_path}")
 
     # Check for options in the query parameters
     options = request.args.to_dict()
-    print(f"********* Options: {options}")
-    if options:
-        print("Options received:")
-        for key, value in options.items():
-            print(f"  {key}: {value}")
 
     # Execute the tool command
-    execute_module_tool(tool_name, command, subject_name, study_name)
+    execute_module_tool_simply(tool_name, command, target_path, options)
 
-    return f"Tool '{tool_name}' executed command '{command}' for subject '{subject_name}' and study '{study_name}'.", 200
+    return f"Tool '{tool_name}' executed command '{command}' for target path '{target_path}' and options '{options}'.", 200
 
 
 

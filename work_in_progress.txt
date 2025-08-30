@@ -1,3 +1,19 @@
+20250826
+Working great. I have a prototype going that runs inline or blocking, captures all the 
+outputs in the correct folder. Much simpler than before. Next steps in this:
+* use the correct process folders. Make sure the "Process" pages work right. 
+* Pass the options correctly. Especially the execution
+* Do you need to get the options from command line? 
+* Clean up lots of code. 
+
+Before you give back to Leo, implement autotagger and parse dicom as modules.
+
+Note I made it so that the module_definitions.csv files just look up folder and script
+It's the config files that tell you which tools to present
+
+
+--------------------
+
 Major revision of the tools/modules/processes
 First, let's get the new module structure to look at the correct folder. 
 Implement only nii_converter first
@@ -22,9 +38,11 @@ tool routes, command
                         subporcess.run()
 
 That all works, but it is too many cooks!
-1) get some options going
-2) minimize this. In the route, assemble what you need. Call it.
+minimize this. In the route, assemble what you need. Call it.
 
+Using copilot I made a function run_commandline() in pm that does most everything. 
+
+I think CSV just maps name to script. Then properties tells you the scope, etc
 
 
 
