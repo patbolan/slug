@@ -30,7 +30,7 @@ def tool_command(tool_name, command, subject_name=None, study_name=None):
     options = request.args.to_dict()
 
     # Execute the tool command
-    execute_module_tool_simply(tool_name, command, target_path, options)
+    execute_module_tool_simply(tool_name, command, subject_name, study_name, target_path, options)
 
     return f"Tool '{tool_name}' executed command '{command}' for target path '{target_path}' and options '{options}'.", 200
 
@@ -43,8 +43,8 @@ def processes():
     process_manager = ProcessModuleManager()
 
     # Get the list of running and completed processes
-    running_processes = process_manager.get_processes(folder_type='running')
-    completed_processes = process_manager.get_processes(folder_type='completed')
+    running_processes = process_manager.get_process_dicts(folder_type='running')
+    completed_processes = process_manager.get_process_dicts(folder_type='completed')
 
     # Render the processes.html template with both lists
     return render_template('processes.html', 
@@ -57,7 +57,8 @@ def process_info(pid):
     process_manager = ProcessModuleManager()
 
     # Get process information
-    process_info = process_manager.get_process_info(pid)
+    process_info = process_manager.get_process_dict(pid)
+    print(f"Process info for PID {pid}: {process_info}")
 
     # Generate file tree
     file_tree = get_file_tree(get_process_file_path(pid))
@@ -73,7 +74,7 @@ def process_info(pid):
 @tools_bp.route('/clear-running-logs', methods=['POST'])
 def clear_running_logs():
     pm = ProcessModuleManager()
-    pm.clear_logs(folder_type='runing')
+    pm.clear_logs(folder_type='running')
 
     return redirect(url_for('tools_bp.processes'))
 

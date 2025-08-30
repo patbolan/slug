@@ -107,7 +107,7 @@
     </script>
 
     <h2>Processing Tools</h2>
-    {% if toolset %}
+    {% if tool_menu %}
         <table border="1" cellpadding="2" cellspacing="0">
             <thead>
                 <tr>
@@ -120,12 +120,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% for tool in toolset %}
+                {% for tool in tool_menu %}
                     <tr>
                         <td>{{ tool.name }}</td>
                         <td>{{ tool.status }}</td>
                         <td>{{ tool.message if tool.message else '' }}</td>
-                        <td>fake pid</td>
+                        <td>
+                            {% if tool.pid %}
+                                <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
+                            {% endif %}
+                        </td>
                         <td align="center">
                             {% if tool.command %}
                                 <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}')">

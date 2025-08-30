@@ -94,7 +94,7 @@ def study(subject_name, study_name):
     notes = open(notes_file, 'r').read() if os.path.isfile(notes_file) else ""
     files = get_study_files(subject_name, study_name)
     file_tree = get_file_tree(study_path)
-    toolset = get_tool_menu_for_study(subject_name, study_name)
+    tool_menu = get_tool_menu_for_study(subject_name, study_name)
 
     dicom_path = os.path.join(study_path, 'dicom-original')
     dicom_folders = []
@@ -123,4 +123,4 @@ def study(subject_name, study_name):
                         'tag': tag
                     })
 
-    return render_template('study.html', subject=subject_name, study=study_name, notes=notes, toolset=toolset, files=files, file_tree=file_tree, dicom_folders=dicom_folders, dicom_info=dicom_info)
+    return render_template('study.html', subject=subject_name, study=study_name, notes=notes, tool_menu=tool_menu, files=files, file_tree=file_tree, dicom_folders=dicom_folders, dicom_info=dicom_info)

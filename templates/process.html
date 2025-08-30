@@ -39,22 +39,17 @@
             <td>{{ process_info.study_name }}</td>
         </tr>
         <tr>
-            <th>File Path</th>
-            <td>{{ process_info.file_path }}</td>
-        </tr>
-        <tr>
             <th>Start Time</th>
             <td>{{ process_info.start_time }}</td>
         </tr>
         <tr>
             <th>Status</th>
-            <!-- <td>{{ "Running" if is_running else "Completed" }}</td> -->
             <td>{{ process_info.status }}</td>
         </tr>
 
         <tr>
             <th>Return Code</th>
-            <td>{{ process_info.return_code }}</td>
+            <td>{{ process_info.returncode }}</td>
         </tr>
         <tr>
             <th>End Time</th>
@@ -62,7 +57,7 @@
         </tr>
         <tr>
             <th>Duration (s)</th>
-            <td>{{ process_info.duration_s }}</td>
+            <td>{{ process_info.duration }}</td>
         </tr>
 
     </table>

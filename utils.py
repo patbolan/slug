@@ -97,10 +97,10 @@ def get_study_type(subject_name, study_name):
     return f"{subject_type}-mri"
 
 def get_process_file_path(process_id, file_relative_path=None):
-    from tools.process_manager import ProcessManager
+    from tools.process_module_manager import ProcessModuleManager
 
-    pm = ProcessManager()
-    process_info = pm.get_process_info(process_id)
+    pm = ProcessModuleManager()
+    process_info = pm.get_process_dict(process_id)
     if process_info is None:
         return None
     else:
