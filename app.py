@@ -31,7 +31,7 @@ app.logger.setLevel(logging.DEBUG)
 # Set a new umask
 new_umask = 0o007 # u=rwx,g=rwx,o-rwx
 old_umask = os.umask(new_umask)
-print(f"Changed process umask from {oct(old_umask)} to {oct(new_umask)}")
+app.logger.info(f"Changed process umask from {oct(old_umask)} to {oct(new_umask)}")
 
 
 # Middleware (?) to handle method overrides 

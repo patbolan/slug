@@ -1,3 +1,4 @@
+from flask import current_app
 from utils import get_subject_type, get_study_type, get_module_folder, get_study_path
 from tools.module_wrapper import ModuleWrapper
 from tools.process_module_manager import ProcessModuleManager
@@ -18,7 +19,7 @@ def get_module_configuration_for_study(subject_name, study_name):
             module_configuration = json.load(f)
         return module_configuration
     else:
-        print(f'Module configuration not found: {json_config_path}')
+        current_app.logger.error(f'Module configuration not found: {json_config_path}')
         return None
     
 
@@ -48,12 +49,6 @@ def get_tool_menu_for_study(subject_name, study_name):
             module_folder=module_folder,
             module_script=module_script)
         status = wrapper.get_status_for_study(subject_name, study_name)
-
-        # For debugging
-        # print(f'--- properties for {module_name} ---')
-        # print(wrapper.properties)
-        # print(f'--- status for {module_name} ---')
-        # print(status)
 
         # Check values from dicts, make sure they are there
         status_string = status.get("state", "unknown")
@@ -96,7 +91,6 @@ def get_tool_menu_for_study(subject_name, study_name):
             ],
             'pid': f'{pid}' if pid else '',
         }
-        print(tool_menu_item)
         tool_menu.append(tool_menu_item)    
 
     return tool_menu
@@ -123,13 +117,13 @@ def get_module_wrapper(tool_name):
                         module_script=row['script'])
                     return wrapper
 
-    print(f"Module '{tool_name}' not found in module_definitions.csv")            
+    current_app.logger.error(f"Module '{tool_name}' not found in module_definitions.csv")            
     return None   
 
 
 # This is my new, simplified interface for executing a module tool.
 def execute_module_tool_simply(tool_name, command, subject_name, study_name, target, options):
-    print(f"execute_module_tool_simply: {tool_name}, command: {command}, target: {target}, options: {options}")
+    current_app.logger.debug(f"execute_module_tool_simply: {tool_name}, command: {command}, target: {target}, options: {options}")
 
     module_wrapper = get_module_wrapper(tool_name)
     if module_wrapper is None:
@@ -152,35 +146,36 @@ def execute_module_tool_simply(tool_name, command, subject_name, study_name, tar
 
 
 
-# TEMP
-# This one works but is very complex. 
-def execute_module_tool(tool_name, command, subject_name, study_name):
+# Made obsolete with new refactoring
+# # TEMP
+# # This one works but is very complex. 
+# def execute_module_tool(tool_name, command, subject_name, study_name):
 
-    print(f"Executing module tool: {tool_name}, command: {command}, subject: {subject_name}, study: {study_name}")
+#     print(f"Executing module tool: {tool_name}, command: {command}, subject: {subject_name}, study: {study_name}")
 
-    module_configuration = get_module_configuration_for_study(subject_name, study_name)
-    if module_configuration is None:
-        raise ValueError(f"Module configuration not found for study {study_name} of subject {subject_name}")
+#     module_configuration = get_module_configuration_for_study(subject_name, study_name)
+#     if module_configuration is None:
+#         raise ValueError(f"Module configuration not found for study {study_name} of subject {subject_name}")
 
-    if tool_name not in module_configuration:
-        raise ValueError(f"Unknown tool '{tool_name}' for study {study_name} of subject {subject_name}")    
+#     if tool_name not in module_configuration:
+#         raise ValueError(f"Unknown tool '{tool_name}' for study {study_name} of subject {subject_name}")    
     
-    target_path = get_study_path(subject_name, study_name)
-    module_folder = module_configuration[tool_name]['folder']
-    module_script = module_configuration[tool_name]['script']   
-    wrapper = ModuleWrapper(
-        module_name=tool_name,
-        module_folder=module_folder,
-        module_script=module_script)    
+#     target_path = get_study_path(subject_name, study_name)
+#     module_folder = module_configuration[tool_name]['folder']
+#     module_script = module_configuration[tool_name]['script']   
+#     wrapper = ModuleWrapper(
+#         module_name=tool_name,
+#         module_folder=module_folder,
+#         module_script=module_script)    
 
-    if command == 'run':
-        #tool.run_in_subprocess()
-        wrapper.run_command_line('run', target_path)
-    elif command == 'undo':
-        #tool.undo()
-        wrapper.run_command_line('undo', target_path)
-    else:
-        raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
+#     if command == 'run':
+#         #tool.run_in_subprocess()
+#         wrapper.run_command_line('run', target_path)
+#     elif command == 'undo':
+#         #tool.undo()
+#         wrapper.run_command_line('undo', target_path)
+#     else:
+#         raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
 
 
     

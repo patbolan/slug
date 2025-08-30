@@ -1,10 +1,15 @@
 20250826
 Working great. I have a prototype going that runs inline or blocking, captures all the 
 outputs in the correct folder. Much simpler than before. Next steps in this:
-* use the correct process folders. Make sure the "Process" pages work right. 
+X use the correct process folders. Make sure the "Process" pages work right. 
+
+* Implement autotagger as module. Add an option to undo (preserve). Then work on options
 * Pass the options correctly. Especially the execution
 * Do you need to get the options from command line? 
+
+* Make a simple project and study module. Figure out the json options
 * Clean up lots of code. 
+* preload the modules
 
 Before you give back to Leo, implement autotagger and parse dicom as modules.
 

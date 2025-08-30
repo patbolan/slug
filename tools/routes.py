@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, abort, redirect, url_for, request
+from flask import Blueprint, render_template, abort, redirect, url_for, request, current_app
 
-from tools.utils import execute_module_tool, execute_module_tool_simply
+from tools.utils import execute_module_tool_simply
 #from tools.process_manager import ProcessManager
 from tools.process_module_manager import ProcessModuleManager
 from utils import get_process_file_path, get_file_tree, get_study_path
@@ -24,7 +24,7 @@ def tool_command(tool_name, command, subject_name=None, study_name=None):
         target_path = None # Should be project, at some point.
 
     # Print the basic tool information
-    print(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}, target_path: {target_path}")
+    current_app.logger.debug(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}, target_path: {target_path}")
 
     # Check for options in the query parameters
     options = request.args.to_dict()
@@ -33,8 +33,6 @@ def tool_command(tool_name, command, subject_name=None, study_name=None):
     execute_module_tool_simply(tool_name, command, subject_name, study_name, target_path, options)
 
     return f"Tool '{tool_name}' executed command '{command}' for target path '{target_path}' and options '{options}'.", 200
-
-
 
 
 @tools_bp.route('/processes')
@@ -58,7 +56,7 @@ def process_info(pid):
 
     # Get process information
     process_info = process_manager.get_process_dict(pid)
-    print(f"Process info for PID {pid}: {process_info}")
+    current_app.logger.debug(f"Process info for PID {pid}: {process_info}")
 
     # Generate file tree
     file_tree = get_file_tree(get_process_file_path(pid))

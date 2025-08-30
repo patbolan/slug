@@ -39,9 +39,8 @@ import json
 from datetime import datetime
 from multiprocessing import Process, Pipe
 import subprocess
-import sys
-import io
 import threading
+from flask import current_app
 
 """ 
 ProcessModuleManager is responsible for managing the execution of tools in separate 
@@ -110,10 +109,6 @@ class ProcessModuleManager():
             with open(os.path.join(this_process_dir, 'completion.json'), 'w', encoding='utf-8') as f_json:
                 json.dump(completion_data, f_json, indent=4)
 
-            print(f"Command completed with return code {returncode} (pid {pid})")
-            print(f"Started at: {start_time.isoformat()}")
-            print(f"Ended at: {end_time.isoformat()}")
-            print(f"Duration (seconds): {duration}")
             if stdout:
                 print("Standard Output:")
                 print(stdout)
@@ -123,7 +118,7 @@ class ProcessModuleManager():
 
             # Move the process folder to the completed folder   
             shutil.move(this_process_dir, self.completed_folder)
-            print(f"Process folder moved to completed: {os.path.join(self.completed_folder, str(pid))}")    
+            current_app.logger.debug(f"Process folder moved to completed: {os.path.join(self.completed_folder, str(pid))}")    
 
         def _run():
             start_time = datetime.now()
@@ -308,7 +303,7 @@ class ProcessModuleManager():
                 status = 'completed' 
             else:
                 return None       
-        print(f'For pid {pid}, found in folder {status}')
+        current_app.logger.debug(f'For pid {pid}, found in folder {status}')
 
         context_file = os.path.join(process_folder, 'context.json')
         completion_file = os.path.join(process_folder, 'completion.json')
@@ -326,7 +321,7 @@ class ProcessModuleManager():
                     'start_time': process_context.get('start_time', 'N/A'),
                 }
         except Exception as e:
-            print(f"Error reading context.json in {process_folder}: {e}")
+            current_app.logger.error(f"Error reading context.json in {process_folder}: {e}")
             #return None
 
         # If the process is completed, add completion details
@@ -364,7 +359,7 @@ class ProcessModuleManager():
         for folder_name in os.listdir(folder_path):
             processes.append( self.get_process_dict(folder_name) )
 
-        print(f'Found {len(processes)} processes in {folder_type} folder: {processes}')
+        current_app.logger.debug(f'Found {len(processes)} processes in {folder_type} folder: {processes}')
 
         if processes:
             if sort_order == 'most_recent':
@@ -393,7 +388,7 @@ class ProcessModuleManager():
             process_folder_path = os.path.join(folder_path, process_folder)
             if os.path.isdir(process_folder_path):
                 shutil.rmtree(process_folder_path)
-                print(f"Deleted folder: {process_folder_path}")
+                current_app.logger.info(f"Deleted folder: {process_folder_path}")
 
 
 
