@@ -1,3 +1,9 @@
+20250831
+Got the options working. Now the options are defined by the properties command.
+The run and undo commands must work with all of the options.
+
+The config file needs a list of tools. 
+
 20250826
 Working great. I have a prototype going that runs inline or blocking, captures all the 
 outputs in the correct folder. Much simpler than before. Next steps in this:

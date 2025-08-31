@@ -41,10 +41,10 @@ class ModuleWrapper():
             )
 
             # Log the standard output and errors
-            if result.stdout:
-                current_app.logger.info(f"Script output:\n{result.stdout}")
-            if result.stderr:
-                current_app.logger.info(f"Script errors:\n{result.stderr}")
+            # if result.stdout:
+            #     current_app.logger.debug(f"Script properties output:\n{result.stdout}")
+            # if result.stderr:
+            #     current_app.logger.debug(f"Script properties errors:\n{result.stderr}")
 
             # Parse the output into a JSON object
             return json.loads(result.stdout)
@@ -76,10 +76,11 @@ class ModuleWrapper():
                 text=True,
                 check=True
             )
-            if result.stdout:
-                current_app.logger.info(f"Script output:\n{result.stdout}")
-            if result.stderr:
-                current_app.logger.info(f"Script errors:\n{result.stderr}")
+            # if result.stdout:
+            #     current_app.logger.debug(f"Script status output:\n{result.stdout}")
+            # if result.stderr:
+            #     current_app.logger.debug(f"Script status errors:\n{result.stderr}")
+
             return json.loads(result.stdout)
         except subprocess.CalledProcessError as e:
             current_app.logger.error(f"Error running script: {e.stderr}")
@@ -102,7 +103,7 @@ class ModuleWrapper():
 
         # Run the module, a command-line script
         cmd_line = [self.script_path, command, '--target', target_path] # Important: cmd is a list, not a string with spaces!
-        current_app.logger.info(f"***** Running module command line: {cmd_line}")
+        current_app.logger.info(f"Running module command line: {cmd_line}")
 
         # Run the command in a subprocess
         result = subprocess.run(
@@ -125,49 +126,6 @@ class ModuleWrapper():
     def is_undoable(self):
         return self.properties.get('undoable', False)
 
-
-    # not need with refactoring
-    # def get_status_dict(self):
-    #     """
-    #     Returns a dictionary with the status of the tool.
-    #     The status can be 'running', 'complete', 'available', or 'unavailable'.
-    #     This dictionary is used by the UI to display the status of the tool and
-    #     what commands can be run
-    #     """
-    #     pm = ProcessModuleManager()
-    #     pid = pm.get_process_id(self.subject_name, self.study_name, self.name)
-    #     if pm.is_running(pid):
-    #         return {
-    #             'name': self.name,
-    #             'status': 'running',
-    #             'message': f'{self.name} is running, refresh page to update',
-    #             'commands': [],
-    #             'pid': pid,
-    #         }
-    #     elif self.are_output_files_present():
-    #         return {
-    #             'name': self.name,
-    #             'status': 'complete',
-    #             'message': f'{self.name} has run successfully',
-    #             'commands': ['undo'] if self.is_undoable() else [],
-    #             'pid': pid,
-    #         }
-    #     elif self.are_input_files_present():
-    #         return {
-    #             'name': self.name,
-    #             'status': 'available',
-    #             'message': f'{self.name} is ready to run',
-    #             'commands': ['run'],
-    #             'pid': None,
-    #         }
-    #     else:
-    #         return {
-    #             'name': self.name,
-    #             'status': 'unavailable',
-    #             'message': f'{self.name} cannot run, inputs do not exist',
-    #             'commands': [],
-    #             'pid': None,
-    #         }
         
     def print_subprocess_output(self, result):
         """

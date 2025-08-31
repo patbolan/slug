@@ -118,7 +118,8 @@ class ProcessModuleManager():
 
             # Move the process folder to the completed folder   
             shutil.move(this_process_dir, self.completed_folder)
-            current_app.logger.debug(f"Process folder moved to completed: {os.path.join(self.completed_folder, str(pid))}")    
+            # Logging doesn't work if this is threaded
+            #current_app.logger.debug(f"Process folder moved to completed: {os.path.join(self.completed_folder, str(pid))}")    
 
         def _run():
             start_time = datetime.now()
@@ -194,7 +195,7 @@ class ProcessModuleManager():
                 status = 'completed' 
             else:
                 return None       
-        current_app.logger.debug(f'For pid {pid}, found in folder {status}')
+        #current_app.logger.debug(f'For pid {pid}, found in folder {status}')
 
         context_file = os.path.join(process_folder, 'context.json')
         completion_file = os.path.join(process_folder, 'completion.json')
@@ -212,7 +213,8 @@ class ProcessModuleManager():
                     'start_time': process_context.get('start_time', 'N/A'),
                 }
         except Exception as e:
-            current_app.logger.error(f"Error reading context.json in {process_folder}: {e}")
+            pass
+            #current_app.logger.error(f"Error reading context.json in {process_folder}: {e}")
             #return None
 
         # If the process is completed, add completion details
@@ -250,7 +252,7 @@ class ProcessModuleManager():
         for folder_name in os.listdir(folder_path):
             processes.append( self.get_process_dict(folder_name) )
 
-        current_app.logger.debug(f'Found {len(processes)} processes in {folder_type} folder: {processes}')
+        #current_app.logger.debug(f'Found {len(processes)} processes in {folder_type} folder: {processes}')
 
         if processes:
             if sort_order == 'most_recent':

@@ -50,6 +50,7 @@ def get_tool_menu_for_study(subject_name, study_name):
 
         if status["state"] == "runnable":
             command = "run"
+
         elif status["state"] == "completed":
             if wrapper.is_undoable():
                 command = "undo"
@@ -70,8 +71,6 @@ def get_tool_menu_for_study(subject_name, study_name):
             rationale_string = f"{module_name} is running"
             command = None
 
-
-
         # Cool. Now from status prepare a dict to give to the web interface.
         # Name, status, options, mesage, pid, commands 
         tool_menu_item = {
@@ -79,12 +78,31 @@ def get_tool_menu_for_study(subject_name, study_name):
             'status': status_string,
             'message': rationale_string,
             'command': command,
-            'options': [
-                {"name": "mode", "choices": ["nlls", "loglin", "cnn"], }, 
-                {"name": "execution", "choices": ["inline","queued"] }
-            ],
-            'pid': f'{pid}' if pid else '',
+            'pid': f'{pid}' if pid else ''
         }
+
+        # Execution mode. Always add this option, default to "in-process" unless specified
+        # by the module configuration
+        default_execution_mode = module_configuration.get(module_name, {}).get(command, {}).get('execution-mode', 'in-process') 
+        execution_option = {"name": "execution", "choices": ["in-process","background"], "default": default_execution_mode }
+
+        # Specify options if there are commands to run.
+        # Options come from the command line "properties" call. Defaults can be provided on a 
+        # per-command basis in the module_configuration
+        if command:
+            # Options are like: {'mode': {'values': ['size', 'tree', 'ls']}}
+            options = wrapper.properties.get("options")
+            if options: 
+                tool_menu_item['options'] = []
+                for option_name, option_info in options.items():
+                    choices = option_info.get('values', []) 
+                    default = module_configuration.get(module_name, {}).get(command, {}).get('option-defaults', {}).get(option_name, {})
+                    tool_menu_item['options'].append({"name": option_name, "choices": choices, "default": default })
+                tool_menu_item['options'].append(execution_option)  # Add execution option at the end
+            else:   
+                tool_menu_item['options'] = [execution_option]  # Only execution option
+
+        # Finally, append this to the tool menu
         tool_menu.append(tool_menu_item)    
 
     return tool_menu
@@ -131,11 +149,25 @@ def execute_module_tool_simply(tool_name, command, subject_name, study_name, tar
         'study_name': study_name,
         'target_path': target, 
         'options': options
-    }
+    }    
+
+    # Execution mode: in-process or background
+    if options.get('execution', 'in-process') == 'in-process':
+        blocking = True
+    else:
+        blocking = False
+
+    # Other options except execution should be added to the command_list
+    for option_name, option_value in options.items():
+        if option_name != 'execution':  # Skip execution mode, already handled
+            command_list.append(f'--{option_name}')
+            command_list.append(str(option_value))
+            
+    current_app.logger.debug(f"Executing command list: {' '.join(command_list)}")
     
     pm = ProcessModuleManager()
     #pm.run_commandline(command_list, context_dict, blocking=False)
-    pm.run_commandline(command_list, context_dict, blocking=True)
+    pm.run_commandline(command_list, context_dict, blocking=blocking) 
     
     return None
 
