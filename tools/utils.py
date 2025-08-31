@@ -38,16 +38,10 @@ def get_tool_menu_for_study(subject_name, study_name):
 
     tool_menu = []
     for module_name in module_configuration:
-        module_folder = module_configuration[module_name]['folder']
-        module_script = module_configuration[module_name]['script']
-        print(f'{module_name}, {module_folder}, {module_script}')
 
         # Great. Here is where you instantiate this object, get its status dict.
         # Append status dict to toolset
-        wrapper = ModuleWrapper(
-            module_name=module_name,
-            module_folder=module_folder,
-            module_script=module_script)
+        wrapper = get_module_wrapper(module_name)
         status = wrapper.get_status_for_study(subject_name, study_name)
 
         # Check values from dicts, make sure they are there
@@ -140,66 +134,8 @@ def execute_module_tool_simply(tool_name, command, subject_name, study_name, tar
     }
     
     pm = ProcessModuleManager()
-    pm.run_commandline(command_list, context_dict, blocking=False)
+    #pm.run_commandline(command_list, context_dict, blocking=False)
+    pm.run_commandline(command_list, context_dict, blocking=True)
     
     return None
 
-
-
-# Made obsolete with new refactoring
-# # TEMP
-# # This one works but is very complex. 
-# def execute_module_tool(tool_name, command, subject_name, study_name):
-
-#     print(f"Executing module tool: {tool_name}, command: {command}, subject: {subject_name}, study: {study_name}")
-
-#     module_configuration = get_module_configuration_for_study(subject_name, study_name)
-#     if module_configuration is None:
-#         raise ValueError(f"Module configuration not found for study {study_name} of subject {subject_name}")
-
-#     if tool_name not in module_configuration:
-#         raise ValueError(f"Unknown tool '{tool_name}' for study {study_name} of subject {subject_name}")    
-    
-#     target_path = get_study_path(subject_name, study_name)
-#     module_folder = module_configuration[tool_name]['folder']
-#     module_script = module_configuration[tool_name]['script']   
-#     wrapper = ModuleWrapper(
-#         module_name=tool_name,
-#         module_folder=module_folder,
-#         module_script=module_script)    
-
-#     if command == 'run':
-#         #tool.run_in_subprocess()
-#         wrapper.run_command_line('run', target_path)
-#     elif command == 'undo':
-#         #tool.undo()
-#         wrapper.run_command_line('undo', target_path)
-#     else:
-#         raise ValueError(f"Unknown command '{command}' for tool '{tool_name}'")
-
-
-    
-
-### THESE are broken for now. Revisit later
-
-# def get_tools_for_subject(subject_name):
-#     """ 
-#     Returns a list of tools suitable for a subject, each as a dictionary summarizing its current state
-#     """
-#     from .simple_subject_tool import SimpleSubjectTool
-#     simple_subject_tool = SimpleSubjectTool(subject_name)
-
-#     return [
-#         simple_subject_tool.get_status_dict(),
-#     ]
-
-# def get_tools_for_project():
-#     """ 
-#     Returns a list of tools suitable for the whole project
-#     """
-#     from .simple_project_tool import SimpleProjectTool
-#     simple_project_tool = SimpleProjectTool()
-
-#     return [
-#         simple_project_tool.get_status_dict(),
-#     ]    
