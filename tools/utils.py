@@ -125,13 +125,23 @@ def get_tool_menu(subject_name, study_name):
     return tool_menu
 
 
-# TEMP Load everything up from disk. 
-# Later, we will load all modules and properties at startup, and then pull them from a memory structure.
+# Global cache for ModuleWrapper instances
+_module_wrapper_cache = {}
+
+
 def get_module_wrapper(tool_name):
     """
-    Looks up the module folder and script for a given tool name from the CSV file.
-    Returns (module_folder, module_script) or (None, None) if not found.
+    Retrieves a cached ModuleWrapper instance for the given tool name.
+    If the instance does not exist, it creates one and caches it.
+    Instead you could just read the disk each time, but that is a bit slow.
     """
+    global _module_wrapper_cache
+
+    # Check if the tool_name is already in the cache
+    if tool_name in _module_wrapper_cache:
+        return _module_wrapper_cache[tool_name]
+
+    # If not cached, create a new ModuleWrapper instance
     import csv
     csv_path = os.path.join(get_module_folder(), 'module_definitions.csv')
     if os.path.isfile(csv_path):
@@ -139,15 +149,18 @@ def get_module_wrapper(tool_name):
             reader = csv.DictReader(f)
             for row in reader:
                 if row['name'] == tool_name:
-                    # Now get a module wrapper
+                    # Create and cache the ModuleWrapper instance
                     wrapper = ModuleWrapper(
-                        module_name=tool_name,  
+                        module_name=tool_name,
                         module_folder=row['folder'],
-                        module_script=row['script'])
+                        module_script=row['script']
+                    )
+                    _module_wrapper_cache[tool_name] = wrapper
                     return wrapper
 
-    current_app.logger.error(f"Module '{tool_name}' not found in module_definitions.csv")            
-    return None   
+    # Log an error if the tool is not found
+    current_app.logger.error(f"Module '{tool_name}' not found in module_definitions.csv")
+    return None
 
 
 # This is my new, simplified interface for executing a module tool.
