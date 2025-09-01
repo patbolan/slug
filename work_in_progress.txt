@@ -2,7 +2,12 @@
 Got the options working. Now the options are defined by the properties command.
 The run and undo commands must work with all of the options.
 
-The config file needs a list of tools. 
+Updated the documentation. 
+* complete the phantom module conversion. Include running-reports
+* create dummy modules for subject and project levels
+* once that's all done you can merge branches and push. Then pull on the pcad2 version
+
+
 
 20250826
 Working great. I have a prototype going that runs inline or blocking, captures all the 

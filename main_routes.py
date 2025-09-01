@@ -16,7 +16,7 @@ from utils import (
     get_study_type
 )
 
-from tools.utils import get_tool_menu_for_study
+from tools.utils import get_tool_menu
 import os
 import csv
 
@@ -29,11 +29,11 @@ main_bp = Blueprint('main_bp', __name__)
 def index():
     project_reports_path = os.path.join(get_data_folder(), 'Project_Reports')
     file_tree = get_file_tree(project_reports_path) if os.path.isdir(project_reports_path) else []
-    #toolset = get_tools_for_project()
-    toolset = None
+    
+    tool_menu = get_tool_menu(subject_name=None, study_name=None)
     server_env = get_server_environment()
 
-    return render_template('index.html', toolset=toolset, file_tree=file_tree, server_env=server_env)
+    return render_template('index.html', tool_menu=tool_menu, file_tree=file_tree, server_env=server_env)
 
 # List all subjects
 @main_bp.route('/subjects')
@@ -75,13 +75,12 @@ def subject(subject_name):
         study_type = get_study_type(subject_name, study)
         all_studies.append({'name':study, "study_type": study_type})
 
-    file_tree = get_file_tree(get_subject_path(subject_name)) 
+    file_tree = get_file_tree(os.path.join(get_subject_path(subject_name), 'Subject_Reports' ))
     # remove the studies: entries in file_tree that start with "MR-"
-    file_tree = [entry for entry in file_tree if not entry['text'].startswith('MR-')]
+    #file_tree = [entry for entry in file_tree if not entry['text'].startswith('MR-')]
 
-    #toolset = get_tools_for_subject(subject_name)
-    toolset = None
-    return render_template('subject.html', subject=subject_name, subject_type = subject_type, studies=all_studies, notes=notes, toolset=toolset, file_tree=file_tree)
+    tool_menu = get_tool_menu(subject_name, study_name=None)
+    return render_template('subject.html', subject=subject_name, subject_type = subject_type, studies=all_studies, notes=notes, tool_menu=tool_menu, file_tree=file_tree)
 
 # Details for one study
 @main_bp.route('/subjects/<subject_name>/studies/<study_name>')
@@ -94,7 +93,7 @@ def study(subject_name, study_name):
     notes = open(notes_file, 'r').read() if os.path.isfile(notes_file) else ""
     files = get_study_files(subject_name, study_name)
     file_tree = get_file_tree(study_path)
-    tool_menu = get_tool_menu_for_study(subject_name, study_name)
+    tool_menu = get_tool_menu(subject_name, study_name)
 
     dicom_path = os.path.join(study_path, 'dicom-original')
     dicom_folders = []

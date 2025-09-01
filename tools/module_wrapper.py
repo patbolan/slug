@@ -5,7 +5,7 @@ that work on subjects, projects, etc. Will get this working first then generaliz
 Not supporting options yet, either
 """
 from tools.process_module_manager import ProcessModuleManager
-from utils import get_study_path, get_module_folder
+from utils import get_study_path, get_module_folder, get_data_folder, get_subject_path
 import os
 import subprocess
 import json     
@@ -55,7 +55,7 @@ class ModuleWrapper():
             current_app.logger.error(f"Error parsing JSON output: {e}")
             raise
         
-    def get_status_for_study(self, subject_name, study_name):
+    def get_status(self, subject_name, study_name):
         """
         Calls the script with the command 'status' and properties '--target' and
          the study path.
@@ -64,13 +64,19 @@ class ModuleWrapper():
         :param study_name: The name of the study.
         :return: JSON object containing the status information.
         """
-        study_path = get_study_path(subject_name, study_name)
-        if not study_path:
-            raise FileNotFoundError(f"Study path not found for subject '{subject_name}' and study '{study_name}'")
+        if subject_name is None:
+            target_path = get_data_folder()
+        elif study_name is None:
+            target_path = get_subject_path(subject_name)
+        else:
+            target_path = get_study_path(subject_name, study_name)
+
+        if not target_path:
+            raise FileNotFoundError(f"Target path not found for subject '{subject_name}' and study '{study_name}'")
 
         try:
             result = subprocess.run(
-                [self.script_path, "status", "--target", study_path],
+                [self.script_path, "status", "--target", target_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,

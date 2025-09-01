@@ -4,14 +4,30 @@ from tools.module_wrapper import ModuleWrapper
 from tools.process_module_manager import ProcessModuleManager
 import os
 
-def get_module_configuration_for_study(subject_name, study_name):
+def get_module_configuration(subject_name, study_name):
     """
     Returns the module configuration for a given study based on its type.
     The configuration is expected to be in a JSON file named 'study_<study_type>.json'
     located in the module folder.
     """
-    study_type = get_study_type(subject_name, study_name)
-    json_config_path = os.path.join(get_module_folder(), f'study_{study_type}.json')
+    # Different module-list files depending on context (project, subject, study) and types
+    if subject_name is None:
+        json_config_path = os.path.join(get_module_folder(), f'module-list_project.json')    
+    elif study_name is None:
+        # Subject-level tool
+        subject_type = get_subject_type(subject_name)
+        if subject_type is None:
+            json_config_path = os.path.join(get_module_folder(), f'module-list_subject.json')
+        else:
+            json_config_path = os.path.join(get_module_folder(), f'module-list_subject_{subject_type}.json')    
+    else:
+        # Study-level tool
+        study_type = get_study_type(subject_name, study_name)
+        if study_type is None:
+            json_config_path = os.path.join(get_module_folder(), f'module-list_study.json')
+        else:
+            json_config_path = os.path.join(get_module_folder(), f'module-list_study_{study_type}.json')
+
 
     if os.path.isfile(json_config_path):
         import json
@@ -23,7 +39,8 @@ def get_module_configuration_for_study(subject_name, study_name):
         return None
     
 
-def get_tool_menu_for_study(subject_name, study_name):
+
+def get_tool_menu(subject_name, study_name):
     """
     The processing tools are determined by the module_configuration.json
     Wait... TBD
@@ -32,7 +49,7 @@ def get_tool_menu_for_study(subject_name, study_name):
     A single tool is a menu item.
     each menu item is a dictionary with values needed by the web interface
     """
-    module_configuration = get_module_configuration_for_study(subject_name, study_name)
+    module_configuration = get_module_configuration(subject_name, study_name)
     if module_configuration is None:
         return None
 
@@ -42,7 +59,7 @@ def get_tool_menu_for_study(subject_name, study_name):
         # Great. Here is where you instantiate this object, get its status dict.
         # Append status dict to toolset
         wrapper = get_module_wrapper(module_name)
-        status = wrapper.get_status_for_study(subject_name, study_name)
+        status = wrapper.get_status(subject_name, study_name)
 
         # Check values from dicts, make sure they are there
         status_string = status.get("state", "unknown")
@@ -134,7 +151,7 @@ def get_module_wrapper(tool_name):
 
 
 # This is my new, simplified interface for executing a module tool.
-def execute_module_tool_simply(tool_name, command, subject_name, study_name, target, options):
+def execute_module_commandline(tool_name, command, subject_name, study_name, target, options):
     current_app.logger.debug(f"execute_module_tool_simply: {tool_name}, command: {command}, target: {target}, options: {options}")
 
     module_wrapper = get_module_wrapper(tool_name)
@@ -165,8 +182,8 @@ def execute_module_tool_simply(tool_name, command, subject_name, study_name, tar
             
     current_app.logger.debug(f"Executing command list: {' '.join(command_list)}")
     
+    # Command line execution is managed with the ProcessModuleManager
     pm = ProcessModuleManager()
-    #pm.run_commandline(command_list, context_dict, blocking=False)
     pm.run_commandline(command_list, context_dict, blocking=blocking) 
     
     return None

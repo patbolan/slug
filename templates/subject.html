@@ -74,6 +74,103 @@
         </tbody>
     </table>
 
+    <h2>Processing Tools</h2>
+    {% if tool_menu %}
+        <table border="1" cellpadding="2" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Message</th>
+                    <th>PID</th>
+                    <th>Commands</th>
+                    <th>Options</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tool in tool_menu %}
+                    <tr>
+                        <td>{{ tool.name }}</td>
+                        <td>{{ tool.status }}</td>
+                        <td>{{ tool.message if tool.message else '' }}</td>
+                        <td>
+                            {% if tool.pid %}
+                                <a href="{{ url_for('tools_bp.process_info', pid=tool.pid) }}" target="_blank">{{ tool.pid }}</a>
+                            {% endif %}
+                        </td>
+                        <td align="center">
+                            {% if tool.command %}
+                                <button type="button" onclick="runToolCommand('{{ tool.name }}', '{{ tool.command }}')">
+                                    {{ tool.command }}
+                                </button>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tool.options %}
+                                {% for option in tool.options %}
+                                    <label for="{{ tool.name }}-{{ option.name }}">{{ option.name }}:</label>
+                                    <select id="{{ tool.name }}-{{ option.name }}" name="{{ option.name }}">
+                                        {% for choice in option.choices %}
+                                            <option value="{{ choice }}" {% if choice == option.default %}selected{% endif %}>{{ choice }}</option>
+                                        {% endfor %}
+
+                                    </select>   
+                                {% endfor %}
+                
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No processing tools available for this subject.</p>
+    {% endif %}
+
+    <script>
+        function runToolCommand(toolName, command) {
+            // Collect all select elements for the tool
+            const selectElements = document.querySelectorAll(`select[id^="${toolName}-"]`);
+            const params = new URLSearchParams();
+    
+            // Iterate over each select element and add its value to the query parameters
+            selectElements.forEach(select => {
+                const paramName = select.name;
+                const paramValue = select.value;
+                params.append(paramName, paramValue);
+            });
+    
+            // Construct the URL with the query parameters
+            const url = `/tools/${toolName}/${command}/subjects/{{ subject }}/?` + params.toString();
+    
+            // Change cursor to wait
+            document.body.style.cursor = 'wait';
+    
+            // Send POST request
+            fetch(url, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('Failed to execute command');
+                    }
+                })
+                .then(data => {
+                    console.log(data); // Log the server response
+                    // Reload the page to update the study page
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('An error occurred while executing the command.');
+                })
+                .finally(() => {
+                    // Reset cursor to default
+                    document.body.style.cursor = 'default';
+                });
+        }
+    </script>
+
     {% if file_tree %}
     <h2>Subject_Reports</h2>
     <div id="file-tree"></div>
@@ -84,7 +181,7 @@
                 'core': {
                     'data': [
                         {
-                            'text': '',
+                            'text': 'Subject_Reports',
                             'state': { 'opened': false }, // Start collapsed
                             'children': {{ file_tree|tojson }}
                         }

@@ -1,10 +1,9 @@
 from flask import Blueprint, render_template, abort, redirect, url_for, request, current_app
 
-from tools.utils import execute_module_tool_simply
+from tools.utils import execute_module_commandline
 #from tools.process_manager import ProcessManager
 from tools.process_module_manager import ProcessModuleManager
-from utils import get_process_file_path, get_file_tree, get_study_path
-
+from utils import get_process_file_path, get_file_tree, get_study_path, get_subject_path, get_data_folder
 
 
 tools_bp = Blueprint('tools_bp', __name__)
@@ -19,9 +18,9 @@ def tool_command(tool_name, command, subject_name=None, study_name=None):
     if subject_name and study_name:
         target_path = get_study_path(subject_name, study_name)
     elif subject_name:
-        target_path = get_study_path(subject_name)
+        target_path = get_subject_path(subject_name)
     else:   
-        target_path = None # Should be project, at some point.
+        target_path = get_data_folder()
 
     # Print the basic tool information
     current_app.logger.debug(f"Tool: {tool_name}, Command: {command}, Subject: {subject_name}, Study: {study_name}, target_path: {target_path}")
@@ -30,7 +29,7 @@ def tool_command(tool_name, command, subject_name=None, study_name=None):
     options = request.args.to_dict()
 
     # Execute the tool command
-    execute_module_tool_simply(tool_name, command, subject_name, study_name, target_path, options)
+    execute_module_commandline(tool_name, command, subject_name, study_name, target_path, options)
 
     return f"Tool '{tool_name}' executed command '{command}' for target path '{target_path}' and options '{options}'.", 200
 
