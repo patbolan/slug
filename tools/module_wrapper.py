@@ -2,7 +2,9 @@
 Starting by writing this specifically for modules that operate on studies, not those
 that work on subjects, projects, etc. Will get this working first then generalize.
 
-Not supporting options yet, either
+Note that calling status for each  module is time consuming. I have print() calls
+in place. Could optimize somehow... how do you know the status is unchanged?
+
 """
 from tools.process_module_manager import ProcessModuleManager
 from utils import get_study_path, get_module_folder, get_data_folder, get_subject_path
@@ -10,6 +12,7 @@ import os
 import subprocess
 import json     
 from flask import current_app
+import time
 
 class ModuleWrapper():
     def __init__(self, module_name=None, module_folder=None, module_script=None):
@@ -75,6 +78,8 @@ class ModuleWrapper():
             raise FileNotFoundError(f"Target path not found for subject '{subject_name}' and study '{study_name}'")
 
         try:
+            # Measure time for subprocess execution
+            subprocess_start = time.time()
             result = subprocess.run(
                 [self.script_path, "status", "--target", target_path],
                 stdout=subprocess.PIPE,
@@ -82,12 +87,12 @@ class ModuleWrapper():
                 text=True,
                 check=True
             )
-            # if result.stdout:
-            #     current_app.logger.debug(f"Script status output:\n{result.stdout}")
-            # if result.stderr:
-            #     current_app.logger.debug(f"Script status errors:\n{result.stderr}")
+            current_app.logger.debug(f"Execution time for {self.name}/status: {time.time() - subprocess_start:.4f} seconds")
 
-            return json.loads(result.stdout)
+            #  Parse JSON
+            status = json.loads(result.stdout)
+
+            return status
         except subprocess.CalledProcessError as e:
             current_app.logger.error(f"Error running script: {e.stderr}")
             raise
@@ -150,4 +155,4 @@ class ModuleWrapper():
             print('Standard Error:')
             print(result.stderr)    
         else: 
-            print('No errors.') 
+            print('No errors.')

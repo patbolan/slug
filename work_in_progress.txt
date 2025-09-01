@@ -2,9 +2,11 @@
 Got the options working. Now the options are defined by the properties command.
 The run and undo commands must work with all of the options.
 
+Calling the command-line status for each tool has a time cost. The slowest
+is get_tool_menu(), even when the call to properties is cached.
+
 Updated the documentation. 
 * complete the phantom module conversion. Include running-reports
-* create dummy modules for subject and project levels
 * once that's all done you can merge branches and push. Then pull on the pcad2 version
 
 
