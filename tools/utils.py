@@ -59,6 +59,8 @@ def get_tool_menu(subject_name, study_name):
         # Great. Here is where you instantiate this object, get its status dict.
         # Append status dict to toolset
         wrapper = get_module_wrapper(module_name)
+        if not wrapper:
+            raise ValueError(f"Module wrapper not found for tool '{module_name}'")
         status = wrapper.get_status(subject_name, study_name)
 
         # Check values from dicts, make sure they are there
@@ -165,7 +167,7 @@ def get_module_wrapper(tool_name):
 
 # This is my new, simplified interface for executing a module tool.
 def execute_module_commandline(tool_name, command, subject_name, study_name, target, options):
-    current_app.logger.debug(f"execute_module_tool_simply: {tool_name}, command: {command}, target: {target}, options: {options}")
+    current_app.logger.debug(f"execute_module_commandline: {tool_name}, command: {command}, target: {target}, options: {options}")
 
     module_wrapper = get_module_wrapper(tool_name)
     if module_wrapper is None:

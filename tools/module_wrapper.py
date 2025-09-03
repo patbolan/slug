@@ -3,7 +3,8 @@ Starting by writing this specifically for modules that operate on studies, not t
 that work on subjects, projects, etc. Will get this working first then generalize.
 
 Note that calling status for each  module is time consuming. I have print() calls
-in place. Could optimize somehow... how do you know the status is unchanged?
+in place. Could optimize somehow, perhaps using "watchdog" to keep track of when 
+studies are modified.
 
 """
 from tools.process_module_manager import ProcessModuleManager
@@ -93,12 +94,15 @@ class ModuleWrapper():
             status = json.loads(result.stdout)
 
             return status
+        
         except subprocess.CalledProcessError as e:
             current_app.logger.error(f"Error running script: {e.stderr}")
-            raise
+            
         except json.JSONDecodeError as e:
             current_app.logger.error(f"Error parsing JSON output: {e}")
-            raise                                              
+
+        json_str = '{"state": "error", "rationale": "Error retrieving status"}'
+        return json.loads(json_str)                                              
 
 
     def get_context(self):
