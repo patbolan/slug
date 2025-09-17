@@ -6,11 +6,11 @@ from utils import (
     get_subject_path,
     get_subject_file_path,
     get_study_file_path,
-    get_study_files,
+    get_subject_reports_path,
     get_sample_dicom_header,
     get_file_tree,
     get_series_number_from_folder,
-    get_data_folder,
+    get_project_reports_path,
     get_server_environment,
     get_subject_type,
     get_study_type
@@ -27,8 +27,9 @@ main_bp = Blueprint('main_bp', __name__)
 # Home route
 @main_bp.route('/')
 def index():
-    project_reports_path = os.path.join(get_data_folder(), 'Project_Reports')
-    file_tree = get_file_tree(project_reports_path) if os.path.isdir(project_reports_path) else []
+    project_reports_path = get_project_reports_path()
+    file_tree = get_file_tree(project_reports_path)
+    print(file_tree)
     
     tool_menu = get_tool_menu(subject_name=None, study_name=None)
     server_env = get_server_environment()
@@ -75,7 +76,8 @@ def subject(subject_name):
         study_type = get_study_type(subject_name, study)
         all_studies.append({'name':study, "study_type": study_type})
 
-    file_tree = get_file_tree(os.path.join(get_subject_path(subject_name), 'Subject_Reports' ))
+    subject_reports_path = get_subject_reports_path(subject_name)
+    file_tree = get_file_tree(subject_reports_path)
     # remove the studies: entries in file_tree that start with "MR-"
     #file_tree = [entry for entry in file_tree if not entry['text'].startswith('MR-')]
 

@@ -171,8 +171,8 @@
         }
     </script>
 
-    {% if file_tree %}
     <h2>Subject_Reports</h2>
+    {% if file_tree %}
     <div id="file-tree"></div>
 
     <script>
@@ -181,7 +181,7 @@
                 'core': {
                     'data': [
                         {
-                            'text': 'Subject_Reports',
+                            'text': 'Reports',
                             'state': { 'opened': false }, // Start collapsed
                             'children': {{ file_tree|tojson }}
                         }
@@ -211,6 +211,8 @@
             });
         });
     </script>
+    {% else %}
+        <p>No reports tools available for this subject.</p>
     {% endif %}
 
 </body>

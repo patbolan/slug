@@ -157,24 +157,50 @@ def get_file_tree(path):
     :return: List representing the file tree.
     """
     tree = []
-    for entry in sorted(os.listdir(path)):
-        if entry.startswith('.'):  # Ignore files or folders starting with a period
-            continue
-        full_path = os.path.join(path, entry)
-        if os.path.isdir(full_path):
-            tree.append({
-                'text': entry,
-                'icon': 'jstree-folder',  # Folder icon
-                'children': get_file_tree(full_path),
-                'full_path': full_path
-            })
-        else:
-            tree.append({
-                'text': entry,
-                'icon': 'jstree-file',  # File icon
-                'full_path': full_path
-            })
+    if os.path.isdir(path):
+        for entry in sorted(os.listdir(path)):
+            if entry.startswith('.'):  # Ignore files or folders starting with a period
+                continue
+            full_path = os.path.join(path, entry)
+            if os.path.isdir(full_path):
+                tree.append({
+                    'text': entry,
+                    'icon': 'jstree-folder',  # Folder icon
+                    'children': get_file_tree(full_path),
+                    'full_path': full_path
+                })
+            else:
+                tree.append({
+                    'text': entry,
+                    'icon': 'jstree-file',  # File icon
+                    'full_path': full_path
+                })
     return tree
+
+def get_project_reports_path():
+    """
+    Make this more flexible to handle a few variations. Warn if using the old convention
+    """
+    project_reports_path = os.path.join(get_data_folder(), 'project-reports')
+    if not os.path.isdir(project_reports_path):
+        alt_path = os.path.join(get_data_folder(), 'Project_Reports')
+        if os.path.isdir(alt_path):
+            project_reports_path = alt_path
+            print('Note: Using <Project_Reports>. Please rename to <project-reports>')
+    return project_reports_path
+
+def get_subject_reports_path(subject_name):
+    """
+    Make this more flexible to handle a few variations. If no
+    """
+    subject_reports_path = os.path.join(get_subject_path(subject_name), 'subject-reports' )
+
+    if not os.path.isdir(subject_reports_path):
+        alt_path = os.path.join(get_subject_path(subject_name), 'Subject_Reports')
+        if os.path.isdir(alt_path):
+            subject_reports_path = alt_path
+            print(f'Note: Using <Subject_Reports> for {subject_name}. Please rename to <subject-reports>')
+    return subject_reports_path
 
 def get_series_number_from_folder(folder_name):
     """
