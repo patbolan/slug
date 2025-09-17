@@ -29,7 +29,6 @@ main_bp = Blueprint('main_bp', __name__)
 def index():
     project_reports_path = get_project_reports_path()
     file_tree = get_file_tree(project_reports_path)
-    print(file_tree)
     
     tool_menu = get_tool_menu(subject_name=None, study_name=None)
     server_env = get_server_environment()
